@@ -226,7 +226,7 @@ describe("check-internal-links main()", () => {
     expect(r.out).toMatch(/Checked 1 internal links .* against 2 routes\./);
   });
 
-  it("registers nav-alias routes (sectioned and bare) for entries whose file exists", async () => {
+  it("registers only the real nav route when its file exists", async () => {
     writePageMap(`
 type NavItem = { [key: string]: string } | string
 const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
@@ -253,16 +253,41 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
 
     const r = await runChecker();
 
-    // Routes: 2 flat (hive/readme, pluk/links) + 2 aliases for the existing
-    // readme.md. ghost.md does not exist, so its aliases are NOT registered and
-    // links to them are reported broken.
-    expect(r.out).toMatch(/Checked 4 internal links .* against 4 routes\./);
+    // Two flat routes plus the one real sidebar route for readme.md.
+    expect(r.out).toMatch(/Checked 4 internal links .* against 3 routes\./);
     expect(r.exitCode).toBe(1);
-    expect(r.err).toContain("Found 2 broken internal link(s)");
+    expect(r.err).toContain("Found 3 broken internal link(s)");
+    expect(r.err).toContain("resolves to (no route): /docs/hive/introduction");
     expect(r.err).toContain(
       "resolves to (no route): /docs/hive/overview/ghost-page"
     );
     expect(r.err).toContain("resolves to (no route): /docs/hive/ghost-page");
+  });
+
+  it("accepts a nested sidebar URL and rejects a cross-section alias", async () => {
+    writePageMap(`
+const NAV_STRUCTURE_HIVE = [
+  { title: 'Reference', items: [
+    { 'Architecture Decision Records': [
+      { 'ADR index': 'adr/readme.md' },
+    ] },
+  ] },
+  { title: 'Security', items: [] },
+]
+`);
+    writeContent("hive/adr/readme.md", "# ADRs\n");
+    writeContent(
+      "hive/links.md",
+      "[real](/docs/hive/reference/architecture-decision-records/adr-index)\n" +
+        "[invented](/docs/hive/security/adr-index)\n"
+    );
+
+    const r = await runChecker();
+    expect(r.out).toMatch(/Checked 2 internal links .* against 3 routes\./);
+    expect(r.err).toContain("Found 1 broken internal link(s)");
+    expect(r.err).toContain(
+      "resolves to (no route): /docs/hive/security/adr-index"
+    );
   });
 
   it("resolves GENERAL nav entries against docs/content directly", async () => {
@@ -280,7 +305,7 @@ const NAV_STRUCTURE_GENERAL: Array<{ title: string; items: NavItem[] }> = [
     writeContent(
       "hive/readme.md",
       [
-        "[alias](/docs/community/community-meetings)",
+        "[alias](/docs/community/meetings)",
         "[flat](/docs/community/meetings)",
       ].join("\n")
     );
@@ -288,11 +313,11 @@ const NAV_STRUCTURE_GENERAL: Array<{ title: string; items: NavItem[] }> = [
     const r = await runChecker();
 
     expect(r.exitCode).toBeNull();
-    // 2 flat routes + sectioned alias + bare alias.
-    expect(r.out).toMatch(/Checked 2 internal links .* against 4 routes\./);
+    // The nav route coincides with the direct route for this general file.
+    expect(r.out).toMatch(/Checked 2 internal links .* against 2 routes\./);
   });
 
-  it("falls back to docs/content root when a project nav file is missing under its project dir", async () => {
+  it("does not register a project alias for a file outside that project", async () => {
     writePageMap(`
 const NAV_STRUCTURE_PLUK: Array<{ title: string; items: NavItem[] }> = [
   { title: 'Guides', items: [ { 'Shared Guide': 'shared.md' } ] }
@@ -304,9 +329,11 @@ const NAV_STRUCTURE_PLUK: Array<{ title: string; items: NavItem[] }> = [
 
     const r = await runChecker();
 
-    expect(r.exitCode).toBeNull();
-    // 2 flat routes + sectioned alias + bare alias.
-    expect(r.out).toMatch(/Checked 1 internal links .* against 4 routes\./);
+    expect(r.exitCode).toBe(1);
+    expect(r.out).toMatch(/Checked 1 internal links .* against 2 routes\./);
+    expect(r.err).toContain(
+      "resolves to (no route): /docs/pluk/guides/shared-guide"
+    );
   });
 
   it("ignores NAV_STRUCTURE blocks with no PROJECT_FOR_NAV mapping", async () => {

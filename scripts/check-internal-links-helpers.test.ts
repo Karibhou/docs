@@ -149,7 +149,7 @@ describe("parseNavStructures", () => {
     expect(parseNavStructures(src)).toEqual([]);
   });
 
-  it("extracts entries and emits one row per section plus one bare row", () => {
+  it("extracts one route under the entry's own section", () => {
     const src = `
       const NAV_STRUCTURE_HIVE: X = [
         { title: 'Overview', items: [
@@ -158,26 +158,16 @@ describe("parseNavStructures", () => {
 ]
     `;
     const entries = parseNavStructures(src);
-    // One per section + one bare = 2 rows
-    expect(entries).toHaveLength(2);
-    const sectionRow = entries.find(e => e.sectionSlug === "overview");
-    const bareRow = entries.find(e => e.sectionSlug === "");
-    expect(sectionRow).toEqual<NavAliasEntry>({
-      navName: "HIVE",
-      base: "docs/hive",
-      sectionSlug: "overview",
-      slug: "getting-started",
-      title: "Getting Started",
-      file: "getting-started.md",
-    });
-    expect(bareRow).toEqual<NavAliasEntry>({
-      navName: "HIVE",
-      base: "docs/hive",
-      sectionSlug: "",
-      slug: "getting-started",
-      title: "Getting Started",
-      file: "getting-started.md",
-    });
+    expect(entries).toEqual<NavAliasEntry[]>([
+      {
+        navName: "HIVE",
+        base: "docs/hive",
+        sectionSlug: "overview",
+        slug: "getting-started",
+        title: "Getting Started",
+        file: "getting-started.md",
+      },
+    ]);
   });
 
   it("accepts both single- and double-quoted title/file pairs", () => {
@@ -192,7 +182,7 @@ describe("parseNavStructures", () => {
     const slugs = parseNavStructures(src)
       .map(e => e.slug)
       .sort();
-    expect(slugs).toEqual(["deploy", "deploy", "rollback", "rollback"]);
+    expect(slugs).toEqual(["deploy", "rollback"]);
   });
 
   it("skips entries whose file value is an http URL or an absolute path", () => {
@@ -208,7 +198,7 @@ describe("parseNavStructures", () => {
     const files = parseNavStructures(src).map(e => e.file);
     expect(files).not.toContain("https://example.com/x.md");
     expect(files).not.toContain("/other/place.md");
-    expect(files.filter(f => f === "real.md")).toHaveLength(2); // section + bare
+    expect(files.filter(f => f === "real.md")).toHaveLength(1);
   });
 
   it("supports .mdx entries", () => {
@@ -224,7 +214,7 @@ describe("parseNavStructures", () => {
     expect(entries[0].file).toBe("tutorial.mdx");
   });
 
-  it("emits an entry per section for blocks with multiple sections", () => {
+  it("keeps each entry in its own section", () => {
     const src = `
       const NAV_STRUCTURE_HIVE: X = [
         { title: 'Overview', items: [] },
@@ -235,8 +225,7 @@ describe("parseNavStructures", () => {
     `;
     const entries = parseNavStructures(src);
     const sections = entries.map(e => e.sectionSlug).sort();
-    // 2 sections + 1 bare = 3 rows for the single 'deploy' entry
-    expect(sections).toEqual(["", "ops", "overview"]);
+    expect(sections).toEqual(["ops"]);
   });
 
   it("honors a custom projectForNav override", () => {
@@ -256,20 +245,14 @@ describe("navEntryRoute", () => {
   const base: NavAliasEntry = {
     navName: "HIVE",
     base: "docs/hive",
-    sectionSlug: "",
+    sectionSlug: "ops",
     slug: "overview",
     title: "Overview",
     file: "overview.md",
   };
 
-  it("emits a section-scoped route when sectionSlug is set", () => {
-    expect(navEntryRoute({ ...base, sectionSlug: "ops" })).toBe(
-      "/docs/hive/ops/overview"
-    );
-  });
-
-  it("emits a bare route when sectionSlug is empty", () => {
-    expect(navEntryRoute(base)).toBe("/docs/hive/overview");
+  it("emits the entry under its section", () => {
+    expect(navEntryRoute(base)).toBe("/docs/hive/ops/overview");
   });
 });
 

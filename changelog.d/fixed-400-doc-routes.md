@@ -1,0 +1,1 @@
+- Internal link checks now match sidebar routes, including nested Hive reference pages, and the obsolete Hive intro redirects to the synced introduction.

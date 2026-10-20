@@ -5,9 +5,10 @@
  * without triggering the CLI script's top-level filesystem reads (contentRoot
  * walk, page-map.ts parse). The main script re-imports and reuses them.
  *
- * All helpers here are deterministic and only use path/string primitives.
+ * All helpers here are deterministic and have no filesystem side effects.
  */
 import path from "node:path";
+import ts from "typescript";
 
 /**
  * Convert a human-readable nav title into a URL slug.
@@ -99,9 +100,7 @@ export interface NavAliasEntry {
   /** Base path resolved via PROJECT_FOR_NAV, e.g. 'docs/hive'. */
   base: string;
   /**
-   * The section slug this entry falls under, or "" if it is a
-   * bare (top-level) entry. Sections are the slugified `title:` fields
-   * of category objects in the NAV_STRUCTURE block.
+   * Slugified category and folder ancestors, joined with `/`.
    */
   sectionSlug: string;
   /** The slug derived from the entry's title (via slugify()). */
@@ -129,54 +128,102 @@ export interface NavAliasEntry {
  *
  * Parsing rules (must mirror buildPageMap in src/app/docs/page-map.ts):
  *   - Each `const NAV_STRUCTURE_<NAME> ... = [ ... ]` block is one nav.
- *   - Category objects `{ title: 'X', items: [...] }` contribute section
- *     slugs; slugify(X) is used as the section prefix.
- *   - `{ 'Title': 'file.md' }` (or "double quoted") pairs inside a nav
- *     block are entries; slugify('Title') is the slug.
- *   - Entries whose file starts with `http` or `/` are external and
- *     skipped.
- *   - Every entry is emitted once per section slug in the block AND
- *     once with `sectionSlug: ""` (bare form), mirroring the two
- *     validRoutes.add() calls the main script makes.
+ *   - Each category's `title` starts the path; nested array-valued items
+ *     contribute folder slugs.
+ *   - Each string-valued leaf contributes exactly one route. General-section
+ *     leaves use the file basename, as buildPageMap() does.
  */
 export function parseNavStructures(
   pageMapSrc: string,
   projectForNav: Record<string, string> = PROJECT_FOR_NAV
 ): NavAliasEntry[] {
   const results: NavAliasEntry[] = [];
-  const navBlockRe = /const NAV_STRUCTURE_([A-Z_]+)[^=]*=\s*(\[[\s\S]*?\n\])/g;
-  let nav: RegExpExecArray | null;
-  while ((nav = navBlockRe.exec(pageMapSrc))) {
-    const navName = nav[1];
-    const base = projectForNav[navName];
-    if (!base) continue;
-    const block = nav[2];
-
-    // Category section slugs come from `title:` bareword fields on
-    // category objects. These are slugified and used as path prefixes.
-    const sections: string[] = [];
-    const catRe = /title:\s*['"]([^'"]+)['"]/g;
-    let c: RegExpExecArray | null;
-    while ((c = catRe.exec(block))) sections.push(slugify(c[1]));
-
-    // Entry pairs are `'Title': 'file.md'` or `"Title": "file.md"`.
-    const titleFileRe = /['"]([^'"]+)['"]\s*:\s*['"]([^'"]+\.mdx?)['"]/g;
-    const entries: { title: string; file: string; slug: string }[] = [];
-    let m: RegExpExecArray | null;
-    while ((m = titleFileRe.exec(block))) {
-      const title = m[1];
-      const file = m[2];
-      if (file.startsWith("http") || file.startsWith("/")) continue;
-      entries.push({ title, file, slug: slugify(title) });
-    }
-
-    // Emit each entry once per section prefix and once bare, matching
-    // the two `validRoutes.add(...)` calls the main script makes.
-    for (const { title, file, slug } of entries) {
-      for (const sectionSlug of sections) {
-        results.push({ navName, base, sectionSlug, slug, title, file });
+  const source = ts.createSourceFile(
+    "page-map.ts",
+    pageMapSrc,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const property = (node: ts.ObjectLiteralExpression, name: string) =>
+    node.properties.find(
+      (p): p is ts.PropertyAssignment =>
+        ts.isPropertyAssignment(p) &&
+        p.name.getText(source).replace(/^['"]|['"]$/g, "") === name
+    );
+  const visitItems = (
+    items: ts.ArrayLiteralExpression,
+    ancestors: string[],
+    navName: string,
+    base: string
+  ) => {
+    for (const item of items.elements) {
+      if (!ts.isObjectLiteralExpression(item)) continue;
+      for (const member of item.properties) {
+        if (!ts.isPropertyAssignment(member)) continue;
+        const title = ts.isStringLiteral(member.name)
+          ? member.name.text
+          : member.name.getText(source);
+        if (ts.isArrayLiteralExpression(member.initializer)) {
+          visitItems(
+            member.initializer,
+            [...ancestors, slugify(title)],
+            navName,
+            base
+          );
+        } else if (ts.isStringLiteral(member.initializer)) {
+          const file = member.initializer.text;
+          if (
+            !/\.mdx?$/.test(file) ||
+            file.startsWith("http") ||
+            file.startsWith("/")
+          )
+            continue;
+          const isGeneral = /^(contributing|community|news)\//.test(file);
+          const slug = isGeneral
+            ? path.posix.basename(file).replace(/\.mdx?$/, "")
+            : slugify(title);
+          results.push({
+            navName,
+            base: isGeneral ? "docs" : base,
+            sectionSlug: ancestors.join("/"),
+            slug,
+            title,
+            file,
+          });
+        }
       }
-      results.push({ navName, base, sectionSlug: "", slug, title, file });
+    }
+  };
+  for (const statement of source.statements) {
+    if (
+      !ts.isVariableStatement(statement) ||
+      !(statement.declarationList.flags & ts.NodeFlags.Const)
+    )
+      continue;
+    for (const declaration of statement.declarationList.declarations) {
+      if (
+        !ts.isIdentifier(declaration.name) ||
+        !declaration.initializer ||
+        !ts.isArrayLiteralExpression(declaration.initializer)
+      )
+        continue;
+      const match = /^NAV_STRUCTURE_([A-Z_]+)$/.exec(declaration.name.text);
+      const navName = match?.[1];
+      const base = navName && projectForNav[navName];
+      if (!navName || !base) continue;
+      for (const category of declaration.initializer.elements) {
+        if (!ts.isObjectLiteralExpression(category)) continue;
+        const title = property(category, "title")?.initializer;
+        const items = property(category, "items")?.initializer;
+        if (
+          title &&
+          ts.isStringLiteral(title) &&
+          items &&
+          ts.isArrayLiteralExpression(items)
+        ) {
+          visitItems(items, [slugify(title.text)], navName, base);
+        }
+      }
     }
   }
   return results;
@@ -190,9 +237,7 @@ export function parseNavStructures(
  * the route shape only has to be made in one place.
  */
 export function navEntryRoute(e: NavAliasEntry): string {
-  return e.sectionSlug
-    ? `/${e.base}/${e.sectionSlug}/${e.slug}`
-    : `/${e.base}/${e.slug}`;
+  return `/${e.base}/${e.sectionSlug}/${e.slug}`;
 }
 
 /**

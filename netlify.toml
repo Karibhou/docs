@@ -51,6 +51,11 @@
 
 # Redirect project root pages to their first content page
 [[redirects]]
+  from = "/docs/hive/overview/intro"
+  to = "/docs/hive/overview/introduction"
+  status = 301
+
+[[redirects]]
   from = "/docs/hive"
   to = "/docs/hive/overview/introduction"
   status = 302

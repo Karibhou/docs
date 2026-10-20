@@ -25,7 +25,6 @@ import fs from "fs";
 import path from "path";
 import { pathToFileURL } from "url";
 import {
-  slugify,
   normRoute,
   isExternalOrAnchor,
   ASSET_EXT,
@@ -64,18 +63,16 @@ collectFlatRoutes(contentRoot);
 // source the site uses, WITHOUT importing it directly (page-map.ts pulls in
 // nextra's bundler-only `normalizePageMap` export, which does not resolve under
 // a plain Node/tsx run). Instead we parse the NAV_STRUCTURE_* tables out of
-// page-map.ts and replicate its title->slug rule. This keeps the checker a
-// zero-heavy-dependency, deterministic gate.
+// page-map.ts and mirror its category/folder/title route rules.
 const pageMapSrc = fs.readFileSync(
   path.join(process.cwd(), "src", "app", "docs", "page-map.ts"),
   "utf8"
 );
-// slugify, normRoute, isExternalOrAnchor and ASSET_EXT are imported from
+// normRoute, isExternalOrAnchor and ASSET_EXT are imported from
 // ./check-internal-links-helpers.ts (side-effect free, unit-tested).
 
 // Extract every nav-alias entry, then filter to those whose target file
-// actually exists on disk, and register both the sectioned and the bare
-// form as valid routes. Splitting the pure parse (parseNavStructures)
+// actually exists on disk, and register its one sidebar route. Splitting the pure parse (parseNavStructures)
 // from this fs-touching registration keeps the parser unit-testable.
 for (const entry of parseNavStructures(pageMapSrc, PROJECT_FOR_NAV)) {
   const fileAbs = path.join(
@@ -83,11 +80,7 @@ for (const entry of parseNavStructures(pageMapSrc, PROJECT_FOR_NAV)) {
     entry.base.replace(/^docs\/?/, ""),
     entry.file
   );
-  if (!fs.existsSync(fileAbs) && entry.base !== "docs") {
-    // Kubestellar nav references live under docs/content directly.
-    const alt = path.join(contentRoot, entry.file);
-    if (!fs.existsSync(alt)) continue;
-  }
+  if (!fs.existsSync(fileAbs)) continue;
   validRoutes.add(navEntryRoute(entry));
 }
 

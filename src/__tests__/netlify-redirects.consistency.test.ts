@@ -94,9 +94,19 @@ describe("netlify.toml redirects", () => {
     const stale = docsRedirects
       .map(r => r.from)
       .filter(
-        from => !known.has(from.replace(/^\/docs\//, "").replace(/\/$/, ""))
+        from =>
+          from !== "/docs/hive/overview/intro" &&
+          !known.has(from.replace(/^\/docs\//, "").replace(/\/$/, ""))
       );
     expect(stale).toEqual([]);
+  });
+
+  it("redirects the removed Hive intro to the synced introduction", () => {
+    const rule = docsRedirects.find(
+      r => r.from === "/docs/hive/overview/intro"
+    );
+    expect(rule?.to).toBe("/docs/hive/overview/introduction");
+    expect(rule?.status).toBe("301");
   });
 
   it("has exactly one redirect per /docs/* source path", () => {
