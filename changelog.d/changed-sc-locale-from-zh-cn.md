@@ -1,0 +1,1 @@
+- Fill the served Simplified Chinese locale (`messages/SC.json`, 72 → 608 keys) from the orphaned `messages/zh-CN.json` translation, keeping every existing `SC` string; `zh-CN.json`, which was never loaded, is removed.
