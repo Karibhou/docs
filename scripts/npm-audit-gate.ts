@@ -12,6 +12,9 @@
  * expired exception fails the gate so acknowledged findings are re-reviewed
  * rather than silently forgotten.
  *
+ * A file that is not an audit report (e.g. the error document npm writes when
+ * the registry is unreachable) fails the gate rather than passing it.
+ *
  * Usage: npx tsx scripts/npm-audit-gate.ts <audit.json> [--level=high]
  */
 import fs from "fs";
@@ -54,6 +57,29 @@ interface AuditReport {
     string,
     { name?: string; severity?: string; via?: Array<AuditVia | string> }
   >;
+}
+
+/**
+ * Return why `report` is not a usable `npm audit --json` report, or null when
+ * it is. npm writes `{ message, error: { summary, detail } }` to stdout when
+ * the audit request itself fails, which must not be read as "no advisories".
+ */
+export function validateAuditReport(report: unknown): string | null {
+  if (typeof report !== "object" || report === null || Array.isArray(report)) {
+    return "report is not a JSON object";
+  }
+  const doc = report as Record<string, unknown>;
+  const vulns = doc.vulnerabilities;
+  if (typeof vulns === "object" && vulns !== null && !Array.isArray(vulns)) {
+    return null;
+  }
+  const err = (doc.error ?? {}) as { summary?: unknown; detail?: unknown };
+  const parts = [doc.message, err.summary, err.detail].filter(
+    (p): p is string => typeof p === "string" && p.length > 0
+  );
+  return parts.length > 0
+    ? parts.join(" — ")
+    : 'report has no "vulnerabilities" object';
 }
 
 export function ghsaIdFromUrl(url: string | undefined): string | null {
@@ -174,7 +200,14 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     return;
   }
 
-  const report = JSON.parse(fs.readFileSync(reportFile, "utf8")) as AuditReport;
+  const parsed: unknown = JSON.parse(fs.readFileSync(reportFile, "utf8"));
+  const invalidReason = validateAuditReport(parsed);
+  if (invalidReason !== null) {
+    console.error(`❌ npm audit did not produce a report: ${invalidReason}`);
+    process.exit(1);
+    return;
+  }
+  const report = parsed as AuditReport;
   const exceptionsFile = path.join(
     process.cwd(),
     ".github",

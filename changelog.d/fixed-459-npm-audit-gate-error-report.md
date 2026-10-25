@@ -1,0 +1,1 @@
+- The npm audit gate now fails when `npm audit` itself errors (registry outage, network failure) instead of passing on the error document npm writes to stdout (hivecommons/docs#459).

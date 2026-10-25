@@ -8,6 +8,7 @@ import {
   ghsaIdFromUrl,
   loadExceptions,
   main,
+  validateAuditReport,
   type AuditException,
 } from "./npm-audit-gate";
 
@@ -359,5 +360,56 @@ describe("main", () => {
     const err = errSpy.mock.calls.flat().join("\n");
     expect(err).toMatch(/Expired npm audit exceptions/);
     expect(err).toMatch(/Malformed exception entries/);
+  });
+
+  it("exits 1 on the error document npm writes when the audit fails", () => {
+    const report = write("audit.json", {
+      message:
+        "request to https://registry.npmjs.org failed, reason: ECONNREFUSED",
+      error: { summary: "", detail: "" },
+    });
+    main([report]);
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errSpy.mock.calls.flat().join("\n")).toMatch(
+      /did not produce a report: request to .* ECONNREFUSED/
+    );
+    expect(logSpy.mock.calls.flat().join("\n")).not.toMatch(/passed/);
+  });
+
+  it("exits 1 when the report has no vulnerabilities object", () => {
+    const report = write("audit.json", {});
+    main([report]);
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errSpy.mock.calls.flat().join("\n")).toMatch(
+      /did not produce a report: report has no "vulnerabilities" object/
+    );
+  });
+
+  it("still passes a valid report with no vulnerabilities", () => {
+    const report = write("audit.json", { vulnerabilities: {} });
+    main([report]);
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(logSpy.mock.calls.flat().join("\n")).toMatch(/passed at level/);
+  });
+});
+
+describe("validateAuditReport", () => {
+  it("rejects non-objects", () => {
+    expect(validateAuditReport(null)).toMatch(/not a JSON object/);
+    expect(validateAuditReport([])).toMatch(/not a JSON object/);
+    expect(validateAuditReport("x")).toMatch(/not a JSON object/);
+  });
+
+  it("surfaces npm's message, summary and detail", () => {
+    expect(
+      validateAuditReport({
+        message: "boom",
+        error: { summary: "sum", detail: "det" },
+      })
+    ).toBe("boom — sum — det");
+  });
+
+  it("accepts a report with a vulnerabilities object", () => {
+    expect(validateAuditReport({ vulnerabilities: {} })).toBeNull();
   });
 });
