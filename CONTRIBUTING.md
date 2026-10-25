@@ -27,7 +27,13 @@ npm run check-links   # internal docs links
 npm run lint          # ESLint for src/, scripts/ and netlify/
 npm run format        # Prettier; CI runs format:check, so run this before pushing
 npm run build         # production build and doc-sync scripts
+typos                 # spell check (https://github.com/crate-ci/typos); not an npm script
 ```
+
+The TypeScript & Lint Check workflow also runs `typos` with the configuration in
+`_typos.toml`. Synced docs under `docs/content/` are excluded there — fix their
+spelling in the project repository. Add genuine false positives to
+`[default.extend-words]`.
 
 The Internal Links CI gate re-syncs Hive docs with `npm run sync-hive-docs` and sibling-project docs with `npm run sync-sibling-docs` before running `npm run check-links`, so a local `check-links` alone validates only the committed snapshot. To reproduce the gate exactly, run the sync scripts first (both require network access; they fall back to the committed content offline).
 
