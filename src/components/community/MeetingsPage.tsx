@@ -187,11 +187,7 @@ function RecordingCard({
           )}
         </p>
         {recording.duration ? <p>{recording.duration}</p> : null}
-        <a
-          href={COMMUNITY_MEETINGS.recordingsUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={recording.url} target="_blank" rel="noreferrer">
           Watch on YouTube
         </a>
       </div>

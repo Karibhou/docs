@@ -1,0 +1,1 @@
+- Community meeting recording cards' "Watch on YouTube" link now opens that recording's own video instead of the channel page (hivecommons/docs#462).

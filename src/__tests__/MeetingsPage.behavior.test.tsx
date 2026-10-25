@@ -227,7 +227,11 @@ describe("MeetingsPage calendar links", () => {
 describe("MeetingsPage recordings (committed data)", () => {
   it("renders each matching committed recording and swaps to an embed on play", () => {
     const matching = (
-      recordingsData.recordings as Array<{ id: string; title: string }>
+      recordingsData.recordings as Array<{
+        id: string;
+        title: string;
+        url: string;
+      }>
     ).filter(r =>
       new RegExp(COMMUNITY_MEETINGS.recordingTitlePattern, "i").test(r.title)
     );
@@ -239,6 +243,14 @@ describe("MeetingsPage recordings (committed data)", () => {
     expect(document.querySelector("iframe")).toBeNull();
 
     const first = matching[0];
+    const watchLink = screen.getAllByRole("link", {
+      name: "Watch on YouTube",
+    })[0];
+    expect(watchLink.getAttribute("href")).toBe(first.url);
+    expect(watchLink.getAttribute("href")).not.toBe(
+      COMMUNITY_MEETINGS.recordingsUrl
+    );
+
     fireEvent.click(
       screen.getByRole("button", { name: `Play ${first.title}` })
     );
