@@ -30,7 +30,7 @@
     "@netlify/blobs": "^11.1.6",
     "@theguild/remark-mermaid": "^0.3.0",
     "dotenv": "^18.0.9",
-    "lucide-react": "^1.57.0",
+    "lucide-react": "^1.61.0",
     "mermaid": "^12.2.0",
     "next": "^16.4.2",
     "next-intl": "^4.14.9",
