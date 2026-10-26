@@ -76,6 +76,7 @@ export function useNavDropdowns() {
       };
 
       const hideMenu = () => {
+        clearHideTimeout();
         timeoutRef.current = setTimeout(() => {
           menu.style.display = "none";
           menu.style.opacity = "0";
@@ -179,6 +180,10 @@ export function useNavDropdowns() {
       };
 
       const handleMouseLeave = () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
         timeoutRef.current = setTimeout(() => {
           const langButton = langSwitcher.querySelector("button");
           const dropdown = document.querySelector('[role="listbox"]');

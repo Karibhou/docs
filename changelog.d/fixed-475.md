@@ -1,0 +1,1 @@
+- fix(navbar): clear the pending hide timer before rescheduling in useNavDropdowns so leaving via the menu and re-entering no longer closes the dropdown (#475).
