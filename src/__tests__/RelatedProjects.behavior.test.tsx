@@ -98,6 +98,22 @@ describe("project list and highlighting", () => {
     expect(inactive.className).not.toContain("font-medium");
   });
 
+  it("highlights projects without a hard-coded prefix, not Hive", () => {
+    pathname = "/docs/rationguard/overview/introduction";
+    useSharedConfigMock.mockReturnValue({
+      config: configWith([
+        { title: "Hive", href: "/docs/hive/overview/introduction" },
+        {
+          title: "rationguard",
+          href: "/docs/rationguard/overview/introduction",
+        },
+      ]),
+    });
+    render(<RelatedProjects />);
+    expect(screen.getByText("rationguard").className).toContain("font-medium");
+    expect(screen.getByText("Hive").className).not.toContain("font-medium");
+  });
+
   it("falls back to Hive when no section prefix matches", () => {
     pathname = "/docs/something-else";
     render(<RelatedProjects />);
@@ -203,8 +219,8 @@ describe("renderLegacyMenuTree", () => {
 
   function renderTree() {
     // The tree renders only under the *current* secondary project, and
-    // getCurrentProject() recognizes a fixed set of pathname prefixes, so the
-    // secondary project must be one of those (pluk here).
+    // getCurrentProject() matches the pathname against the project hrefs, so
+    // the secondary project's href must be a prefix of the pathname.
     pathname = "/docs/pluk";
     useSharedConfigMock.mockReturnValue({
       config: configWith([

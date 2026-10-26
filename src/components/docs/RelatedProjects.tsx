@@ -222,12 +222,11 @@ export function RelatedProjects({ variant = 'full', onCollapse, bannerActive = f
   // Determine current project or section from pathname
   // THIS HIGHLIGHTS THE ACTIVE PROJECT/SECTION IN THE PROJECT LIST IN THE SIDEBAR
   const getCurrentProject = () => {
-    if (pathname.startsWith('/docs/hotshot')) return 'hotshot';
-    if (pathname.startsWith('/docs/a2a')) return 'A2A';
-    if (pathname.startsWith('/docs/kubeflex')) return 'KubeFlex';
-    if (pathname.startsWith('/docs/multi-plugin')) return 'Multi Plugin';
-    if (pathname.startsWith('/docs/pluk')) return 'pluk';
-    if (pathname.startsWith('/docs/spektacular')) return 'Spektacular';
+    const matched = allProjects.find((project) => {
+      const base = `/docs/${project.href.split('/')[2]}`;
+      return pathname === base || pathname.startsWith(`${base}/`);
+    });
+    if (matched) return matched.title;
     if (pathname.startsWith('/docs/contributing')) return 'Contributing';
     if (pathname.startsWith('/docs/community')) return 'Community';
     if (pathname.startsWith('/docs/news')) return 'News';

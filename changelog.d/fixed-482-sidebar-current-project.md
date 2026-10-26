@@ -1,0 +1,1 @@
+- The docs sidebar now highlights rationguard, promptargs and dibs on their own pages instead of Hive; the current project is derived from the project hrefs (hivecommons/docs#482).
