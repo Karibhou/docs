@@ -55,6 +55,13 @@
         "isDefault": true
       }
     },
+    "crux": {
+      "latest": {
+        "label": "main (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
+    },
     "spektacular": {
       "latest": {
         "label": "main (Latest)",
@@ -92,6 +99,11 @@
     "dibs": {
       "name": "dibs",
       "basePath": "dibs",
+      "currentVersion": "main"
+    },
+    "crux": {
+      "name": "Crux",
+      "basePath": "crux",
       "currentVersion": "main"
     },
     "spektacular": {
@@ -137,6 +149,12 @@
       "secondary": true
     },
     {
+      "title": "Crux",
+      "href": "/docs/crux/overview/introduction",
+      "description": "Standalone runtime for AI coding agents",
+      "secondary": true
+    },
+    {
       "title": "Spektacular",
       "href": "/docs/spektacular/overview/introduction",
       "description": "Spec-driven development for AI coding agents (canonical site: spektacular.dev)",
@@ -150,6 +168,7 @@
     "rationguard": "https://github.com/hivecommons/rationguard/edit/main",
     "promptargs": "https://github.com/hivecommons/promptargs/edit/main",
     "spektacular": "https://github.com/hivecommons/spektacular/edit/main",
+    "crux": "https://github.com/hivecommons/crux/edit/main",
     "dibs": "https://github.com/hivecommons/dibs/edit/main"
   },
   "updatedAt": "2026-09-24T11:55:47.068Z"

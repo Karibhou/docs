@@ -83,6 +83,7 @@ export const PROJECT_FOR_NAV: Record<string, string> = {
   RATIONGUARD: "docs/rationguard",
   PROMPTARGS: "docs/promptargs",
   DIBS: "docs/dibs",
+  CRUX: "docs/crux",
   SPEKTACULAR: "docs/spektacular",
   // Shared sections (Community, …) live under docs/content/<section>/ and
   // are served at /docs/<section>/<slug>.

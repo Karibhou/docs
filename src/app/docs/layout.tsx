@@ -29,7 +29,7 @@ const jetbrainsMono = localFont({
 const SITE_URL = 'https://docs.hivecommons.dev'
 const SITE_TITLE = 'Hive Commons Docs - AI Agent Collaboration Projects'
 const SITE_DESCRIPTION =
-  'Documentation for Hive Commons projects that help AI coding agents and maintainers work together: Hive, Spektacular (Spek), hotshot, pluk, promptargs, rationguard, and dibs.'
+  'Documentation for Hive Commons projects that help AI coding agents and maintainers work together: Hive, Spektacular (Spek), hotshot, pluk, promptargs, rationguard, dibs, and Crux.'
 
 const INTEGRATION_NAMES = [
   'Claude Code',

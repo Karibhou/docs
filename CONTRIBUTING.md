@@ -3,7 +3,7 @@
 Thank you for helping improve the Hive Commons documentation site
 ([docs.hivecommons.dev](https://docs.hivecommons.dev)).
 
-- Hive, hotshot, pluk, rationguard, promptargs, dibs, and Spektacular page content is
+- Hive, hotshot, pluk, rationguard, promptargs, dibs, Crux, and Spektacular page content is
   synced from the project repositories at build time — edit it there (see
   README "How content is sourced").
 - Site code, navigation, and layout changes belong in this repository.

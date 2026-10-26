@@ -1,5 +1,5 @@
 /**
- * Sync hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs from their GitHub repos into docs/content/.
+ * Sync hotshot, pluk, rationguard, promptargs, dibs, Crux, and Spektacular docs from their GitHub repos into docs/content/.
  *
  * Same single-sourcing model as scripts/sync-hive-docs.ts: the repos own the
  * markdown; this script pulls it at build time (prebuild) so the site never
@@ -118,6 +118,13 @@ export const PROJECTS: ProjectSync[] = [
       { source: "docs/credit-wall-api.md", target: "credit-wall-api.md" },
       { source: "docs/mcp-registry.md", target: "mcp-registry.md" },
     ],
+  },
+  {
+    project: "crux",
+    owner: SIBLING_OWNER,
+    repo: "crux",
+    branch: process.env.CRUX_DOCS_REF || "main",
+    files: [{ source: "README.md", target: "readme.md", required: true }],
   },
   {
     // Canonical site is https://spektacular.dev. The repo README and

@@ -16,7 +16,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
 const HIVE_DOCS_PATH = process.env.HIVE_DOCS_PATH
-const STATIC_PROJECTS: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'spektacular']
+const STATIC_PROJECTS: ProjectId[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'crux', 'spektacular']
 
 const INTEGRATIONS_DESCRIPTION =
   'Hive works with Claude Code, GitHub Copilot, Codex, Antigravity, IBM Bob, Goose, vLLM, llm-d and more.'
@@ -266,7 +266,7 @@ export function syncedSourceUrl(content: string): string | undefined {
 }
 
 function getProjectFromSlug(slug: string[]): { projectId: ProjectId | undefined; docSlug: string[] } {
-  const knownProjects: string[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'spektacular']
+  const knownProjects: string[] = ['hive', 'hotshot', 'pluk', 'rationguard', 'promptargs', 'dibs', 'crux', 'spektacular']
   
   if (slug.length > 0 && knownProjects.includes(slug[0])) {
     return {

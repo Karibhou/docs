@@ -68,7 +68,7 @@ jobs:
         run: npm run sync-hive-docs || echo "sync skipped (network unavailable); checking committed content"
 
       # Same for the sibling-project docs (hotshot, pluk, rationguard,
-      # promptargs, dibs, Spektacular): their synced pages carry internal
+      # promptargs, dibs, Crux, Spektacular): their synced pages carry internal
       # /docs/<project>/... links that the committed snapshot alone cannot gate.
       - name: Sync sibling docs
         run: npm run sync-sibling-docs || echo "sibling sync skipped (network unavailable); checking committed content"

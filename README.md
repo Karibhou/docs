@@ -15,21 +15,22 @@ Official documentation site for [Hive Commons](https://hivecommons.dev), served 
 - **[rationguard](https://github.com/hivecommons/rationguard)** — detect and rebut rationalization patterns in AI agent output
 - **[promptargs](https://github.com/hivecommons/promptargs)** — template expansion for AI prompts
 - **[dibs](https://github.com/hivecommons/dibs)** — claim ideas so contributors get credit when agents implement them
+- **[Crux](https://github.com/hivecommons/crux)** — standalone runtime for AI coding agents
 - **[Spektacular (Spek)](https://github.com/hivecommons/spektacular)** — spec-driven development for AI coding agents (canonical site: [spektacular.dev](https://spektacular.dev))
 
 ## How content is sourced
 
-Hive, hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs are
+Hive, hotshot, pluk, rationguard, promptargs, dibs, Crux, and Spektacular docs are
 **single-sourced from their repositories** and pulled at build time:
 
 - `scripts/sync-hive-docs.ts` pulls Hive docs from `hivecommons/hive` (`src/docs/`, branch `v5`;
   override with `HIVE_DOCS_OWNER` / `HIVE_DOCS_REPO` / `HIVE_DOCS_REF`).
-- `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, dibs, and Spektacular docs from their repos.
+- `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, dibs, Crux, and Spektacular docs from their repos.
   Spektacular also pulls its tutorials from `hivecommons/spektacular-website` (MDX, converted to Markdown by
   `scripts/mdx-to-markdown.ts`; override the ref with `SPEKTACULAR_WEBSITE_DOCS_REF`).
   Override the org for all sibling repos with `SIBLING_DOCS_OWNER` (default `hivecommons`), or the
   branch/ref for an individual project with `HOTSHOT_DOCS_REF`, `PLUK_DOCS_REF`,
-  `RATIONGUARD_DOCS_REF`, `PROMPTARGS_DOCS_REF`, `DIBS_DOCS_REF`, or `SPEKTACULAR_DOCS_REF`.
+  `RATIONGUARD_DOCS_REF`, `PROMPTARGS_DOCS_REF`, `DIBS_DOCS_REF`, `CRUX_DOCS_REF`, or `SPEKTACULAR_DOCS_REF`.
 
 Edit the canonical source in the project repository — not the synced copies under
 `docs/content/`. If a sync source is unreachable at build time, the build fails so

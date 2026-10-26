@@ -288,6 +288,7 @@ describe("PROJECT_FOR_NAV", () => {
       RATIONGUARD: "docs/rationguard",
       PROMPTARGS: "docs/promptargs",
       DIBS: "docs/dibs",
+      CRUX: "docs/crux",
       SPEKTACULAR: "docs/spektacular",
       GENERAL: "docs",
     });

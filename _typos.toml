@@ -9,6 +9,7 @@ extend-exclude = [
     "messages/",
     # Synced from the project repositories at build time (README "How content
     # is sourced"); fix spelling in the canonical source, not the copy.
+    "docs/content/crux/",
     "docs/content/dibs/",
     "docs/content/hive/",
     "docs/content/hotshot/",

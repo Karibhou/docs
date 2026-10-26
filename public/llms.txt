@@ -20,6 +20,7 @@ Hive Commons thanks Akamai (Linode), Oracle Cloud (OKE), Cloudflare, GitHub Copi
 - [rationguard](https://docs.hivecommons.dev/docs/rationguard/overview/introduction): detect and rebut rationalization patterns in AI agent output
 - [promptargs](https://docs.hivecommons.dev/docs/promptargs/overview/introduction): template expansion for AI prompts
 - [dibs](https://docs.hivecommons.dev/docs/dibs/overview/introduction): claim ideas so contributors get credit when agents implement them
+- [Crux](https://docs.hivecommons.dev/docs/crux/overview/introduction): standalone runtime for AI coding agents
 - [Spektacular (Spek)](https://docs.hivecommons.dev/docs/spektacular/overview/introduction): spec-driven development for AI coding agents
 
 ## Community

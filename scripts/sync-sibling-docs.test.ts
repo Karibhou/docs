@@ -12,6 +12,7 @@ const SIBLING_PROJECTS = [
   "rationguard",
   "promptargs",
   "dibs",
+  "crux",
   "spektacular",
 ];
 

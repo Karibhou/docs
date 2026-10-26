@@ -20,6 +20,8 @@ export function getContentPath(projectId: ProjectId): string {
       return path.join(process.cwd(), 'docs', 'content', 'promptargs')
     case 'dibs':
       return path.join(process.cwd(), 'docs', 'content', 'dibs')
+    case 'crux':
+      return path.join(process.cwd(), 'docs', 'content', 'crux')
     case 'spektacular':
       return path.join(process.cwd(), 'docs', 'content', 'spektacular')
     case 'hive':
@@ -41,6 +43,8 @@ export function getBasePath(projectId: ProjectId): string {
       return 'docs/promptargs'
     case 'dibs':
       return 'docs/dibs'
+    case 'crux':
+      return 'docs/crux'
     case 'spektacular':
       return 'docs/spektacular'
     case 'hive':
@@ -254,6 +258,16 @@ const NAV_STRUCTURE_DIBS: Array<{ title: string; items: NavItem[] }> = [
   }
 ]
 
+// Crux Navigation Structure
+const NAV_STRUCTURE_CRUX: Array<{ title: string; items: NavItem[] }> = [
+  {
+    title: 'Overview',
+    items: [
+      { 'Introduction': 'readme.md' },
+    ]
+  }
+]
+
 // Spektacular Navigation Structure (canonical site: https://spektacular.dev)
 // readme.md and knowledge-base.md are synced from hivecommons/spektacular; the
 // tutorials are converted from MDX in hivecommons/spektacular-website.
@@ -315,6 +329,8 @@ function getProjectNavStructure(projectId: ProjectId): Array<{ title: string; it
       return NAV_STRUCTURE_PROMPTARGS
     case 'dibs':
       return NAV_STRUCTURE_DIBS
+    case 'crux':
+      return NAV_STRUCTURE_CRUX
     case 'spektacular':
       return NAV_STRUCTURE_SPEKTACULAR
     case 'hive':

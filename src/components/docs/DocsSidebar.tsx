@@ -37,6 +37,7 @@ const PRIMARY_PROJECTS = [
   { id: 'rationguard', label: 'rationguard', href: '/docs/rationguard/overview/introduction' },
   { id: 'promptargs', label: 'promptargs', href: '/docs/promptargs/overview/introduction' },
   { id: 'dibs', label: 'dibs', href: '/docs/dibs/overview/introduction' },
+  { id: 'crux', label: 'Crux', href: '/docs/crux/overview/introduction' },
   { id: 'spektacular', label: 'Spektacular', href: '/docs/spektacular/overview/introduction' },
 ] as const;
 

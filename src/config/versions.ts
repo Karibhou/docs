@@ -1,5 +1,5 @@
 // Multi-project versions config for the Hive Commons docs site
-// Supports hive, hotshot, pluk, rationguard, promptargs, dibs, and spektacular with independent versioning
+// Supports hive, hotshot, pluk, rationguard, promptargs, dibs, crux, and spektacular with independent versioning
 //
 // Versioning Strategy:
 // - Each project has its own version scheme
@@ -24,6 +24,7 @@ export type ProjectId =
   | "pluk"
   | "rationguard"
   | "promptargs"
+  | "crux"
   | "dibs"
   | "spektacular";
 
@@ -113,6 +114,15 @@ const DIBS_VERSIONS: Record<string, VersionInfo> = {
   },
 };
 
+// crux versions
+const CRUX_VERSIONS: Record<string, VersionInfo> = {
+  latest: {
+    label: "main (Latest)",
+    branch: "main",
+    isDefault: true,
+  },
+};
+
 // spektacular versions (canonical site: https://spektacular.dev)
 const SPEKTACULAR_VERSIONS: Record<string, VersionInfo> = {
   latest: {
@@ -172,6 +182,14 @@ export const PROJECTS: Record<ProjectId, ProjectConfig> = {
     contentPath: "docs/content/dibs",
     versions: DIBS_VERSIONS,
   },
+  crux: {
+    id: "crux",
+    name: "Crux",
+    basePath: "crux",
+    currentVersion: "main",
+    contentPath: "docs/content/crux",
+    versions: CRUX_VERSIONS,
+  },
   spektacular: {
     id: "spektacular",
     name: "Spektacular",
@@ -198,6 +216,9 @@ export function getProjectFromPath(pathname: string): ProjectConfig {
   }
   if (pathname.startsWith("/docs/dibs")) {
     return PROJECTS.dibs;
+  }
+  if (pathname.startsWith("/docs/crux")) {
+    return PROJECTS.crux;
   }
   if (pathname.startsWith("/docs/spektacular")) {
     return PROJECTS.spektacular;

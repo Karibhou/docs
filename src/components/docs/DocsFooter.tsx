@@ -299,6 +299,18 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
+                    href="/docs/crux/overview/introduction"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    Crux
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/docs/spektacular/overview/introduction"
                     className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
                       isDark

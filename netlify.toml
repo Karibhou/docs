@@ -114,6 +114,16 @@
   status = 302
 
 [[redirects]]
+  from = "/docs/crux"
+  to = "/docs/crux/overview/introduction"
+  status = 302
+
+[[redirects]]
+  from = "/docs/crux/"
+  to = "/docs/crux/overview/introduction"
+  status = 302
+
+[[redirects]]
   from = "/docs/dibs"
   to = "/docs/dibs/overview/introduction"
   status = 302

@@ -1,0 +1,1 @@
+- Added a Crux section to the docs site (`/docs/crux/`), synced from `hivecommons/crux`, with sidebar, footer, llms.txt and project-list entries (hivecommons/docs#489).
