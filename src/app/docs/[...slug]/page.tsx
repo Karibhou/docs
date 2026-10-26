@@ -5,6 +5,7 @@ import { useMDXComponents as getMDXComponents } from '../../../../mdx-components
 import { convertHtmlScriptsToJsxComments } from '@/lib/transformMdx'
 import { sanitizeHtmlForMdx, removeCommentPatterns } from '@/lib/sanitizeHtml'
 import { rewriteRelativeImagePaths } from '@/lib/rewriteImagePaths'
+import { rewriteRelativeDocLinks } from '@/lib/rewriteDocLinks'
 import { remarkStripMdxJs } from '@/lib/remarkStripMdxJs'
 import { buildPageMap, docsContentPath, getContentPath, isGeneralSectionFile } from '../page-map'
 import { CURRENT_VERSION, type ProjectId } from '@/config/versions'
@@ -219,7 +220,7 @@ async function getPageContent(slug: string[], projectId?: ProjectId): Promise<Pa
 // (next.config.ts) proxies `/docs-images/<path>` → `/api/docs-image/<path>` which
 // serves files from docs/content/.  We compute the directory of the source file
 // relative to docs/content/ and use it as the base for the rewritten URL.
-function rewriteImagePaths(content: string, filePath: string, projectId: ProjectId | undefined): string {
+function sourceBaseDir(filePath: string, projectId: ProjectId | undefined): string {
   // The content root for this project (e.g. docs/content/console for projectId='console').
   const contentRoot = projectId ? getContentPath(projectId) : docsContentPath
 
@@ -229,9 +230,11 @@ function rewriteImagePaths(content: string, filePath: string, projectId: Project
   // Directory of the source file, relative to docs/content/.
   const fullRelPath = contentPrefix ? `${contentPrefix}/${filePath}` : filePath
   const fileDir = path.posix.dirname(fullRelPath)
-  const baseDir = fileDir === '.' ? '' : fileDir
+  return fileDir === '.' ? '' : fileDir
+}
 
-  return rewriteRelativeImagePaths(content, baseDir)
+function rewriteImagePaths(content: string, filePath: string, projectId: ProjectId | undefined): string {
+  return rewriteRelativeImagePaths(content, sourceBaseDir(filePath, projectId))
 }
 
 async function buildContent(slug: string[], projectId?: ProjectId): Promise<PageContent | null> {
@@ -242,6 +245,8 @@ async function buildContent(slug: string[], projectId?: ProjectId): Promise<Page
   let content = page.content
   content = replaceTemplateVariables(content)
   content = rewriteImagePaths(content, page.filePath, projectId)
+  // Relative doc links 404 at nav-alias routes; make them root-absolute.
+  content = rewriteRelativeDocLinks(content, sourceBaseDir(page.filePath, projectId))
   content = removeCommentPatterns(content)
   content = sanitizeHtmlForMdx(content)
 
