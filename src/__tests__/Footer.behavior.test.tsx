@@ -216,4 +216,18 @@ describe("back-to-top button", () => {
     fireEvent.click(button());
     expect(scrollToSpy).toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
   });
+
+  it("removes scroll and click listeners on unmount", () => {
+    const windowRemoveSpy = vi.spyOn(window, "removeEventListener");
+    const { unmount } = render(<Footer />);
+    const buttonRemoveSpy = vi.spyOn(button(), "removeEventListener");
+
+    unmount();
+
+    expect(windowRemoveSpy).toHaveBeenCalledWith(
+      "scroll",
+      expect.any(Function)
+    );
+    expect(buttonRemoveSpy).toHaveBeenCalledWith("click", expect.any(Function));
+  });
 });

@@ -35,20 +35,27 @@ export default function Footer() {
         }
       };
 
-      window.addEventListener("scroll", toggleButton);
-
-      backToTopButton.addEventListener("click", () => {
+      const handleClick = () => {
         window.scrollTo({
           top: 0,
           behavior: "smooth",
         });
-      });
+      };
+
+      window.addEventListener("scroll", toggleButton);
+      backToTopButton.addEventListener("click", handleClick);
 
       // Initial check
       toggleButton();
+
+      // Cleanup function to prevent memory leaks
+      return () => {
+        window.removeEventListener("scroll", toggleButton);
+        backToTopButton.removeEventListener("click", handleClick);
+      };
     };
 
-    initBackToTop();
+    return initBackToTop();
   }, []);
 
   return (

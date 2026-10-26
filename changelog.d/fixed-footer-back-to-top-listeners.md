@@ -1,0 +1,1 @@
+- Footer back-to-top effect now removes its scroll/click listeners on unmount.
