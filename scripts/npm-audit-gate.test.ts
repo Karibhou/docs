@@ -96,10 +96,8 @@ describe("collectAdvisories", () => {
     ]);
   });
 
-  it("keeps one entry when the same GHSA is a root advisory under two packages", () => {
-    // npm lists a root advisory object under every package name it applies
-    // to (e.g. a renamed/forked package); the gate must count it once and
-    // attribute it to the first package seen so an exception can target it.
+  it("keeps each package when the same GHSA is a root advisory under two packages", () => {
+    // Each affected package must retain its own severity and exception scope.
     const advs = collectAdvisories({
       vulnerabilities: {
         "pkg-a": {
@@ -114,12 +112,27 @@ describe("collectAdvisories", () => {
         },
       },
     });
-    expect(advs).toHaveLength(1);
-    expect(advs[0]).toMatchObject({
-      id: "GHSA-VFJ7-8CJW-P6XM",
-      package: "pkg-a",
-      severity: "high",
-    });
+    expect(advs).toEqual([
+      expect.objectContaining({
+        id: "GHSA-VFJ7-8CJW-P6XM",
+        package: "pkg-a",
+        severity: "high",
+      }),
+      expect.objectContaining({
+        id: "GHSA-VFJ7-8CJW-P6XM",
+        package: "pkg-b",
+        severity: "critical",
+      }),
+    ]);
+  });
+
+  it("deduplicates repeated advisory objects for the same package", () => {
+    const via = { name: "pkg-a", url: BRACES_URL, severity: "high" };
+    expect(
+      collectAdvisories({
+        vulnerabilities: { "pkg-a": { via: [via, via] } },
+      })
+    ).toHaveLength(1);
   });
 
   it("falls back to npm-unknown, the parent severity, then info", () => {
@@ -181,6 +194,35 @@ describe("evaluateAudit", () => {
     expect(r.blocking.map(a => a.id)).toEqual(["GHSA-VFJ7-8CJW-P6XM"]);
     expect(r.unused).toHaveLength(1);
   });
+
+  it.each(["moderate", "high"])(
+    "keeps the second package blocking with a %s first package and scoped exception",
+    severity => {
+      const report = {
+        vulnerabilities: {
+          "pkg-a": { via: [{ name: "pkg-a", url: BRACES_URL, severity }] },
+          "pkg-b": {
+            via: [{ name: "pkg-b", url: BRACES_URL, severity: "critical" }],
+          },
+        },
+      };
+      const r = evaluateAudit(
+        report,
+        [exception({ package: "pkg-a" })],
+        "high",
+        NOW
+      );
+      expect(r.blocking).toEqual([
+        expect.objectContaining({ package: "pkg-b", severity: "critical" }),
+      ]);
+      expect(r.excepted.map(a => a.package)).toEqual(
+        severity === "high" ? ["pkg-a"] : []
+      );
+      expect(r.belowLevel.map(a => a.package)).toEqual(
+        severity === "moderate" ? ["pkg-a"] : []
+      );
+    }
+  );
 
   it("reports expired exceptions and keeps the advisory blocking", () => {
     const r = evaluateAudit(

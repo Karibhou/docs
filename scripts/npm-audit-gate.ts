@@ -91,6 +91,7 @@ export function ghsaIdFromUrl(url: string | undefined): string | null {
  * Collect root advisories from an `npm audit --json` report. Packages that are
  * only vulnerable because they depend on a vulnerable package carry string
  * entries in `via`; those are derived and are covered by their root advisory.
+ * Deduplicate by advisory id and package so each affected package is evaluated.
  */
 export function collectAdvisories(report: AuditReport): Advisory[] {
   const seen = new Map<string, Advisory>();
@@ -98,10 +99,12 @@ export function collectAdvisories(report: AuditReport): Advisory[] {
     for (const via of vuln.via ?? []) {
       if (typeof via === "string") continue;
       const id = ghsaIdFromUrl(via.url) ?? `npm-${via.source ?? "unknown"}`;
-      if (seen.has(id)) continue;
-      seen.set(id, {
+      const packageName = via.name ?? vuln.name ?? pkgName;
+      const key = `${id}:${packageName}`;
+      if (seen.has(key)) continue;
+      seen.set(key, {
         id,
-        package: via.name ?? vuln.name ?? pkgName,
+        package: packageName,
         severity: (via.severity ?? vuln.severity ?? "info").toLowerCase(),
         title: via.title ?? "",
         url: via.url ?? "",
