@@ -85,6 +85,18 @@ describe("rewriteRelativeDocLinks", () => {
     );
   });
 
+  it("rewrites reference-style definitions without a title", () => {
+    expect(rewriteRelativeDocLinks("[id]: architecture.md", "hive")).toBe(
+      "[id]: /docs/hive/architecture"
+    );
+  });
+
+  it("leaves non-doc reference-style definitions unchanged", () => {
+    same("[ext]: https://example.com/page");
+    same("[abs]: /docs/hive/architecture");
+    same("[img]: diagram.png");
+  });
+
   it("preserves CommonMark titles", () => {
     expect(rewriteRelativeDocLinks('[x](x.md "Title")', "hive")).toBe(
       '[x](/docs/hive/x "Title")'
