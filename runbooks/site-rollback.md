@@ -10,8 +10,13 @@ or missing synced content, or broken navigation. The site is built by Netlify
 2. Find the first bad deploy in the Netlify deploy list and the commit it built.
 3. Decide whether the cause is site code in this repo or content synced at
    build time from a project repo (hive, hotshot, pluk, rationguard,
-   promptargs, dibs). The `prebuild` script falls back to committed content
-   when a sync is unavailable, so a sync failure alone does not fail the build.
+   promptargs, dibs, Crux, Spektacular). Every sync step in `prebuild` runs
+   through `scripts/run-sync-step.ts`, so a failed sync (an unreachable project
+   repo) **fails the build** — a red deploy may be caused by a broken sync
+   source, not only by site code. Only the meeting-recordings refresh always
+   falls back to committed data. `DOCS_SYNC_OPTIONAL=1` keeps committed
+   content but is local/offline only; CI and Netlify always use the strict
+   behavior.
 
 ## 2. Mitigate: restore the last good deploy
 

@@ -1,0 +1,1 @@
+- `runbooks/site-rollback.md`: corrected step 3 to match `scripts/run-sync-step.ts` — sync failures fail the build (unless `DOCS_SYNC_OPTIONAL=1`, local-only); added Crux and Spektacular to the synced-project list (hivecommons/docs#493).
