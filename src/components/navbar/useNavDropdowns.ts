@@ -24,6 +24,13 @@ export function useNavDropdowns() {
   useEffect(() => {
     const cleanups: (() => void)[] = [];
 
+    const clearHideTimeout = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+
     const dropdownContainers =
       document.querySelectorAll<HTMLElement>("[data-dropdown]");
 
@@ -31,13 +38,6 @@ export function useNavDropdowns() {
       const menu = container.querySelector<HTMLElement>("[data-dropdown-menu]");
 
       if (!menu) return;
-
-      const clearHideTimeout = () => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-      };
 
       const showMenu = () => {
         clearHideTimeout();
@@ -180,10 +180,7 @@ export function useNavDropdowns() {
       };
 
       const handleMouseLeave = () => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
+        clearHideTimeout();
         timeoutRef.current = setTimeout(() => {
           const langButton = langSwitcher.querySelector("button");
           const dropdown = document.querySelector('[role="listbox"]');

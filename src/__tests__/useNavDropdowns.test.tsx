@@ -137,6 +137,31 @@ describe("useNavDropdowns", () => {
     expect(menu.style.display).toBe("block");
   });
 
+  it.each(["container", "button", "menu"] as const)(
+    "cancels both leave events when re-entering the %s",
+    target => {
+      const dropdown = buildDropdown("community");
+      const { result } = renderHook(() => useNavDropdowns());
+
+      mouseEnter(dropdown.container);
+      mouseEnter(dropdown.menu);
+      mouseLeave(dropdown.menu);
+      mouseLeave(dropdown.container);
+      advance(150);
+      mouseEnter(dropdown[target]);
+      advance(1000);
+
+      expect(dropdown.menu.style.display).toBe("block");
+      expect(result.current.isDropdownOpen).toBe(true);
+      expect(result.current.isCommunityOpen).toBe(true);
+
+      mouseLeave(dropdown.container);
+      advance(300);
+      expect(dropdown.menu.style.display).toBe("none");
+      expect(result.current.isDropdownOpen).toBe(false);
+    }
+  );
+
   it("dispatches close-lang-switcher when a dropdown opens", () => {
     const { container } = buildDropdown("contribute");
     const seen = vi.fn();
@@ -364,6 +389,33 @@ describe("useNavDropdowns", () => {
       advance(300);
       expect(click).toHaveBeenCalledTimes(2);
     });
+
+    it.each(["wrap", "listbox"] as const)(
+      "cancels both language leave events when re-entering the %s",
+      async target => {
+        const { wrap, button } = buildLangSwitcher();
+        const click = vi.spyOn(button, "click");
+        const { result } = renderHook(() => useNavDropdowns());
+
+        mouseEnter(wrap);
+        const listbox = appendListbox();
+        await flushObservers();
+        mouseEnter(listbox);
+        mouseLeave(listbox);
+        mouseLeave(wrap);
+        advance(150);
+        mouseEnter(target === "wrap" ? wrap : listbox);
+        advance(1000);
+
+        expect(click).toHaveBeenCalledTimes(1);
+        expect(result.current.isDropdownOpen).toBe(true);
+
+        mouseLeave(wrap);
+        advance(300);
+        expect(click).toHaveBeenCalledTimes(2);
+        expect(result.current.isDropdownOpen).toBe(false);
+      }
+    );
 
     it("wires a listbox that is itself the added node", async () => {
       const { wrap, button } = buildLangSwitcher();
