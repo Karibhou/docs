@@ -235,6 +235,7 @@ describe("SlugLayout", () => {
         ["rationguard", "rationguard"],
         ["promptargs", "promptargs"],
         ["dibs", "dibs"],
+        ["crux", "crux"],
         ["spektacular", "spektacular"],
         ["anything-else", "hive"],
       ] as const) {
@@ -277,6 +278,60 @@ describe("SlugLayout", () => {
       expect(hasMeta(pageMap)).toBe(false);
     } finally {
       vi.doUnmock("@/components/docs/SidebarContainer");
+      vi.resetModules();
+    }
+  });
+
+  it("strips raw `kind: 'Meta'` nodes, including nested ones, before they reach the sidebar", async () => {
+    // buildPageMap() returns nextra-normalized nodes (no `kind`), so the
+    // raw-Meta arm of isMetaNode is only reachable with a hand-built map.
+    // The raw nodes carry a `name` so the normalized arm (data + no name/
+    // route) cannot strip them: only the `kind === 'Meta'` check can.
+    vi.resetModules();
+    const captured: Array<{ pageMap: unknown[] }> = [];
+    vi.doMock("@/components/docs/SidebarContainer", () => ({
+      SidebarContainer: (props: { pageMap: unknown[] }) => {
+        captured.push(props);
+        return null;
+      },
+    }));
+    vi.doMock("../app/docs/page-map", () => ({
+      buildPageMap: () => ({
+        pageMap: [
+          { kind: "Meta", name: "_meta", data: { index: "Home" } },
+          { name: "index", route: "/docs/hive" },
+          {
+            name: "guide",
+            route: "/docs/hive/guide",
+            children: [
+              { kind: "Meta", name: "_meta", data: { intro: "Intro" } },
+              { data: { nested: "Nested" } },
+              { name: "intro", route: "/docs/hive/guide/intro" },
+            ],
+          },
+        ],
+      }),
+    }));
+    try {
+      const { default: SlugLayout } =
+        await import("../app/docs/[...slug]/layout");
+      renderToStaticMarkup(
+        await SlugLayout({
+          children: null,
+          params: Promise.resolve({ slug: ["hive", "guide"] }),
+        })
+      );
+      expect(captured.at(-1)?.pageMap).toEqual([
+        { name: "index", route: "/docs/hive" },
+        {
+          name: "guide",
+          route: "/docs/hive/guide",
+          children: [{ name: "intro", route: "/docs/hive/guide/intro" }],
+        },
+      ]);
+    } finally {
+      vi.doUnmock("@/components/docs/SidebarContainer");
+      vi.doUnmock("../app/docs/page-map");
       vi.resetModules();
     }
   });
