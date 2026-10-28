@@ -50,7 +50,7 @@
 # CI checks Bot-authored PR heads against this exact rule (#439). Add new bot
 # lanes here when that gate fails; prefixes also match human-authored branches.
 [context.deploy-preview]
-  ignore = "case \"${HEAD:-$BRANCH}\" in arch/*|guide/*|scanner/*|quality/*|sec/*|outreach/*|ops/*|automation/*|hive/*|dependabot/*|reviewer/*|feat/*|fix/*|generated/*|docs-rot-*) exit 0;; *) exit 1;; esac"
+  ignore = "case \"${HEAD:-$BRANCH}\" in arch/*|guide/*|scanner/*|quality/*|sec/*|outreach/*|ops/*|automation/*|hive/*|dependabot/*|reviewer/*|feat/*|fix/*|generated/*|bot/*|docs-rot-*) exit 0;; *) exit 1;; esac"
 
 # Enable branch deploys for documentation versioning
 # Version branches follow the pattern: docs/{version}

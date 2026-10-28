@@ -39,6 +39,7 @@ describe("deploy-preview drift gate", () => {
     "feat/topic",
     "fix/topic",
     "generated/topic",
+    "bot/hive-docs-refresh",
     "docs-rot-weekly",
   ])("accepts a Bot PR covered by the real rule: %s", head => {
     expect(main({ PR_AUTHOR_TYPE: "Bot", PR_HEAD_REF: head })).toBe(0);
