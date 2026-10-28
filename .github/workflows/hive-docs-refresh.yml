@@ -1,0 +1,86 @@
+name: Refresh Hive docs mirror
+
+# The committed mirrors under docs/content/ (hive, crux, dibs, hotshot, pluk,
+# promptargs, rationguard, spektacular) drift from their upstream repos between
+# hand-run resyncs (#496). This mirrors meeting-recordings-refresh.yml: resync
+# daily and open a signed PR when anything changed.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+
+env:
+  REFRESH_BRANCH: bot/hive-docs-refresh
+  # Workflows whose jobs are the required status checks on main. Each must
+  # declare `on: workflow_dispatch` so this run can trigger them on the PR
+  # branch (see "Trigger required checks" below).
+  REQUIRED_CHECK_WORKFLOWS: build.yml typecheck.yml vitest.yml npm-audit.yml
+
+jobs:
+  refresh:
+    permissions:
+      actions: write # dispatch the CI workflows on the PR branch
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Check out the live tip of main rather than github.sha, which is
+          # stale if the run sat in the runner queue.
+          ref: main
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Both scripts fetch from hivecommons/hive@v5 and the sibling repos over
+      # raw.githubusercontent.com; they fail (rather than silently keep stale
+      # content) if upstream is unreachable, so a bad run opens no PR.
+      - run: npm run sync-hive-docs
+      - run: npm run sync-sibling-docs
+      - name: Open PR with resynced mirror
+        id: pr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          # Pushes and PRs made with GITHUB_TOKEN never create pull_request
+          # runs; the step below dispatches the CI workflows on the PR branch
+          # instead (same approach as meeting-recordings-refresh.yml).
+          token: ${{ secrets.GITHUB_TOKEN }}
+          signoff: true
+          branch: ${{ env.REFRESH_BRANCH }}
+          delete-branch: true
+          add-paths: docs/content
+          commit-message: "📖 docs: resync the Hive docs mirror from hive@v5"
+          title: "📖 docs: resync the Hive docs mirror from hive@v5"
+          body: |
+            Automated daily resync of the committed mirrors under `docs/content/`
+            via `npm run sync-hive-docs` and `npm run sync-sibling-docs`.
+
+            This PR was opened with `GITHUB_TOKEN`, so GitHub does not start
+            `pull_request` workflows for it. The refresh run instead dispatches
+            Build, TypeScript & Lint Check, Vitest and npm audit on the PR
+            branch; their check-runs land on the head SHA as usual.
+
+            Refresh run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Refs #496
+
+            The hive sweep merges this PR once CI is green.
+      - name: Trigger required checks on the PR branch
+        if: steps.pr.outputs.pull-request-operation == 'created' || steps.pr.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.pr.outputs.pull-request-head-sha }}
+        run: |
+          set -euo pipefail
+          echo "Dispatching required checks on $REFRESH_BRANCH @ $HEAD_SHA"
+          for wf in $REQUIRED_CHECK_WORKFLOWS; do
+            gh workflow run "$wf" --repo "$GITHUB_REPOSITORY" --ref "$REFRESH_BRANCH"
+            echo "  dispatched $wf"
+          done
