@@ -149,7 +149,7 @@ A blank looks like this: `{{name}}`
 
 A blank with a default looks like this: `{{name=hello}}` (promptargs extension)
 
-Padding inside the braces is fine too — `{{ name }}` and `{{ name=hello }}` mean the same thing.
+Padding inside the braces is fine too — `{{ name }}` and `{{ name=hello }}` mean the same thing, and so does `{{ name = hello }}` (padding around `=` is not part of the default).
 
 Names may use letters, digits, `_` and `-` (`{{file-name}}`). Dotted names such as `{{repo.owner}}` are rejected with an error — use `{{repo_owner}}`; the switch names `no-interactive`, `cross`, `json`, `status` and `help` are also rejected, as they are reserved for CLI switches. Likewise, the template file names `help`, `env`, `ui`, `init`, `list` and `show` are reserved for the subcommands of the same name; such a template is listed as unreachable by `promptargs list` (and `show` warns), because the subcommand always wins.
 
@@ -234,7 +234,10 @@ Status lines showing iteration progress go to stderr:
 | Syntax | What it does |
 |--------|-------------|
 | `--file=a.go,b.go,c.go` | Comma-separated list |
+| `--expected="returns 200\, not 500"` | `\,` is a literal comma: one value, no fan-out |
+| `--dir='C:\out\\,D:\out'` | `\\,` is a literal backslash then a separator: two values `C:\out\` and `D:\out` |
 | `--file="src/*.go"` | Glob pattern (expands to matching files) |
+| `--file="src/**/*.go"` | Recursive glob (`**` matches any depth) |
 | `--file=@list.txt` | Reads one value per line from a file |
 
 ### Multiple arrays: zip vs cross-product
@@ -356,7 +359,7 @@ In the **Builder UI** (`promptargs ui`), click "Show terminal env" to see all av
 
 Common useful env vars: `NODE_ENV`, `AWS_REGION`, `CI`, `USER`, `EDITOR`, `PATH`, `SHELL`.
 
-Credential-looking names are intentionally **excluded** from auto-detection: anything containing `TOKEN`, `SECRET`, `PASSWORD`/`PASSWD`/`PASSPHRASE`, `CREDENTIAL`, `API_KEY`/`ACCESS_KEY`/`PRIVATE_KEY`, `BEARER`, `COOKIE`, `WEBHOOK`, `JWT`, `HMAC`, `OAUTH`, `CONNECTION_STRING`, or the `_`-delimited words `AUTH`, `KEY`/`KEYS`, `PWD`, `PAT`, `PASS`, `DSN` (so `GITHUB_TOKEN`, `SIGNING_KEY`, `MYSQL_PWD`, `GITHUB_PAT` and `SLACK_WEBHOOK_URL` are all refused, while `PATH`, `PWD`, `KEYBOARD` and `AUTHOR` still work). Credential-**shaped** values are excluded whatever the name: URLs with a password in them (`postgres://user:pass@host/db`), PEM blocks, JWTs, and well-known token prefixes (`ghp_`, `github_pat_`, `glpat-`, `sk-`, `xoxb-`, `AKIA…`, `npm_…`, …). A repo-controlled template can therefore never expand `{{GITHUB_TOKEN}}` or `{{DATABASE_URL}}` into a secret, even though an explicit `--flag=value` can still pass any value you choose. This also applies to the Builder UI's "Show terminal env" list.
+Credential-looking names are intentionally **excluded** from auto-detection: anything containing `TOKEN`, `SECRET`, `PASSWORD`/`PASSWD`/`PASSPHRASE`, `CREDENTIAL`/`CREDENTIALS`/`CREDS`, `API_KEY`/`ACCESS_KEY`/`PRIVATE_KEY`, `BEARER`, `COOKIE`, `WEBHOOK`, `JWT`, `HMAC`, `OAUTH`, `CONNECTION_STRING`, or the `_`-delimited words `AUTH`, `KEY`/`KEYS`, `PWD`, `PAT`, `PASS`, `DSN` (so `GITHUB_TOKEN`, `SIGNING_KEY`, `MYSQL_PWD`, `GITHUB_PAT` and `SLACK_WEBHOOK_URL` are all refused, while `PATH`, `PWD`, `KEYBOARD` and `AUTHOR` still work). Credential-**shaped** values are excluded whatever the name: URLs with a password in them (`postgres://user:pass@host/db`), PEM blocks, JWTs, and well-known token prefixes (`ghp_`, `github_pat_`, `glpat-`, `sk-`, `xoxb-`, `AKIA…`, `npm_…`, `hf_`, `pypi-`, `dop_v1_`, `lin_api_`, `shpat_`, `SG.`, `dapi`, `glc_`, `ya29.`, …). A repo-controlled template can therefore never expand `{{GITHUB_TOKEN}}` or `{{DATABASE_URL}}` into a secret, even though an explicit `--flag=value` can still pass any value you choose. This also applies to the Builder UI's "Show terminal env" list.
 
 ### Priority
 
@@ -531,7 +534,7 @@ If you installed the skill (see [Install](#as-an-agent-skill)), use it directly 
 | `--no-interactive` | Skip questions, use defaults only |
 | `--cross` | Cross-product mode (all combinations) |
 | `--json` | Output as JSON |
-| `--status` | Output status line only |
+| `--status` | Output status line only (never prompts; implies `--no-interactive`) |
 | `... \| claude -p "do this"` | Pipe to Claude |
 | `... \| goose run` | Pipe to Goose |
 
@@ -554,4 +557,4 @@ promptargs is part of [Hive Commons](https://hivecommons.dev), a family of tools
 
 Apache-2.0
 
-Pirate flag icon: [Twemoji](https://twemoji.twitter.com/), [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Pirate flag icon: [Twemoji](https://github.com/twitter/twemoji), [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).

@@ -1,0 +1,35 @@
+> **Synced from dibs.** This page is pulled from [hivecommons/dibs@main](https://github.com/hivecommons/dibs/blob/main/ROADMAP.md) during the docs build. Edit the canonical source in the dibs repository.
+
+# Dibs Roadmap
+
+Dibs is a marketplace for turning public ideas into claimable, settleable work.
+This roadmap gives maintainers, ideators, and adopters a shared view of where
+the project is headed next.
+
+## Recently shipped
+
+- End-to-end ideation, matching, and settlement flows for GitHub issue-backed
+  work.
+- Intake support for common document formats with bounded PDF extraction and
+  malformed-input recovery.
+- Repository registry, credit-wall mechanics, notifications, and guided server
+  flows covered by automated tests.
+
+## Near term
+
+1. **Trust and abuse controls:** improve spam resistance for public idea intake,
+   including clearer moderation states and rate/quality signals for ideators.
+   See the [proposed idea-intake trust design](https://github.com/hivecommons/dibs/blob/main/docs/idea-intake-trust.md);
+   implementation follows in separate issues.
+2. **Forge and repo coverage:** define what it takes to support non-GitHub issue
+   targets while growing the repository registry beyond hive-managed projects.
+3. **Credit-wall integrations:** the [consumer API reference](/docs/dibs/credit-wall-api)
+   documents eligibility, settlement state, rewards, and current experimental
+   stability levels. Next, define compatibility guarantees and stabilize the
+   downstream contract.
+
+## Deferred / non-goals
+
+- Custodial payments or token issuance.
+- Replacing project maintainers' review and merge authority.
+- Accepting arbitrary unauthenticated uploads or anonymous settlement claims.

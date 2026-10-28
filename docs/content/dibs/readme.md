@@ -98,7 +98,7 @@ fallbacks for every `DIBS_*` variable.
 
 ### Roadmap
 
-See [ROADMAP.md](https://github.com/hivecommons/dibs/blob/main/ROADMAP.md) for what is planned next. Delivery history:
+See [ROADMAP.md](/docs/dibs/roadmap) for what is planned next. Delivery history:
 
 - **Wave 1 (done):** scaffold, hub auth bridge, idea CRUD, repo registry.
 - **Wave 2 (done):** LLM matching + TLDRs, swipe UX ("offer" / "pass"), issue settlement (credited GitHub issues), notifications.
@@ -135,13 +135,19 @@ Everything else requires a hive hub session; signed-in ideators additionally
 get `GET /api/me/stats` (ideas posted / offered / accepted / settled).
 
 For response schemas, eligibility/privacy rules, settlement actions, rewards,
-and stability levels, see the [credit-wall consumer API](https://github.com/hivecommons/dibs/blob/main/docs/credit-wall-api.md).
+and stability levels, see the [credit-wall consumer API](/docs/dibs/credit-wall-api).
 
 ## Submit ideas from your agent
 
 Dibs exposes a stateless Streamable HTTP MCP endpoint at
-`https://dibs.hivecommons.dev/mcp`, so Claude Code, Copilot CLI, Cursor, and
-other MCP clients can submit ideas without leaving the agent.
+`https://dibs.hivecommons.dev/mcp`, so Claude Code, Copilot CLI, Cursor,
+Gemini CLI, Codex, and other MCP clients can submit ideas without leaving the agent.
+
+Dibs is listed in the official MCP Registry as `dev.hivecommons/dibs`
+([registry entry](https://registry.modelcontextprotocol.io/v0.1/servers?search=dev.hivecommons%2Fdibs)).
+Search for that full name: a plain `dibs` search also returns the unrelated
+1stDibs marketplace. How the listing is published is covered in
+[MCP Registry publishing](/docs/dibs/mcp-registry).
 
 Available tools:
 
@@ -218,6 +224,49 @@ Cursor reads MCP configuration from `~/.cursor/mcp.json` (global) or `.cursor/mc
 
 Cursor supports `${env:NAME}` interpolation in headers, so you can set `DIBS_TOKEN` as an environment variable rather than storing it in the file. For details, see the [Cursor MCP documentation](https://cursor.com/docs/mcp).
 
+### Gemini CLI
+
+```sh
+gemini mcp add --scope user --transport http \
+  --header "Authorization: Bearer <your-token-or-hive_hub_user-cookie-value>" \
+  dibs https://dibs.hivecommons.dev/mcp
+```
+
+This adds the server to `~/.gemini/settings.json`; drop `--scope user` to add
+it to the project's `.gemini/settings.json` instead. For details, see the
+[Gemini CLI MCP documentation](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md).
+
+### Codex
+
+Codex (CLI and IDE extension) reads MCP servers from `~/.codex/config.toml`.
+`bearer_token_env_var` keeps the token out of the file and sends it as
+`Authorization: Bearer <token>`:
+
+```toml
+[mcp_servers.dibs]
+url = "https://dibs.hivecommons.dev/mcp"
+bearer_token_env_var = "DIBS_TOKEN"
+```
+
+Then `export DIBS_TOKEN=<your-token-or-hive_hub_user-cookie-value>` before
+starting Codex. For details, see the [Codex MCP documentation](https://developers.openai.com/codex/mcp).
+
+### Generic MCP JSON
+
+```json
+{
+  "mcpServers": {
+    "dibs": {
+      "type": "http",
+      "url": "https://dibs.hivecommons.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-token-or-hive_hub_user-cookie-value>"
+      }
+    }
+  }
+}
+```
+
 ## Recall ideas you never acted on
 
 Dibs ships an MCP prompt, `recall_ideas`, for the ideas that never made it to
@@ -239,25 +288,9 @@ In Claude Code and Claude Desktop the prompt appears as a slash command once
 the connector is added. Clients that do not surface prompts in their UI can
 still call `prompts/get` directly.
 
-### Generic MCP JSON
-
-```json
-{
-  "mcpServers": {
-    "dibs": {
-      "type": "http",
-      "url": "https://dibs.hivecommons.dev/mcp",
-      "headers": {
-        "Authorization": "Bearer <your-token-or-hive_hub_user-cookie-value>"
-      }
-    }
-  }
-}
-```
-
 ## Operations and further reading
 
-- [MCP Registry publishing](https://github.com/hivecommons/dibs/blob/main/docs/mcp-registry.md): listing manifest and operator steps for DNS authentication, publication, and verification.
+- [MCP Registry publishing](/docs/dibs/mcp-registry): listing manifest and operator steps for DNS authentication, publication, and verification.
 - [Runbooks](https://github.com/hivecommons/dibs/blob/main/runbooks/): [incident response](https://github.com/hivecommons/dibs/blob/main/runbooks/incident-response.md), [release rollback](https://github.com/hivecommons/dibs/blob/main/runbooks/release-rollback.md), [data recovery](https://github.com/hivecommons/dibs/blob/main/runbooks/data-recovery.md), [SLOs](https://github.com/hivecommons/dibs/blob/main/runbooks/slo.md), and a [postmortem template](https://github.com/hivecommons/dibs/blob/main/runbooks/postmortem-template.md).
 - [CONTRIBUTING.md](https://github.com/hivecommons/dibs/blob/main/CONTRIBUTING.md): DCO sign-off, CI requirements, and code conventions.
 - [Idea intake trust and abuse controls](https://github.com/hivecommons/dibs/blob/main/docs/idea-intake-trust.md): a proposed design, not yet implemented.
@@ -304,6 +337,16 @@ exit 0:
 docker build --build-arg GIT_HASH="$(git rev-parse HEAD)" -t dibs:smoke .
 hack/smoke.sh dibs:smoke "$(git rev-parse HEAD)"
 ```
+
+## Contributing & Community
+
+Dibs is part of [Hive Commons](https://hivecommons.dev), a family of tools for working with AI agents.
+
+- Want to contribute? See [CONTRIBUTING.md](https://github.com/hivecommons/dibs/blob/main/CONTRIBUTING.md) for DCO sign-off, the CI and coverage gates, and code conventions.
+- Found a bug? Open a [bug report](https://github.com/hivecommons/dibs/issues/new?template=bug_report.yml). Have an idea for Dibs itself? Open a [feature request](https://github.com/hivecommons/dibs/issues/new?template=feature_request.yml).
+- Reporting a security vulnerability? Follow [SECURITY.md](https://github.com/hivecommons/dibs/blob/main/SECURITY.md) to report it privately, not through public issues.
+- Questions? Join the [Hive Commons Discord](https://hivecommons.dev/discord).
+- Please follow the [Hive Commons Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md).
 
 ## License
 

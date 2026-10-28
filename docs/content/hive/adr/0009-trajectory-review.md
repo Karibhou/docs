@@ -19,8 +19,8 @@ Run a periodic trajectory-review lane from the governor tick. The lane snapshots
 running, non-exempt agents with their assigned intent and recent transcript,
 sends a bounded transcript tail to a second model through the existing
 OpenAI-compatible/LiteLLM endpoint, and asks for a compact JSON verdict
-([reviewer](https://github.com/hivecommons/hive/blob/v5/src/pkg/trajectory/trajectory.go),
-[lane](https://github.com/hivecommons/hive/blob/v5/src/pkg/trajectory/lane.go)). On divergence, the configured response is
+([reviewer](https://github.com/hivecommons/hive/blob/v5/src/crux/trajectory/trajectory.go),
+[lane](https://github.com/hivecommons/hive/blob/v5/src/crux/trajectory/lane.go)). On divergence, the configured response is
 to pause the agent and alert by default, or to alert only. The reviewer prompt
 instructs the model to judge direction, not single commands, and to answer
 non-divergent when unsure.
@@ -51,7 +51,7 @@ still in progress can itself be the warning signal, so **"transcript bytes
 identical" is never a skip condition**.
 
 The lane now skips a review only when **all** of the following hold, as decided
-by `skipDecision` in [lane.go](https://github.com/hivecommons/hive/blob/v5/src/pkg/trajectory/lane.go):
+by `skipDecision` in [lane.go](https://github.com/hivecommons/hive/blob/v5/src/crux/trajectory/lane.go):
 
 1. the agent has been reviewed at least once before;
 2. the review is **not overdue** — fewer than `MaxSkipIntervals` (default 6)
@@ -59,7 +59,7 @@ by `skipDecision` in [lane.go](https://github.com/hivecommons/hive/blob/v5/src/p
 3. the agent manager reports the agent **idle** from its own state — the last
    kicked turn has ended (`KickOutcome` settled against `LastKick`), the agent
    is parked at the prompt awaiting CI, or it has never been kicked
-   (`trajectoryIdle` in [trajectory_view.go](https://github.com/hivecommons/hive/blob/v5/src/pkg/agent/trajectory_view.go));
+   (`trajectoryIdle` in [trajectory_view.go](https://github.com/hivecommons/hive/blob/v5/src/crux/agent/trajectory_view.go));
 4. the manager has a known last-output time and it precedes the last review.
 
 If any condition fails the review runs. An unknown last-output time is treated

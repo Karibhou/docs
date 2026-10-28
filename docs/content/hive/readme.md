@@ -40,6 +40,7 @@ Start with [Zero to Automation: Getting Started with Hive](/docs/hive/getting-st
 ## Where to go next
 
 - [Architecture](/docs/hive/architecture)
+- [Integrations](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations.md) — backends, trackers, forges and sandboxes Hive works with, at a glance.
 - [Getting started](/docs/hive/getting-started)
 - [Operator reference](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md)
 - [GitHub webhooks: cadence, patch and reconcile](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md) — polling fallback, webhook patch and reconcile, and the state-accuracy guarantees.
@@ -52,6 +53,7 @@ Start with [Zero to Automation: Getting Started with Hive](/docs/hive/getting-st
 - [Release channels](/docs/hive/release-channels) — what `stable`, `candidate`, and `edge` each mean and what to expect from them.
 - [Security model](/docs/hive/security-model) — agent safety control inventory, threats, enforcement modes, residual gaps and operator audit checklist.
 - Security docs rule: `SECURITY.md` and every `src/docs/security*.md` / `ioscan*.md` page, plus `landscape.md`, must score Flesch-Kincaid grade 11 or lower (CI: `src/scripts/check-security-docs-readability.sh`).
+- Security docs rot rule: the same pages carry a `Last reviewed: YYYY-MM-DD` line in their first 15 lines, no older than 120 days, and may not say an item is "tracked in" / "in progress" / "planned" against an issue that is already closed (CI: `src/scripts/check-security-docs-rot.sh`).
 - [Data collection and telemetry](https://github.com/hivecommons/hive/blob/v5/src/docs/telemetry.md)
 - [Securing your hive: a first-time operator's guide](/docs/hive/securing-your-hive)
 - [Community and support](https://github.com/hivecommons/hive/blob/v5/src/docs/community.md)

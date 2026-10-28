@@ -116,7 +116,9 @@ rationguard watch scanner --rebuttal=send
 elsewhere with `--run-dir=/path/to/pluk/run` or by setting the `PLUK_RUN_DIR`
 environment variable (the flag takes precedence if both are set). Add
 `--verbose` to `watch` to print debug output, and `--patterns-dir=<path>`
-to override pluk's CLI pattern directory. A pluk-send failure that falls
+to override pluk's CLI pattern directory (applies only with `--mode=watch`;
+`--patterns-dir` is ignored, with a warning, in the default
+`--mode=subscribe`; `--cli` is accepted there without a warning). A pluk-send failure that falls
 back to tmux is always logged as one line; add `--log-format=json` to emit
 bounded JSON lines (`event`, `session`, `delivery`, `timestamp`) on stderr
 instead.
@@ -126,7 +128,7 @@ stderr (`event`, `category`, `confidence`, `matched` count; never the text).
 Library users can pass `check(text, config, { onEvent })` to receive the same
 events and feed their own counters.
 
-Add `--diagnostics` (or `--diagnostics=<seconds>`, a positive number; anything else is rejected) to `watch` for opt-in,
+Add `--diagnostics` (or `--diagnostics=<seconds>`, a number from 1 to 2147483.647; anything else is rejected) to `watch` for opt-in,
 local-only health visibility on a long-running session: a bounded JSON
 summary (flush/match/rebuttal counts) is printed to stderr on a fixed
 interval (default 60s) and once more when the watcher stops. It never
@@ -158,7 +160,7 @@ Connect to a pluk event stream and check agent output as it happens.
 
 ```bash
 # Watch a session (subscribe to pluk JSONL log)
-rationguard watch my-agent --cli=claude
+rationguard watch my-agent
 
 # Auto-rebut: send rebuttals back to the agent
 rationguard watch my-agent --rebuttal=send
@@ -307,13 +309,13 @@ A project-local `./.rationguard/custom-excuses.json` is read-only to the CLI and
 ## Programmatic API
 
 ```typescript
-import { check, Watcher, generatePromptBlock } from '@hivecommons/rationguard';
+import { check, Watcher, generatePromptBlock, getAllExcuses } from '@hivecommons/rationguard';
 
 // Check text
 const result = check('Standing by for instructions.');
 if (!result.clean) {
   for (const match of result.matches) {
-    console.log(`${match.excuse.category}: ${match.excuse.rebuttal}`);
+    console.log(`${match.excuse?.category}: ${match.excuse?.rebuttal}`);
   }
 }
 
@@ -330,7 +332,16 @@ await watcher.start();
 
 // Generate prompt block for system prompt injection
 const block = generatePromptBlock();
+
+// Detect against learned and project excuses too
+const full = check('Standing by for instructions.', { excuses: getAllExcuses() });
+
+// Prompt blocks are destined for agent instructions: project-local excuses
+// (`source: 'project'`) are dropped automatically, exactly as `rationguard prompt` does
+const fullBlock = generatePromptBlock({ excuses: getAllExcuses() });
 ```
+
+`check()` and `generatePromptBlock()` called without a config use only the built-in `DEFAULT_EXCUSES`. `getAllExcuses()` returns the same builtin + `~/.rationguard` + project-local set the CLI and `Watcher` use. User and project excuses are tagged `source: 'user'` / `'project'`; builtins carry no `source`. `generatePromptBlock()` never emits `source: 'project'` excuses, whatever it is passed — they come from the (potentially untrusted) working directory and are only ever used for detection.
 
 ---
 

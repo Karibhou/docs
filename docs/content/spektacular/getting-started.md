@@ -200,7 +200,8 @@ omp
 
 This installs the six skills in `.omp/skills/`, command wrappers and native
 input-preserving handlers in `.omp/commands/`, and eight always-applied
-standing-rule files in `.omp/rules/`, alongside the rules in root `AGENTS.md`.
+standing-rule files in `.omp/rules/`, which carry the same short rules as
+root `AGENTS.md` and link to the full guidance in `.spektacular/guidance/`.
 It does not overwrite your own omp instruction or settings files.
 
 **Start omp in the project's top folder.** Spektacular commands only work

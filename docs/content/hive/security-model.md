@@ -2,6 +2,8 @@
 
 # Security model: how Hive keeps autonomous agents from doing damage
 
+Last reviewed: 2026-10-23
+
 Hive runs AI coding agents against real repositories. This page is the
 inventory of the controls that limit what an agent can do, with the file or
 setting behind each one. Hive's design rule is that anything a human would
@@ -158,8 +160,12 @@ merge-eligible list at that commit.
 `HIVE_PROXY_INJECT_GH_AUTH=true`, the agent's token file holds only a
 placeholder and the proxy swaps in the real token on GitHub API requests. It
 requires GitHub App authentication and is refused if advisory proxy mode is
-also set, because advisory mode trusts a self-asserted agent name. Open work
-is tracked in [#9586](https://github.com/hivecommons/hive/issues/9586).
+also set, because advisory mode trusts a self-asserted agent name. A
+default-on version with a signing sidecar was proposed in
+[#9586](https://github.com/hivecommons/hive/issues/9586) and declined in
+September 2026; injection stays opt-in. Rotation of contributor registration
+tokens is a separate open item
+([#13804](https://github.com/hivecommons/hive/issues/13804)).
 
 **Forced egress.** The entrypoint installs an iptables rule redirecting all
 outbound port-443 traffic through the proxy, so agents cannot bypass it with
@@ -171,6 +177,18 @@ agent by the user ID that owns the socket, read from `/proc/net/tcp`, which a
 process cannot forge. Only `api.github.com` is inspected; other hosts are
 tunnelled without inspection. See
 [net-admin-requirement.md](/docs/hive/net-admin-requirement).
+
+**Plain-HTTP forwards.** The redirect covers port 443 only, so plain HTTP
+reaches the proxy through its explicit proxy port. Those forwards are
+identified like any other request and dialled only when the resolved address
+is globally routable: loopback services beside the proxy, the link-local
+metadata endpoint, RFC 1918/CGNAT cluster addresses and multicast are refused
+with `403` and counted as violations (loopback excepted — agents are handed
+`NO_PROXY` for it, so it is logged as the client misconfiguration it is). The
+check runs at dial time on the resolved address, so a hostname pointed inward
+is refused on the same evidence as a literal IP. Set
+`HIVE_PROXY_ALLOW_PRIVATE_FORWARD=true` only where a private-network plain-HTTP
+destination is intended.
 
 **Hub-to-spoke channel.** Heartbeats carry a per-hive bearer key derived from
 the hub master secret and are compared in constant time. The payload is
@@ -351,9 +369,10 @@ until code-owner review is required in branch protection.
 * **Hub registration has no review step.** Any spoke with the derived keys
   can register.
 * **Trust tiers do not decay.**
-* **Trajectory review and the `ioscan` classifier fail open.** The
-  deterministic rules, canaries, proxy and token tiers hold when a model is
-  down.
+* **Trajectory review fails open; the `ioscan` classifier fails open only
+  at L1–L4.** At L5–L6 text is withheld when the classifier cannot answer.
+  The deterministic rules, canaries, proxy and token tiers hold when a model
+  is down.
 
 ## 12. How to audit a running hive
 

@@ -20,7 +20,10 @@ your desktop environment, press the hotkey, select a region, and hotshot:
 |---|---|
 | Claude Code (`claude`) | `[/path/to/shot.png] ` (bracketed) |
 | GitHub Copilot CLI / aider / OpenCode | bare backslash-escaped path + space |
+| Gemini CLI | `@` + backslash-escaped path + space |
 | unknown | bracketed (historical default) |
+
+claude + copilot/aider/opencode in the same terminal process tree (e.g. gnome-terminal / kitty / Windows Terminal tabs) -> escaped bare path, because the focused tab cannot be told apart and every supported CLI accepts the escaped path. Gemini CLI gets its `@path` form only when it is the only known CLI in the tree.
 
 This is the same clipboard/typing contract as the macOS app.
 
@@ -31,6 +34,7 @@ git clone https://github.com/hivecommons/hotshot.git
 cd hotshot/linux
 ./install.sh                 # installs to ~/.local/bin/hotshot-capture
 ./install.sh --gnome-hotkey  # also binds Ctrl+Shift+PrintScreen on GNOME
+./install.sh --prefix DIR    # install somewhere other than ~/.local/bin
 ```
 
 The installer reports which dependencies are missing for your session type.
@@ -88,8 +92,8 @@ hotshot-capture [--region|--full] [--no-type] [--dir DIR]
   `wl-copy` serve one MIME target per invocation, so by default the clipboard
   carries the **image only** (paste with Ctrl-V in Claude Code or GUI apps);
   the typed injection delivers the path. If [CopyQ](https://hluk.github.io/CopyQ/)
-  is running, hotshot puts **both** `image/png` and the text path on the
-  clipboard, matching macOS exactly.
+  is running, hotshot puts `image/png`, the `text/plain` path, and a percent-encoded
+  `text/uri-list` file URL on a single clipboard entry, matching macOS.
 - **Focus tracking**: instead of a menu-bar app that remembers your last
   terminal, the Linux port captures the focused window at hotkey press time —
   press the hotkey while your terminal is focused, then select the region.

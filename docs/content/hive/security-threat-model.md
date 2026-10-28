@@ -2,6 +2,8 @@
 
 # Hive security threat model
 
+Last reviewed: 2026-10-23
+
 Hive runs AI coding agents against real GitHub repositories. Untrusted text
 from GitHub enters Hive, agents act on it, and deterministic Hive components
 limit what can leave. This page lists what is worth protecting, where the
@@ -72,16 +74,19 @@ and what remains open. The control-by-control reference is
 ## Residual risks
 
 * **Shared container.** Agents are separated by user ID, not by container
-  or virtual machine. Credential-free sandboxed execution is tracked in
-  [#2804](https://github.com/hivecommons/hive/issues/2804).
+  or virtual machine. An opt-in sandbox mode
+  ([#2804](https://github.com/hivecommons/hive/issues/2804), shipped) runs
+  each task in its own rootless container with no credentials, but it is
+  not the default. Stronger isolation options, including OpenShell, are
+  under evaluation.
 * **Live tokens in session.** Agents that push or open pull requests still
   hold a scoped live token. Proxy-side credential injection, which replaces
   it with a placeholder, is opt-in.
 * **Network is limited, not absent.** Agents can still reach GitHub reads,
   model backends and opaque `github.com` tunnels.
-* **The optional classifier fails open.** The deterministic rules, canaries
-  and proxy denials are the floor; the language-model classifier adds
-  coverage only when it is up.
+* **The classifier fails open at L1–L4.** It is on by default from L4 and
+  fails closed at L5–L6. The deterministic rules, canaries and proxy denials
+  are the floor; the language-model classifier adds coverage above it.
 * **Trajectory review reads transcripts, not reasoning**, and fails open.
 * **Hub compromise is high impact.** The hub still coordinates callbacks,
   registry data, terminal authorization and fleet visibility.

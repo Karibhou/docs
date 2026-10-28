@@ -108,7 +108,7 @@ older overlays, but new configs should use `bob.session_label`.
 
 ```yaml
     backend: copilot             # the method: claude | copilot | goose | codex | pi |
-                                 #   bob | aider | omp, or an inference backend:
+                                 #   bob | aider | omp | openhands | omnigent, or an inference backend:
                                  #   vllm | llm-d | litellm | watsonx | named gateway
     model: claude-sonnet-4-6     # model id for that method
     reasoning_effort: high       # reasoning effort, for methods that have one:
@@ -137,6 +137,10 @@ The dashboard shows a reasoning-effort dropdown next to the model picker for eve
 
 `backend: omp` launches the OMP CLI as a first-class dashboard method. Hive gives each agent its own durable HOME under `/data/home/agents/<name>`, so `~/.omp/agent/agent.db` can hold several provider sign-ins for that one agent (for example `openai-codex` for the primary model and `anthropic` for an advisor) without sharing refresh-token writers across agents. Select models with their provider prefix (`provider/model`). The dashboard model probe runs `omp models --json` and uses each model's `thinking` list for the effort dropdown. At launch Hive passes `--approval-mode ${HIVE_OMP_APPROVAL_MODE:-yolo}`, `--model <id>`, and `--thinking <effort>` when set.
 
+
+#### Omnigent (`omnigent`) agents
+
+`backend: omnigent` launches the Omnigent CLI as an experimental T3 backend. Omnigent provides an open-source meta-harness layer orchestrating underlying agent engines (Claude Code, Codex, Cursor, Pi, and custom harnesses). On contributor local launches, Omnigent has no OS sandbox wired by Hive, so local mode refuses by default without `HIVE_OMNIGENT_DANGEROUSLY_RUN_UNCONFINED=1`. Container mode is the default and recommended boundary. Every launch is `omnigent run --server local [--model <id>]`: `run` opens the agent REPL (bare `omnigent` only starts a background server) and `--server local` pins a local Omnigent server, so remote-server mode is unsupported. Omnigent's internal policy engine and sandbox evaluate additively, while Hive's proxy remains authoritative on all repository writes. See [`backend-omnigent-cli-contract.md`](https://github.com/hivecommons/hive/blob/v5/src/docs/backend-omnigent-cli-contract.md).
 
 > The dashboard also offers **gemini** as a live method (with live model discovery); as a persisted `backend:` value in `hive.yaml`, stick to the validated list above.
 
@@ -368,7 +372,7 @@ Presets map onto modes (`advisory` denies issue and PR creation, `issues-only` d
 
 ### Replicated agents
 
-Set `replicas: N` on a declared agent to run a small pool with the same prompt, backend, model, mode, channel, tool, and metadata settings. `N` defaults to `1` and is capped at `5`; config load fails if it is outside `1..5`. Hive materializes derived names as `<base>-2`, `<base>-3`, ... (`scanner`, `scanner-2`, `scanner-3`). Do not declare those derived names yourself: a real `scanner-2` entry collides with `scanner: { replicas: 2 }` and is rejected. Derived replicas get their own IDs and bead directories (`/data/beads/scanner-2`) but inherit the base agent's kick template/prompt selection. Runtime-derived replicas are stripped before saving and recreated on the next load.
+Set `replicas: N` on a declared agent to run a small pool with the same prompt, backend, model, mode, channel, tool, and metadata settings. `N` defaults to `1` and is capped at `5`; config load fails if it is outside `1..5`. Hive materializes derived names as `<base>-2`, `<base>-3`, ... (`scanner`, `scanner-2`, `scanner-3`). Do not declare those derived names yourself: a real `scanner-2` entry collides with `scanner: { replicas: 2 }` and is rejected. Derived replicas get their own IDs and bead directories (`/data/beads/scanner-2`) but inherit the base agent's kick template/prompt selection. Runtime-derived replicas are stripped before saving and recreated on the next load. For the reviewer lane, `review.reviewers.autoscale` can raise and lower the materialised count at runtime between `min` and `max`; the declared `replicas` then only seeds the initial size. See [review-swarm.md](https://github.com/hivecommons/hive/blob/v5/src/docs/review-swarm.md#reviewer-autoscale-reviewreviewersautoscale).
 
 ### Trigger channels
 
@@ -554,7 +558,9 @@ Config validation accepts only `off`, `assist`, or empty; the dashboard and
 
 ## Methods: subscription CLIs vs self-hosted inference
 
-`backend:` picks one of two families. They differ in how you authenticate and where model lists come from:
+`backend:` picks one of the CLI or inference families below. Hosted execution
+is a separate `runs.external.<engine>` binding and is never a `backend:` value:
+it has no local binary, CLI login, or live model discovery.
 
 | Method | Family | Auth | Model discovery |
 |---|---|---|---|
@@ -566,6 +572,7 @@ Config validation accepts only `off`, `assist`, or empty; the dashboard and
 | `llm-d` | inference | endpoint + optional key — no login | **live** — `/v1/models` |
 | `litellm` | inference | endpoint + API key — no login | **live** — `/v1/models`, entitlement-filtered per key |
 | `openrouter` (gateway name) | inference | Model Gateway key or scan-to-fund flow — no CLI login | **live** — OpenRouter `/v1/models`, plus curated fallback |
+| `claude-managed-agents` | hosted | API key reference (`api_key_env` or `/data/secrets` `api_key_file`) — no CLI login | pinned agent/model version; no discovery |
 
 Two rules of thumb:
 
@@ -575,6 +582,50 @@ Two rules of thumb:
   Only `POST /v1/messages` is translated into an OpenAI `/v1/chat/completions` call. The Claude CLI also talks to its Anthropic host for housekeeping — telemetry batches (`/api/event_logging/...`), error reports, `POST /v1/messages/count_tokens` — and none of that has a meaning to an OpenAI-compatible gateway; forwarding it used to cost a gateway `400 Missing required parameter: 'messages'` per call, charged against the provider's request rate limit (roughly two failures per real completion in practice). The translator and the MITM reroute now answer those locally: `count_tokens` returns a chars-based estimate, anything under `/api/` returns `{}`, and any other path is a 404 in Anthropic error shape with a `WARN` log line naming the method and path, so a new CLI endpoint shows up in the hive log rather than as gateway noise. Inference-routed `claude` sessions are additionally launched with `DISABLE_TELEMETRY=1`, `DISABLE_ERROR_REPORTING=1`, `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`, and `CLAUDE_CODE_AUTO_MODE_SERVER=0`; subscription sessions are not. The last one matters for Claude Code's [auto-mode classifier](https://code.claude.com/docs/en/auto-mode-classifier-billing): the CLI otherwise asks the inference host for a server-side safety verdict (`safeguards` field in, `safeguard_results` out) that an OpenAI-compatible gateway can never return, then halts the session on an interactive "this session isn't eligible because your requests go through 127.0.0.1:18444 … Enter to continue" notice. With the variable set the CLI runs its own classifier requests through the translator like any other call. Should the notice still appear (for example from a settings file that re-enables the server check), the lifetime prompt watcher presses Enter for it.
 
 Every Model Gateway (and the bob backend) also accepts an optional `key_name` — a human-chosen LABEL for the configured key, e.g. `key_name: openrouter-prod-key`. It is safe-to-show metadata, not a secret: the dashboard's gateway row displays it as "Using key: `<name>`", or "(unnamed)" when no label is set, so operators can tell keys apart without ever seeing the value. For gateway keys, the row and settings/status APIs also expose `keySHA256`, the lowercase SHA-256 of the exact effective key string Hive will inject through the inference proxy; this lets operators compare Hive with LiteLLM/OpenRouter key-hash displays without revealing the secret. Saving a replacement key refreshes live inference proxy routes for running agents, so the next kick uses the new key without an agent restart. See [`inference-backends.md`](https://github.com/hivecommons/hive/blob/v5/docs/inference-backends.md) for a full YAML example.
+
+### Claude Managed Agents hosted execution
+
+Claude Managed Agents is an external hosted engine, not a `backend:` value.
+The prototype is linked only with `extwork_claude_managed_agents` and is
+selected under `runs.external.claude_managed_agents`. It requires a Claude
+`self_hosted` environment in the contributor-private spoke with
+`forced-egress` or `proxy-only` policy. The worker receives its environment key
+and per-session work secret; it never receives `ANTHROPIC_API_KEY`.
+
+```yaml
+runs:
+  external:
+    claude_managed_agents:
+      enabled: false
+      mode: shadow                         # report-only is the dispatch posture
+      endpoint: https://api.anthropic.com
+      workflow_version: claude-managed/2026-04-01
+      agent_id: agt_private
+      agent_version: 1
+      toolset_version: hive-tools/1
+      environment_id: env_private
+      environment_type: self_hosted
+      network_policy: forced-egress
+      api_key_env: ANTHROPIC_API_KEY       # reference only; never the value
+      model: claude-sonnet-4-6
+      state_dir: /data/extwork/claude-managed-agents
+      daily_budget_cents: 2500             # hard USD 25/day maximum
+      github_write_path: none
+```
+
+The adapter performs an authenticated `GET /v1/environments/{id}` before
+creating a session, pins the agent/toolset versions, sends the bounded prompt
+and repository workspace, and records `span.model_request_end` token events in
+`data.metrics_dir`. Event IDs are deduplicated across restarts. Session
+`list_cost`, active seconds, and web-search counts are kept in the durable
+managed-agents ledger; the session budget is the remaining daily cents. Set
+`github_write_path` to `none` or `proxy` for a report-only spoke. Any other
+value (a direct GitHub resource, vaulted secret, GitHub MCP path, or
+`direct_github_write`) is rejected when the adapter is built. `endpoint` must
+be `https` unless its host is loopback, because the vendor API key is sent on
+every request. The hosted worker has no GitHub path in this prototype; the
+`POST /pulls` and `PUT /pulls/{n}/merge` proxy denial tests from #14124 are not
+yet covered.
 
 Kubernetes manifests for deploying inference backends (vllm Deployment, EPP RBAC, kustomization) are in [`deploy/inference/`](https://github.com/hivecommons/hive/blob/v5/src/deploy/inference/).
 
@@ -726,7 +777,7 @@ You don't have to design a roster. Hive ships six **ACMM packs** (`level-1.yaml`
 | L3 | Quality-Gated (Measured) | quality opens issues and test PRs gated by literal `hold`; the rest stay advisory |
 | L4 | Security-Aware (Adaptive) | scanner/guide file issues; quality, ci-maintainer, and sec-check can open PRs gated by literal `hold` |
 | L5 | Semi-Autonomous (Semi-Automated) | issues **and** PRs; PRs are gated by literal `hold`; humans batch-approve |
-| L6 | Fully Autonomous | auto-merge on green CI; no level hold, except cross-repo outreach PRs (target repo not managed by this hive) remain held |
+| L6 | Autonomous | auto-merge on green CI; no level hold, except cross-repo outreach PRs (target repo not managed by this hive) remain held |
 
 Applying a level **reconciles the whole roster**, not just the diff: missing agents are created (as overlay files in `/data/agent-configs/`), existing agents are merged — pack values fill blanks, but your explicit `backend:`, `model:`, and `enabled: false` always win — and the level's `kick_template`, `mode` and `on_demand` are updated so the agent's *policy* matches the level (an `on_demand` you toggled yourself in the agent's settings dialog is operator-owned and left alone; leaving on-demand starts the agent, entering it stops it). A failed agent doesn't abort the rest; the level is only recorded as cleanly applied when every agent reconciled.
 
