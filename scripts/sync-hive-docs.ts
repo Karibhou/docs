@@ -59,6 +59,7 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "integrations/clanker-flue.md" },
   { source: "integrations/spektacular.md" },
   { source: "public-knowledge-mcp.md" },
+  { source: "copilot-permissions-comparison.md" },
   { source: "adr/README.md", target: "adr/readme.md" },
   { source: "adr/0001-record-architecture-decisions.md" },
   { source: "adr/0002-mitm-proxy-network-enforcement.md" },

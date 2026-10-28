@@ -153,6 +153,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'Securing your hive': 'securing-your-hive.md' },
       { 'Security model': 'security-model.md' },
       { 'Security threat model': 'security-threat-model.md' },
+      { 'Hive trust levels vs Copilot assisted permissions': 'copilot-permissions-comparison.md' },
       { 'ACMM policy matrix': 'acmm-policy-matrix.md' },
     ]
   },
