@@ -1,0 +1,1 @@
+- Floor the transitive `re2js` (pulled in by `markdownlint-cli2`) at 2.8.7 via `overrides` to clear GHSA-gg6h-894w-4m9c (#515).
