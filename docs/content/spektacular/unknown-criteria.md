@@ -6,6 +6,13 @@
 
 _How you can use a spec-driven development flow when the criteria for a feature are unknown or incomplete._
 
+Read the [getting-started tutorial](https://spektacular.dev/tutorials/getting-started) first.
+This is a case study in investigating an unclear problem before writing
+requirements, not a setup guide. **SDD** means spec-driven development.
+**Spek** is the tool; a **spek** is its requirements document. `spec` commands
+operate that workflow, while the `spek-new` skill is the agent-side instruction
+set that guides you through it.
+
 A question I often ask myself when I am working on a project is "Should I be
 using spec driven development for this problem?". The answer is usually yes, but
 sometimes I do not have a clear idea of what the criteria for the work are.
@@ -32,7 +39,7 @@ coding my way to another problem.
 ## A bug in Spek
 
 Let's look at a concrete example. I was recently working on what I believed to be
-a bug in Spek when using the `new` mode to create specifications with
+a bug in Spek when starting a new specification with
 the Bob agent. The way that Spek works is that internally the skills are
 deliberately very simple: they only instruct the agent to do a single task.
 Further instructions are provided to the agent once it has completed the task.
@@ -41,7 +48,12 @@ agent, it avoids a common problem in large, complex skills: the agent can skip a
 step or go off on a tangent. The state machine approach keeps it focused on the
 task at hand.
 
-An example of one of these skill prompts looks like this:
+An example of one of these skill prompts looks like this. The main idea is
+that a finite-state machine (FSM: a workflow with allowed next steps) checks
+transitions; an “event” is a request to move to one of those steps.
+
+<details>
+<summary>Optional reference: the internal prompt from this investigation</summary>
 
 ```markdown
 **You are writing a spec, not a plan.** A spec captures *what* is being built and the direction the user has *already decided* — requirements, acceptance criteria, constraints, and any high-level technical direction. It does **not** design the *how*, and it does **not** investigate the codebase: do not read source files, run code searches, or ground decisions in specific files, types, or functions. That grounding is the plan workflow's `discovery` step. Stay at spec altitude in every step that follows.
@@ -56,6 +68,8 @@ spektacular spec goto --data '{"step":"requirements"}'
 **Before you advance:** refresh `.spektacular/working-context.md` with your cross-cutting working context only — the key decisions and substitutions made, the answers the user gave to your questions, and learnings worth carrying forward. Keep it to learnings and decisions, not a transcript and not a copy of content already captured elsewhere (such as a section's own working file). Use your own file tools. This file is git-tracked, and a resumed session reads it back to pick up where you left off, so keep it current every time before running the `goto` command above.
 
 ```
+
+</details>
 
 When the agent calls `spektacular spec goto --data '{"step":"requirements"}'`,
 the state machine validates the agent's current state and requested next step,
@@ -93,7 +107,9 @@ run: spec goto --data '{"step":"requirements"}'
 Now, experience and seeing the issue firsthand makes me think that this is
 probably what happened. The temptation is to just accept the fix and move on:
 this code change probably does not require a spek and a plan, and in
-reality, I could change the code myself in about 30 seconds. But experience
+reality, I estimated I could change the code myself in about 30 seconds.
+That is an estimate about this particular fix, not a promised effort for
+similar problems. But experience
 also tells me that this is not the end of the story: my gut tells me that
 there is more than one error message like this in the codebase. So let's ask
 the agent to look at the code and tell me if there are any other similar

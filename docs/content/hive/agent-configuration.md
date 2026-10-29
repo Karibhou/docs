@@ -129,7 +129,7 @@ older overlays, but new configs should use `bob.session_label`.
                                  #   launch_cmd, prompt, tools, and skills at launch.
 ```
 
-The dashboard API can update this field through [`POST /api/effort/{agent}/{effort}`](https://github.com/hivecommons/hive/blob/v5/src/docs/api-reference.md#agents-and-controls).
+The dashboard API can update this field through [`POST /api/effort/{agent}/{effort}`](https://github.com/hivecommons/hive/blob/v5/src/docs/api-reference/agents-and-controls.md).
 
 The dashboard shows a reasoning-effort dropdown next to the model picker for every method that has an effort control (`codex`, `agy`, `claude`, and `omp`). The value is validated at set time against the method's own set, so a `codex`-only level such as `minimal` is refused for a `claude` agent rather than stored and dropped at launch. For `omp`, the dropdown is per selected model: Hive reads `omp models --json` and uses that model's `thinking` levels, hiding the control for models that report no thinking support. Picking `default` clears the stored value; for `claude` and `omp` that means no effort flag at all and the CLI's own default. The dropdown persists through the same path as the model picker (`hive.yaml` plus the per-agent overlay under `agents_dir`), which is the durable path on a hosted spoke: a hand edit of the agent's file is reverted by the next sync, the dashboard write is not. Each dropdown change is recorded in the audit trail as `set_reasoning_effort` with the new value, like the other per-agent setting changes. The effort the agent was actually launched with is what the run rows and the `- hive:` PR trailer report, so a `claude` agent at `xhigh` shows `effort=xhigh` there and an agent with no stored effort shows none.
 
@@ -1073,6 +1073,31 @@ Issues managed by [GitHub Agentic Workflows](https://github.com/github/gh-aw) (`
 The `hive/tracking` label also satisfies the tracker-issue check used by `/contribute`, so a tracking issue is never handed to an external contributor either.
 
 **Not the same thing as the contribute filters.** `hub.contribute_labels_mode` + its label list gate which issues are *handed out to external contributors* over `/contribute` — they have never gated the hive's **own** agents, so an operator who allow-listed a queue label there (a common setup for routing labeled issues to contributors) still had a hive whose own scanner could work every other open issue. `project.issue_filter.require_labels` is the agent-side gate; configure both if you want the same label to govern both lanes.
+
+## Write-back containment (`writeback`)
+
+ACMM levels and label policy decide what *agents* may do. The `writeback`
+block decides what the *platform* may say on GitHub without being asked:
+sentinel alerts, hold-gate notices, stage labels, supersession and
+duplicate notices, reporter-trust holds, and so on. Each kind has a minimum
+level and, on PRs hive did not open, needs the review opt-in label
+(`review.require_labels`, fallback `hive-review`):
+
+```yaml
+writeback:
+  unsolicited:
+    min_level: 5
+    require_labels: true
+    backfill: false
+  per_repo:
+    torch-spyre/torch-spyre: { mode: issues-only }
+  kinds:
+    sentinel: { min_level: 5, require_label: true, unlabeled_min_level: 6 }
+```
+
+Agent kicks on items already labelled for hive, hive's own PRs and issues,
+and `/hive` command replies are never gated. The default matrix per level
+is in [acmm-policy-matrix.md](/docs/hive/acmm-policy-matrix#what-hive-will-say-on-github-at-each-level).
 
 ## When to add what
 

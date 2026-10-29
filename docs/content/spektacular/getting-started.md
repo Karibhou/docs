@@ -30,17 +30,38 @@ The tutorial works with every coding agent Spek supports. Pick yours at
 the top of the page, and the agent-specific commands and screenshots will swap
 to match.
 
+## Before you start
+
+This tutorial is for developers comfortable editing Go and working in a
+terminal. You need Git, the Go toolchain required by the example repository,
+Spektacular, and a supported coding agent with its account or model-provider
+credentials configured. A binary download of Spektacular does not include that
+agent. You should understand HTTP APIs and SQLite (an embedded database stored
+in a file); the walkthrough focuses on the workflow, not teaching Go or SQL.
+
+Work in a checkout you can change and review the agent's proposed commands.
+**Terminal commands** below run in your system shell. **Agent inputs** such as
+`/spek-new` are typed inside your coding agent, launched in that same checkout.
+Plain text or Markdown examples are document content, not shell commands.
+
+The route is [setup](#setting-up-your-project) → [specify](#the-specification)
+→ [add context](#context) → [review a plan](#the-plan) →
+[implement and verify](#implementation). Agent-integration and multi-store
+details are optional detours; finish each stage's check before continuing.
+
 ## What is Spektacular (Spek)
 
 Spek is a CLI and a collection of skills that integrates with your coding
 agent and drives Spec Driven Development end to end. It is agent-agnostic,
-shipping with adapters for Claude Code, Codex, Bob, and oh-my-pi (omp), and it has a pluggable
-data layer so you can store your speks and knowledge base in whatever way works
-for you.
+shipping with adapters for Claude Code, Codex, Bob, and oh-my-pi (omp).
+Its storage interface is pluggable, but only the file-store provider ships
+today; this tutorial uses local files.
 
 There are three agent skills that do the real work:
 
-```bash
+These are **agent inputs**, not terminal commands:
+
+```text
 /spek-new        # scaffold a new specification
 /spek-plan       # turn a spek into a detailed implementation plan
 /spek-implement  # implement a spek, driving the agent through its plan
@@ -165,19 +186,21 @@ Run `spektacular init` from the root of the codebase you want Spek to
 operate on, passing your chosen agent's identifier so Spek knows which
 CLI to drive.
 
+For this tutorial, stay in `tutorial-spektacular-how-to`, the folder entered
+in Step 1. Run **only your chosen agent's terminal command** below; do not
+switch to a placeholder project directory.
+
 **Claude Code**
 
 ```bash
-cd my-project
 spektacular init claude
 ```
 
-![init screenshot here](images/tutorials/getting-started/init-claude.png)
+![Claude initialization completes and installs project workflow skills](images/tutorials/getting-started/init-claude.png)
 
 **Bob**
 
 ```bash
-cd my-project
 spektacular init bob
 ```
 
@@ -186,17 +209,18 @@ spektacular init bob
 **Codex**
 
 ```bash
-cd my-project
 spektacular init codex
 ```
 
 **Omp**
 
 ```bash
-cd my-project
 spektacular init omp
 omp
 ```
+
+<details>
+<summary>Optional: omp integration files and shared-project upgrades</summary>
 
 This installs the six skills in `.omp/skills/`, command wrappers and native
 input-preserving handlers in `.omp/commands/`, and eight always-applied
@@ -214,6 +238,8 @@ refreshes only the recorded agent, so another agent's copies fall behind.
 After upgrading, run `spektacular init` once for each agent to refresh all
 files and avoid duplicate current/stale skills in omp.
 
+</details>
+
 This command installs the skills for your agent and creates the
 `.spektacular/` folder, which contains the default config and the
 project-level knowledge base.
@@ -226,6 +252,10 @@ planning and implementation work can span all of them together. See
 Let's now look a little deeper at the specification.
 
 ## The specification
+
+**Stage goal:** capture requirements and acceptance criteria for SQLite
+persistence, then review the saved spek before planning. The document examples
+below show what to enter during the agent's interview.
 
 If you have worked with Product Requirement Documents (PRDs), you will be
 familiar with the process of translating business requirements into a technical
@@ -262,10 +292,11 @@ feature.
 
 [Watch this section on YouTube (from 1:48)](https://youtu.be/ZRVa9gml_Bg?t=108)
 
-Start a new instance of your agent and run the following to start the spek-new
-skill:
+Start your coding agent in the same `tutorial-spektacular-how-to` folder.
+Type the following **inside the agent**, not in your system shell, to start
+the spek-new skill:
 
-```bash
+```text
 /spek-new
 ```
 
@@ -489,7 +520,7 @@ its own solution.
 
 For that reason we will leave this section blank.
 
-```bash
+```text
 No technical direction is required.
 ```
 
@@ -499,11 +530,11 @@ Next let's look at how we will measure the success of this feature.
 
 [Watch this section on YouTube (from 6:47)](https://youtu.be/ZRVa9gml_Bg?t=407)
 
-The Success Metrics section is where you define how you will measure the success
-of the feature you are building. Define these so they are measurable, for
-example:
-* p99 latency of the read API is under 200ms
-* Read API should return the correct monster
+Success metrics describe measurable outcomes, not testing methods. For
+example, a production service might require 99% of read requests to complete
+within 200 ms under a specified load. “Test manually” describes a method, not
+an outcome. This tutorial uses its acceptance criteria to define the behavior
+to verify and does not add a separate performance target.
 
 **Claude Code**
 
@@ -518,12 +549,11 @@ defined in the plan and created during the implementation phase. If the
 feature's success cannot be measured with automated tests, the implementation
 phase will generate a manual testing plan instead.
 
-For this tutorial we will keep it simple and test our migration manually. To do
-that, we can simply add the following:
-
-```markdown
-Will test manually
-```
+For this tutorial, leave **Success Metrics empty**. Review the tests the agent
+produces against the acceptance criteria. If any criterion cannot be checked
+automatically, review and run the resulting manual test plan. The historical
+screenshots may show different interview wording; they do not override this
+choice.
 
 Finally we have the non-goals section.
 
@@ -600,6 +630,10 @@ Before we move on to the next phase of Spec Driven Development, the plan phase,
 let's look at something essential to generating a good plan: the context.
 
 ## Context
+
+**Stage goal:** add the context-cancellation and dependency-injection
+conventions before planning, then confirm both entries exist. The shared-store
+configuration at the end is optional for this single-repository exercise.
 
 If we think back to the manual software development process, a product owner
 creates a business requirement and hands it to a developer to implement. How the
@@ -702,11 +736,18 @@ injection, with the consumer relying on an interface rather than a concrete
 implementation.
 
 Let's add two new files to the knowledge base that capture these conventions.
+Run these **terminal commands** from the example repository's top-level folder,
+after initialization. They copy the tutorial's existing conventions from its
+`main` branch, not from a guessed project directory.
 
 ```bash
 git show main:.spektacular/knowledge/conventions/context-cancellation.md > .spektacular/knowledge/conventions/context-cancellation.md
-git show main:.spektacular/knowledge/conventions/dependency-injection.md > .spektacular/knowledge/conventions/dependency-injection.m
+git show main:.spektacular/knowledge/conventions/dependency-injection.md > .spektacular/knowledge/conventions/dependency-injection.md
 ```
+
+You should now have `context-cancellation.md` and `dependency-injection.md`
+in `.spektacular/knowledge/conventions/`. Confirm the conventions are readable
+with `spektacular knowledge always-applied` before starting the plan.
 
 These files contain the coding conventions and code snippets that the agent will
 use when generating the plan.
@@ -762,6 +803,9 @@ supports multiple knowledge sources.
 
 ### Knowledge that spans repositories
 
+<details>
+<summary>Optional detour: configure shared knowledge across repositories</summary>
+
 The conventions we have just covered could realistically be team- or
 language-based rather than specific to this repository. That kind of knowledge
 belongs to the project rather than to any one repository, so you declare it in
@@ -799,9 +843,21 @@ came from. Narrow a request with `--tier` and `--filter` when you only want
 particular stores. These results are passed back to the agent, which can use
 them or request further clarification from the user.
 
+</details>
+
 Let's see all of this in action by generating the plan for our feature.
 
 ## The plan
+
+**Stage goal:** produce and review `plan.md`, `research.md`, and `context.md`
+for the spek you just approved. Inside the agent, type:
+
+```text
+/spek-plan
+```
+
+Select your SQLite migration spek when prompted. Do not implement until you
+have reviewed the proposed approach and how it verifies the acceptance criteria.
 
 [Watch this section on YouTube (from 9:46)](https://youtu.be/ZRVa9gml_Bg?t=586)
 
@@ -859,6 +915,13 @@ and generate the final code.
 
 ## Implementation
 
+**Stage goal:** implement the approved plan, inspect the changes, and verify
+each acceptance criterion. Inside the agent, type:
+
+```text
+/spek-implement
+```
+
 [Watch this section on YouTube (from 18:24)](https://youtu.be/ZRVa9gml_Bg?t=1104)
 
 In terms of user input, the implementation phase is the simplest of the three,
@@ -887,13 +950,15 @@ Once all the milestones are complete, the agent will give you a final summary of
 
 **Claude Code**
 
-![implement init](images/tutorials/getting-started/implement-done-claude.png)
+![Implementation summary after all planned milestones complete](images/tutorials/getting-started/implement-done-claude.png)
 
 The agent will attempt to create and run automated tests to verify the feature.
 For anything it cannot cover automatically, it writes a manual test plan into the
-plans directory instead. In our case we defined no explicit success metrics, so
-the agent verified the acceptance criteria with automated tests and recorded that
-no manual testing was needed:
+plans directory instead. In the recorded example run, there were no separate
+success metrics and the agent reported that automated tests covered all
+acceptance criteria, so no additional manual test plan was needed. Your run
+may differ: inspect the actual tests, their results, and any remaining manual
+checks rather than treating this historical report as a guarantee:
 
 ```markdown
 # Test Plan: 20260605141835-sqlite-migration
