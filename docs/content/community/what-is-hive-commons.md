@@ -70,6 +70,7 @@ The result is an **elastic swarm**: a three-person project can have a dozen cont
 | Project | What it does | Docs |
 |---|---|---|
 | [**Hive**](https://github.com/hivecommons/hive) — flagship | Governed agents that work real GitHub queues. | [Hive docs](/docs/hive/overview/introduction) |
+| [**Crux**](https://github.com/hivecommons/crux) | The agent runtime inside Hive, split out for reuse: starts, supervises and sends work to AI coding agents. | [Crux docs](/docs/crux/overview/introduction) |
 | [**Spektacular (Spek)**](https://github.com/hivecommons/spektacular) | Spec-driven development: markdown spek → reviewed plan → agent implementation. | [Spektacular docs](/docs/spektacular/overview/introduction) · [spektacular.dev](https://spektacular.dev) |
 | [**hotshot**](https://github.com/hivecommons/hotshot) | Screenshots that land directly in an AI coding assistant's terminal. | [hotshot docs](/docs/hotshot/overview/introduction) |
 | [**pluk**](https://github.com/hivecommons/pluk) | Structured event streaming for tmux sessions running AI coding agents. | [pluk docs](/docs/pluk/overview/introduction) |
