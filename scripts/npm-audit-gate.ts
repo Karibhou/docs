@@ -123,6 +123,10 @@ export interface GateResult {
   invalid: string[];
 }
 
+function exceptionKey(id: string, pkg?: string): string {
+  return `${id.toUpperCase()}:${pkg ?? "*"}`;
+}
+
 export function evaluateAudit(
   report: AuditReport,
   exceptions: AuditException[],
@@ -151,7 +155,7 @@ export function evaluateAudit(
       expired.push(ex);
       continue;
     }
-    active.set(ex.id.toUpperCase(), ex);
+    active.set(exceptionKey(ex.id, ex.package), ex);
   }
 
   const blocking: Advisory[] = [];
@@ -163,17 +167,19 @@ export function evaluateAudit(
       belowLevel.push(adv);
       continue;
     }
-    const ex = active.get(adv.id);
-    if (ex && (!ex.package || ex.package === adv.package)) {
-      used.add(adv.id);
+    const key = active.has(exceptionKey(adv.id, adv.package))
+      ? exceptionKey(adv.id, adv.package)
+      : exceptionKey(adv.id);
+    if (active.has(key)) {
+      used.add(key);
       excepted.push(adv);
     } else {
       blocking.push(adv);
     }
   }
-  const unused = [...active.values()].filter(
-    ex => !used.has(ex.id.toUpperCase())
-  );
+  const unused = [...active.entries()]
+    .filter(([key]) => !used.has(key))
+    .map(([, ex]) => ex);
 
   return { blocking, excepted, belowLevel, expired, unused, invalid };
 }

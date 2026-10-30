@@ -195,6 +195,50 @@ describe("evaluateAudit", () => {
     expect(r.unused).toHaveLength(1);
   });
 
+  it("honours one scoped exception per package for the same GHSA", () => {
+    const report = {
+      vulnerabilities: {
+        "pkg-a": {
+          via: [{ name: "pkg-a", url: BRACES_URL, severity: "high" }],
+        },
+        "pkg-b": {
+          via: [{ name: "pkg-b", url: BRACES_URL, severity: "high" }],
+        },
+      },
+    };
+    const r = evaluateAudit(
+      report,
+      [exception({ package: "pkg-a" }), exception({ package: "pkg-b" })],
+      "high",
+      NOW
+    );
+    expect(r.excepted.map(a => a.package)).toEqual(["pkg-a", "pkg-b"]);
+    expect(r.blocking).toEqual([]);
+    expect(r.unused).toEqual([]);
+  });
+
+  it("lets a scoped exception and an unscoped one for the same GHSA coexist", () => {
+    const report = {
+      vulnerabilities: {
+        "pkg-a": {
+          via: [{ name: "pkg-a", url: BRACES_URL, severity: "high" }],
+        },
+        "pkg-b": {
+          via: [{ name: "pkg-b", url: BRACES_URL, severity: "high" }],
+        },
+      },
+    };
+    const r = evaluateAudit(
+      report,
+      [exception({ package: "pkg-a" }), exception({ package: undefined })],
+      "high",
+      NOW
+    );
+    expect(r.excepted.map(a => a.package)).toEqual(["pkg-a", "pkg-b"]);
+    expect(r.blocking).toEqual([]);
+    expect(r.unused).toEqual([]);
+  });
+
   it.each(["moderate", "high"])(
     "keeps the second package blocking with a %s first package and scoped exception",
     severity => {
