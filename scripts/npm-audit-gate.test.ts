@@ -184,6 +184,12 @@ describe("evaluateAudit", () => {
     expect(r.blocking).toEqual([]);
   });
 
+  it("treats an empty package as an unscoped exception", () => {
+    const r = evaluateAudit(REPORT, [exception({ package: "" })], "high", NOW);
+    expect(r.blocking).toEqual([]);
+    expect(r.unused).toEqual([]);
+  });
+
   it("does not apply an exception scoped to a different package", () => {
     const r = evaluateAudit(
       REPORT,
@@ -416,7 +422,9 @@ describe("main", () => {
     expect(exitSpy).not.toHaveBeenCalled();
     const out = logSpy.mock.calls.flat().join("\n");
     expect(out).toMatch(/Acknowledged 1 advisory/);
-    expect(out).toMatch(/::warning::Unused npm audit exception GHSA-zzzz/);
+    expect(out).toMatch(
+      /::warning::Unused npm audit exception GHSA-zzzz-zzzz-zzzz \(nope\)/
+    );
     expect(out).toMatch(/Ignoring 1 advisory/);
     expect(out).toMatch(/passed at level "high"/);
   });

@@ -12,6 +12,11 @@
  * expired exception fails the gate so acknowledged findings are re-reviewed
  * rather than silently forgotten.
  *
+ * An exception may also carry an optional `package` that scopes it to one
+ * affected package, so one GHSA can be listed once per package. Without
+ * `package` (or with an empty one) the exception covers that GHSA for every
+ * package.
+ *
  * A file that is not an audit report (e.g. the error document npm writes when
  * the registry is unreachable) fails the gate rather than passing it.
  *
@@ -124,7 +129,7 @@ export interface GateResult {
 }
 
 function exceptionKey(id: string, pkg?: string): string {
-  return `${id.toUpperCase()}:${pkg ?? "*"}`;
+  return `${id.toUpperCase()}:${pkg || "*"}`;
 }
 
 export function evaluateAudit(
@@ -240,7 +245,9 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     );
   }
   for (const ex of result.unused) {
-    console.log(`::warning::Unused npm audit exception ${ex.id} — remove it.`);
+    console.log(
+      `::warning::Unused npm audit exception ${ex.id} (${ex.package || "*"}) — remove it.`
+    );
   }
 
   let failed = false;
