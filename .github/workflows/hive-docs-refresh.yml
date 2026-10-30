@@ -18,7 +18,7 @@ env:
   # Workflows whose jobs are the required status checks on main. Each must
   # declare `on: workflow_dispatch` so this run can trigger them on the PR
   # branch (see "Trigger required checks" below).
-  REQUIRED_CHECK_WORKFLOWS: build.yml typecheck.yml vitest.yml npm-audit.yml
+  REQUIRED_CHECK_WORKFLOWS: build.yml typecheck.yml vitest.yml npm-audit.yml check-internal-links.yml markdownlint-cli2.yml
 
 jobs:
   refresh:
@@ -64,8 +64,9 @@ jobs:
 
             This PR was opened with `GITHUB_TOKEN`, so GitHub does not start
             `pull_request` workflows for it. The refresh run instead dispatches
-            Build, TypeScript & Lint Check, Vitest and npm audit on the PR
-            branch; their check-runs land on the head SHA as usual.
+            Build, TypeScript & Lint Check, Vitest, npm audit, Internal Links
+            and Markdown Lint on the PR branch; their check-runs land on the
+            head SHA as usual.
 
             Refresh run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 

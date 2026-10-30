@@ -1,6 +1,9 @@
 name: Markdown Lint
 
 on:
+  # Dispatched by the refresh workflows on the PR branch: PRs opened with
+  # GITHUB_TOKEN need explicit CI dispatches (#335, #337, #513).
+  workflow_dispatch:
   pull_request:
     branches: [main]
     paths:

@@ -55,6 +55,19 @@ describe.each(REFRESH_WORKFLOWS)("%s dispatches required checks", refresh => {
     expect(required!.length).toBeGreaterThan(0);
   });
 
+  it("includes every required PR check, including path-filtered checks", () => {
+    expect(required).toEqual(
+      expect.arrayContaining([
+        "build.yml",
+        "typecheck.yml",
+        "vitest.yml",
+        "npm-audit.yml",
+        "check-internal-links.yml",
+        "markdownlint-cli2.yml",
+      ])
+    );
+  });
+
   it("iterates that list in the dispatch step", () => {
     expect(yaml).toMatch(/for wf in \$REQUIRED_CHECK_WORKFLOWS;/);
     expect(yaml).toMatch(/gh workflow run "\$wf"/);
