@@ -245,6 +245,19 @@ describe("evaluateAudit", () => {
     expect(r.unused).toEqual([]);
   });
 
+  it("reports an unscoped exception as unused when a scoped one already covers the only package", () => {
+    // The scoped entry wins the match, so the wildcard is redundant and must
+    // be flagged rather than silently counted as used by the same advisory.
+    const r = evaluateAudit(
+      REPORT,
+      [exception({ package: "braces" }), exception({ package: undefined })],
+      "high",
+      NOW
+    );
+    expect(r.excepted.map(a => a.package)).toEqual(["braces"]);
+    expect(r.unused).toEqual([exception({ package: undefined })]);
+  });
+
   it.each(["moderate", "high"])(
     "keeps the second package blocking with a %s first package and scoped exception",
     severity => {
@@ -427,6 +440,19 @@ describe("main", () => {
     );
     expect(out).toMatch(/Ignoring 1 advisory/);
     expect(out).toMatch(/passed at level "high"/);
+  });
+
+  it("prints an unused unscoped exception with a * package marker", () => {
+    const report = write("audit.json", REPORT);
+    write(".github/npm-audit-exceptions.json", [
+      exception(),
+      exception({ id: "GHSA-zzzz-zzzz-zzzz", package: undefined }),
+    ]);
+    main([report, "--level=high"]);
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(logSpy.mock.calls.flat().join("\n")).toMatch(
+      /::warning::Unused npm audit exception GHSA-zzzz-zzzz-zzzz \(\*\) — remove it\./
+    );
   });
 
   it("omits the Ignoring line when nothing sits below the level", () => {
