@@ -1,6 +1,13 @@
 # What is Hive Commons?
 
-**Hive Commons** is a family of open source tools for getting real work out of AI coding agents, with **Hive** as the flagship tool. The rest of the family is listed afterwards.
+**Hive Commons** is a family of open source tools for working with AI coding agents. **Hive** manages project work. **Crux** runs the agents and can be used on its own.
+
+## Hive or Crux?
+
+- **[Hive](/docs/hive/overview/introduction)** picks up work from your repositories and issue trackers, sends it to agents, and checks the results. Use it to help maintain your projects.
+- **[Crux](/docs/crux/overview/introduction)** starts AI coding agents from YAML, sends them work, and handles stalls and crashes. Use it to run agents in your own tools or workflows, from the CLI or through an HTTP API.
+
+Crux is the agent runtime taken from Hive. You do not need to run Hive to use it. A plain `crux run` does not turn on Hive's GitHub proxy or sandbox for you.
 
 ## What Hive is
 
@@ -65,7 +72,7 @@ The result is an **elastic swarm**: a three-person project can have a dozen cont
 
 **Showcase in 5 steps:** fork → pick one clear issue → set Hive to Holdgated on that area → review the PR it opens → push upstream if you like it. That is the intended first run.
 
-## The rest of the family
+## Projects
 
 | Project | What it does | Docs |
 |---|---|---|
@@ -80,6 +87,7 @@ The result is an **elastic swarm**: a three-person project can have a dozen cont
 
 ## Where next
 
+- [Get started with Crux](/docs/crux/overview/introduction)
 - [Getting started](/docs/hive/getting-started)
 - [Hive introduction](/docs/hive/overview/introduction)
 - [Architecture](/docs/hive/architecture)

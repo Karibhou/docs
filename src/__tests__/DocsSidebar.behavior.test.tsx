@@ -378,6 +378,16 @@ describe("DocsSidebar project rows", () => {
     expect(chevronFor("Hive").getAttribute("aria-label")).toBe(
       "Expand section"
     );
+    const projectLinks = screen
+      .getAllByRole("link")
+      .filter(
+        link =>
+          link.getAttribute("href")?.endsWith("/overview/introduction") &&
+          link.textContent?.trim() !== "Overview"
+      );
+    expect(
+      projectLinks.slice(0, 2).map(link => link.textContent?.trim())
+    ).toEqual(["Hive", "Crux"]);
   });
 
   it("renders Hive as an expanded link row when projectId is omitted", () => {

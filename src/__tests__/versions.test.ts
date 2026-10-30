@@ -61,6 +61,14 @@ describe("getProject / getAllProjects", () => {
     expect(new Set(all.map(p => p.id)).size).toBe(all.length);
   });
 
+  it("lists Crux immediately after Hive", () => {
+    expect(
+      getAllProjects()
+        .slice(0, 2)
+        .map(project => project.id)
+    ).toEqual(["hive", "crux"]);
+  });
+
   it("every project declares exactly one default version", () => {
     for (const project of getAllProjects()) {
       const defaults = Object.values(project.versions).filter(v => v.isDefault);

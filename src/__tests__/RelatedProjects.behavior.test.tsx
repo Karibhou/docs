@@ -19,6 +19,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import type { SharedConfig } from "@/hooks/useSharedConfig";
+import sharedConfig from "../../public/config/shared.json";
 
 let pathname = "/docs/hive";
 vi.mock("next/navigation", () => ({
@@ -89,6 +90,29 @@ afterEach(() => {
 });
 
 describe("project list and highlighting", () => {
+  it("shows Crux beside Hive without expanding the secondary projects", () => {
+    useSharedConfigMock.mockReturnValue({
+      config: configWith(sharedConfig.relatedProjects),
+    });
+    render(<RelatedProjects />);
+    const links = screen.getAllByRole("link");
+    expect(links.slice(0, 2).map(link => link.textContent?.trim())).toEqual([
+      "Hive",
+      "Crux",
+    ]);
+    expect(
+      screen.getByRole("link", { name: "Crux" }).getAttribute("href")
+    ).toBe("/docs/crux/overview/introduction");
+    expect(
+      screen.getByRole("link", { name: "Crux" }).closest("div.overflow-hidden")
+    ).toBeNull();
+    expect(
+      screen
+        .getByRole("link", { name: "hotshot" })
+        .closest("div.overflow-hidden")?.className
+    ).toContain("max-h-0");
+  });
+
   it("renders config projects and highlights the current one from the pathname", () => {
     pathname = "/docs/pluk/setup";
     render(<RelatedProjects />);

@@ -32,12 +32,12 @@ const GENERAL_SECTION_NAMES = GENERAL_SECTION_SLUGS.map(
 // Project display order and labels — each with a landing href for navigation links
 const PRIMARY_PROJECTS = [
   { id: 'hive', label: 'Hive', href: '/docs/hive/overview/introduction' },
+  { id: 'crux', label: 'Crux', href: '/docs/crux/overview/introduction' },
   { id: 'hotshot', label: 'hotshot', href: '/docs/hotshot/overview/introduction' },
   { id: 'pluk', label: 'pluk', href: '/docs/pluk/overview/introduction' },
   { id: 'rationguard', label: 'rationguard', href: '/docs/rationguard/overview/introduction' },
   { id: 'promptargs', label: 'promptargs', href: '/docs/promptargs/overview/introduction' },
   { id: 'dibs', label: 'dibs', href: '/docs/dibs/overview/introduction' },
-  { id: 'crux', label: 'Crux', href: '/docs/crux/overview/introduction' },
   { id: 'spektacular', label: 'Spektacular', href: '/docs/spektacular/overview/introduction' },
 ] as const;
 

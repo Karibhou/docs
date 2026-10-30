@@ -20,6 +20,13 @@
         "externalUrl": "https://github.com/hivecommons/hive/tree/v4/src/docs"
       }
     },
+    "crux": {
+      "latest": {
+        "label": "main (Latest)",
+        "branch": "main",
+        "isDefault": true
+      }
+    },
     "hotshot": {
       "latest": {
         "label": "main (Latest)",
@@ -55,13 +62,6 @@
         "isDefault": true
       }
     },
-    "crux": {
-      "latest": {
-        "label": "main (Latest)",
-        "branch": "main",
-        "isDefault": true
-      }
-    },
     "spektacular": {
       "latest": {
         "label": "main (Latest)",
@@ -75,6 +75,11 @@
       "name": "Hive",
       "basePath": "hive",
       "currentVersion": "v5"
+    },
+    "crux": {
+      "name": "Crux",
+      "basePath": "crux",
+      "currentVersion": "main"
     },
     "hotshot": {
       "name": "hotshot",
@@ -101,11 +106,6 @@
       "basePath": "dibs",
       "currentVersion": "main"
     },
-    "crux": {
-      "name": "Crux",
-      "basePath": "crux",
-      "currentVersion": "main"
-    },
     "spektacular": {
       "name": "Spektacular",
       "basePath": "spektacular",
@@ -117,6 +117,11 @@
       "title": "Hive",
       "href": "/docs/hive/overview/introduction",
       "description": "Autonomous AI agent fleets for your repos"
+    },
+    {
+      "title": "Crux",
+      "href": "/docs/crux/overview/introduction",
+      "description": "Run AI coding agents on their own, without Hive"
     },
     {
       "title": "hotshot",
@@ -149,12 +154,6 @@
       "secondary": true
     },
     {
-      "title": "Crux",
-      "href": "/docs/crux/overview/introduction",
-      "description": "Standalone runtime for AI coding agents",
-      "secondary": true
-    },
-    {
       "title": "Spektacular",
       "href": "/docs/spektacular/overview/introduction",
       "description": "Spec-driven development for AI coding agents (canonical site: spektacular.dev)",
@@ -171,5 +170,5 @@
     "crux": "https://github.com/hivecommons/crux/edit/main",
     "dibs": "https://github.com/hivecommons/dibs/edit/main"
   },
-  "updatedAt": "2026-09-24T11:55:47.068Z"
+  "updatedAt": "2026-10-30T02:50:51.568Z"
 }

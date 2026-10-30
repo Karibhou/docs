@@ -21,6 +21,7 @@ describe("DocsFooter copy and links", () => {
 
   it("links to Hive Commons projects and community resources", () => {
     expect(footer).toContain('href="/docs/hive/overview/introduction"');
+    expect(footer).toContain('href="/docs/crux/overview/introduction"');
     expect(footer).toContain('href="/docs/hotshot/overview/introduction"');
     expect(footer).toContain('href="/docs/pluk/overview/introduction"');
     expect(footer).toContain('href="/docs/rationguard/overview/introduction"');

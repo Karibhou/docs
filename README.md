@@ -10,12 +10,12 @@ Official documentation site for [Hive Commons](https://hivecommons.dev), served 
 [docs.hivecommons.dev](https://docs.hivecommons.dev). It covers:
 
 - **[Hive](https://github.com/hivecommons/hive)** — autonomous AI agent fleets for your repositories
+- **[Crux](https://github.com/hivecommons/crux)** — run AI coding agents on their own, without Hive
 - **[hotshot](https://github.com/hivecommons/hotshot)** — screenshots straight into your AI coding terminal
 - **[pluk](https://github.com/hivecommons/pluk)** — pub-sub event streaming for AI agent tmux sessions
 - **[rationguard](https://github.com/hivecommons/rationguard)** — detect and rebut rationalization patterns in AI agent output
 - **[promptargs](https://github.com/hivecommons/promptargs)** — template expansion for AI prompts
 - **[dibs](https://github.com/hivecommons/dibs)** — claim ideas so contributors get credit when agents implement them
-- **[Crux](https://github.com/hivecommons/crux)** — standalone runtime for AI coding agents
 - **[Spektacular (Spek)](https://github.com/hivecommons/spektacular)** — spec-driven development for AI coding agents (canonical site: [spektacular.dev](https://spektacular.dev))
 
 ## How content is sourced

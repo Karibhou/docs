@@ -1,0 +1,1 @@
+- Show Crux beside Hive in project navigation and explain when to use each, with Crux visible without expanding the secondary-project list.

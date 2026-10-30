@@ -91,6 +91,7 @@ describe("DocsFooter content", () => {
     render(<DocsFooter />);
     for (const project of [
       "hive",
+      "crux",
       "hotshot",
       "pluk",
       "rationguard",
@@ -102,6 +103,18 @@ describe("DocsFooter content", () => {
         1
       );
     }
+  });
+
+  it("lists Crux immediately after Hive", () => {
+    render(<DocsFooter />);
+    const projectLinks = screen
+      .getAllByRole("link")
+      .filter(link =>
+        link.getAttribute("href")?.endsWith("/overview/introduction")
+      );
+    expect(
+      projectLinks.slice(0, 2).map(link => link.textContent?.trim())
+    ).toEqual(["Hive", "Crux"]);
   });
 
   it("marks external and social links target=_blank rel=noopener noreferrer", () => {

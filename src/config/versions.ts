@@ -142,6 +142,14 @@ export const PROJECTS: Record<ProjectId, ProjectConfig> = {
     contentPath: "docs/content/hive",
     versions: HIVE_VERSIONS,
   },
+  crux: {
+    id: "crux",
+    name: "Crux",
+    basePath: "crux",
+    currentVersion: "main",
+    contentPath: "docs/content/crux",
+    versions: CRUX_VERSIONS,
+  },
   hotshot: {
     id: "hotshot",
     name: "hotshot",
@@ -181,14 +189,6 @@ export const PROJECTS: Record<ProjectId, ProjectConfig> = {
     currentVersion: "main",
     contentPath: "docs/content/dibs",
     versions: DIBS_VERSIONS,
-  },
-  crux: {
-    id: "crux",
-    name: "Crux",
-    basePath: "crux",
-    currentVersion: "main",
-    contentPath: "docs/content/crux",
-    versions: CRUX_VERSIONS,
   },
   spektacular: {
     id: "spektacular",
