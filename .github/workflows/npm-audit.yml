@@ -45,3 +45,15 @@ jobs:
 
       - name: Audit production dependencies
         run: npx tsx scripts/npm-audit-gate.ts npm-audit.json --level=high
+
+      # Dev-tree advisories (markdownlint-cli2, jsdom, …) have repeatedly gone
+      # unnoticed because the steps above omit devDependencies. Gate them too;
+      # unpatched upstreams are acknowledged, with an expiry, in
+      # .github/npm-audit-exceptions.json. Warning-only for one release
+      # (ratchet, #515): drop `continue-on-error` to enforce.
+      - name: Run npm audit (including devDependencies)
+        run: npm audit --json > npm-audit-dev.json || true
+
+      - name: Audit development dependencies
+        continue-on-error: true
+        run: npx tsx scripts/npm-audit-gate.ts npm-audit-dev.json --level=high
