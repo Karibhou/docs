@@ -213,9 +213,9 @@ promptargs review --file=main.go --focus=security --tone=detailed
 ```bash
 promptargs review
   file: main.go
-  focus: (correctness)     ← press Enter to keep default
-  tone: detailed
 ```
+
+Only `file` is asked for: `focus` and `tone` already have defaults, so they are filled in silently (override them with `--focus=...` / `--tone=...`).
 
 ### Inline (no template file needed)
 
@@ -427,6 +427,16 @@ promptargs review --file=main.go --status
 
 ```text
 ✅ review: file=main.go  focus=correctness(default)  tone=concise(default)
+```
+
+When a value expands to multiple iterations:
+
+```bash
+promptargs review --file=a.go,b.go,c.go --status
+```
+
+```text
+✅ review [1/3]: file=a.go  focus=correctness(default)  tone=concise(default)
 ```
 
 ---

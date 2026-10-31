@@ -2,9 +2,33 @@
 
 # Hive introduction
 
-Hive is a co-maintainer for your GitHub project that never sleeps. Point it at a repo and it watches the things that pile up — issues, pull requests, failing CI, CVEs, dependabot alerts — then sends AI coding agents (Claude, Copilot, Codex, Antigravity, Goose…) to deal with them: triage, fixes, reviews, releases.
+Hive helps maintain a GitHub project. It watches reports and tasks (issues), proposed code changes (pull requests, or PRs), failed automated build and test checks (CI), known security vulnerabilities (CVEs), and Dependabot alerts. It sends AI coding agents to sort reports, make fixes, review changes, and prepare releases. See [Integrations](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations.md) for supported agent backends.
 
-You decide how much it is allowed to do. Humans keep every decision that matters; agents do the chores.
+For example, Hive can spot a missing test, record the finding on its dashboard, and — if the configured permissions allow it — ask the quality agent to propose a test in a pull request. At lower levels, a person reviews and merges that change. Autonomous merging is optional, not the starting goal.
+
+You decide what agents may do. The **AI Codebase Maturity Model (ACMM)** ties permissions to the project's safeguards: tests, coverage, review practice, and security posture. It is not a checklist for turning every issue into a PR.
+
+## Get started
+
+Choose how to obtain a running hive **before** configuring its agents:
+
+| Your situation | Start here | Expected result |
+|---|---|---|
+| You want a hosted hive, without running a cluster | [Hosted onboarding](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md); request at [hive.hivecommons.dev/get-started](https://hive.hivecommons.dev/get-started) | After admin approval and provisioning, **My Hives** links to your dashboard. |
+| You want to run one hive yourself | [Docker Compose](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md), [Podman](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-podman.md), or [Kubernetes](https://github.com/hivecommons/hive/blob/v5/src/docs/kubernetes-deployment.md) | Your own running container and dashboard, with storage and authentication configured. |
+| Someone has already given you dashboard access | [Getting started](/docs/hive/getting-started#step-0--before-you-start-do-this-first) | Connect the GitHub App, authenticate a model backend, set a budget, then enable agents conservatively. |
+
+You need a GitHub identity and a repository on GitHub.com or GitHub Enterprise.
+For the App route, have permission to install/authorize the GitHub App for that
+repository, or help from someone who can. Hosted requests need admin approval;
+requesting a hive does not itself install the App. Self-hosting also requires
+the chosen runtime, deployment privileges, and repository credentials; the
+Compose guide supports a PAT as well as an App. An agent separately needs its
+supported backend login, subscription, or model-gateway credentials.
+
+Once you can open a dashboard, follow [Getting started](/docs/hive/getting-started) for the first session and its success checks. Operating a fleet is a separate task: see [self-hosted hub deployment](https://github.com/hivecommons/hive/blob/v5/src/docs/hub-deployment.md).
+
+## How Hive is organized
 
 A terminal agent is a power tool: you hold it, aim it, and it stops when you stop. Hive is the workshop that runs the power tools for you on three rules:
 
@@ -12,14 +36,14 @@ A terminal agent is a power tool: you hold it, aim it, and it stops when you sto
 2. **External context.** What the agent needs to know lives outside the model and is re-injected each time.
 3. **Prompts driven by deterministic facts.** Instructions are templates filled from real data, not hand-tuned prose.
 
-## Core concepts
+### Core concepts
 
 - **[Hive and spoke](/docs/hive/architecture#8-hub--spoke):** a spoke is the running hive that serves repositories; a hub can register, provision, and observe multiple spokes.
-- **[Agents](/docs/hive/agent-configuration):** configured AI workers with scopes, models, cadences, and permissions for specific lanes of work.
-- **[Governor](/docs/hive/architecture#3-the-governor-loop--from-queue-depth-to-a-kick):** the scheduler and policy loop that decides what work is actionable and when agents should be kicked.
+- **[Agents](/docs/hive/agent-configuration):** AI workers assigned a job, model, schedule (cadence), and permissions.
+- **[Governor](/docs/hive/architecture#3-the-governor-loop--from-queue-depth-to-a-kick):** the scheduler that checks for work and sends an agent a task (a kick).
 - **[ACMM levels](/docs/hive/acmm-policy-matrix):** the **AI Codebase Maturity Model** — six levels that map how mature a codebase's tests, reviews and security posture are to what agents may observe, propose, open, review, or merge ([paper](https://arxiv.org/abs/2604.09388)).
-- **[Hub](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md):** the hosted or self-hosted control plane for onboarding hives, heartbeats, fleet views, and hosted-spoke lifecycle.
-- **[Contributors and ClankeR relay](/docs/hive/contributor-relay):** a way for trusted contributors to donate compute and run delegated work through hub-mediated roles.
+- **[Hub](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md):** the service that registers hives, receives their periodic status reports (heartbeats), and shows the fleet.
+- **[Contributors and ClankeR relay](/docs/hive/contributor-relay):** a way for trusted contributors to donate compute and run delegated work with permissions checked by the hub.
 
 ## How it works
 
@@ -27,15 +51,6 @@ A terminal agent is a power tool: you hold it, aim it, and it stops when you sto
 2. The Governor enumerates actionable work and applies deterministic filters before any agent sees a task.
 3. Agents receive bounded kicks, work in their configured lanes, and use Hive relays for audited writes such as issues, pull requests, reviews, or merges.
 4. Dashboards, logs, fleet health, and hub heartbeats show what happened and what still needs human attention.
-
-## Ways to run Hive
-
-- **Hosted Hive Hub:** start at [`https://hive.hivecommons.dev`](https://hive.hivecommons.dev) and follow the [hosted onboarding guide](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md) for the no-cluster path.
-- **Self-hosted:** run your own spoke on [Kubernetes](https://github.com/hivecommons/hive/blob/v5/src/docs/kubernetes-deployment.md), [Docker Compose](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md), or [Podman](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-podman.md), or operate a [self-hosted hub](https://github.com/hivecommons/hive/blob/v5/src/docs/hub-deployment.md) for a fleet.
-
-## Get started
-
-Start with [Zero to Automation: Getting Started with Hive](/docs/hive/getting-started). If you want the hosted path, read [Hosted Hive Hub onboarding](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md) next.
 
 ## Where to go next
 
@@ -45,6 +60,7 @@ Start with [Zero to Automation: Getting Started with Hive](/docs/hive/getting-st
 - [Operator reference](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md)
 - [GitHub webhooks: cadence, patch and reconcile](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md) — polling fallback, webhook patch and reconcile, and the state-accuracy guarantees.
 - [Dashboard sections explained](/docs/hive/dashboard-sections) — what each dashboard section shows and what to do about it.
+- [Activity monitor copy inventory](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-copy-inventory.md) — every operator-visible string builder in the activity monitor, with before/after word counts and the hover budget.
 - [Hive on your iPhone Home Screen](https://github.com/hivecommons/hive/blob/v5/src/docs/ios-widget.md) — a Home Screen widget with issue/PR counts and sparklines (Scriptable, no server change).
 - [Dashboard settings explained](https://github.com/hivecommons/hive/blob/v5/src/docs/settings.md) — what each Settings tab controls and where each setting is documented.
 - [Maintainer commands](https://github.com/hivecommons/hive/blob/v5/src/docs/maintainer-commands.md) — slash commands for un-parking
@@ -53,11 +69,14 @@ Start with [Zero to Automation: Getting Started with Hive](/docs/hive/getting-st
 - [Release channels](/docs/hive/release-channels) — what `stable`, `candidate`, and `edge` each mean and what to expect from them.
 - [Security model](/docs/hive/security-model) — agent safety control inventory, threats, enforcement modes, residual gaps and operator audit checklist.
 - [Hive trust levels vs Copilot assisted permissions](/docs/hive/copilot-permissions-comparison) — what GitHub's per-action permission mode (GA 2026-10-26) does, what Hive's levels, lanes, proxy and gates do, and where each covers ground the other does not.
-- Security docs rule: `SECURITY.md` and every `src/docs/security*.md` / `ioscan*.md` page, plus `landscape.md`, must score Flesch-Kincaid grade 11 or lower (CI: `src/scripts/check-security-docs-readability.sh`).
-- Security docs rot rule: the same pages carry a `Last reviewed: YYYY-MM-DD` line in their first 15 lines, no older than 120 days, and may not say an item is "tracked in" / "in progress" / "planned" against an issue that is already closed (CI: `src/scripts/check-security-docs-rot.sh`).
 - [Data collection and telemetry](https://github.com/hivecommons/hive/blob/v5/src/docs/telemetry.md)
+- [Monitoring a hive with Prometheus and Grafana](https://github.com/hivecommons/hive/blob/v5/src/docs/monitoring.md)
 - [Securing your hive: a first-time operator's guide](/docs/hive/securing-your-hive)
 - [Community and support](https://github.com/hivecommons/hive/blob/v5/src/docs/community.md)
 - [Documentation map](/docs/hive/documentation-map)
 
 Current docs target branch `v5`; use the [documentation map](/docs/hive/documentation-map) for v2 → v4 and v4 → v5 migration pointers.
+
+## Contributor reference: maintaining security documentation
+
+`SECURITY.md`, every `src/docs/security*.md` / `ioscan*.md` page, and `landscape.md` must score Flesch-Kincaid grade 11 or lower (`src/scripts/check-security-docs-readability.sh`). The same pages need a `Last reviewed: YYYY-MM-DD` line in their first 15 lines, no older than 120 days, and must not describe a closed issue as "tracked in", "in progress", or "planned" (`src/scripts/check-security-docs-rot.sh`).
