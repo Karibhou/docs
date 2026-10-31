@@ -3,9 +3,11 @@
  *
  * Same single-sourcing model as scripts/sync-hive-docs.ts: the repos own the
  * markdown; this script pulls it at build time (prebuild) so the site never
- * drifts from the source. Only readme.md is required per project — optional
- * pages that 404 are skipped with a warning so a repo layout change cannot
- * break the docs build.
+ * drifts from the source. Only readme.md is required per project and fails
+ * the build when missing. For optional pages a definite 404 removes the
+ * previously synced docs/content copy (with a warning) so a page deleted
+ * upstream does not linger here; any other non-OK response (429/5xx) keeps
+ * the committed copy rather than unpublish a live page.
  *
  * A project may pull pages from more than one repository (Spektacular's
  * tutorials live in the spektacular-website Astro site), and a page may be
@@ -460,10 +462,12 @@ function rawUrl(r: RepoRef, source: string): string {
   return `https://raw.githubusercontent.com/${r.owner}/${r.repo}/${r.branch}/${source}`;
 }
 
-async function fetchFile(r: RepoRef, source: string): Promise<string | null> {
+async function fetchFile(
+  r: RepoRef,
+  source: string
+): Promise<{ status: number; body: string | null }> {
   const res = await fetchTextWithTimeout(rawUrl(r, source));
-  if (!res.ok) return null;
-  return res.body;
+  return { status: res.status, body: res.ok ? res.body : null };
 }
 
 async function fetchBinary(r: RepoRef, source: string): Promise<Buffer | null> {
@@ -542,11 +546,19 @@ async function main() {
 
     for (const f of p.files) {
       const r = fileRepo(p, f);
-      const body = await fetchFile(r, f.source);
+      const { status, body } = await fetchFile(r, f.source);
       if (body === null) {
         const msg = `sync-sibling-docs: ${r.owner}/${r.repo}@${r.branch}/${f.source} not found`;
         if (f.required) throw new Error(msg);
-        console.warn(`${msg} — skipped`);
+        const stale = path.join(outDir, f.target);
+        // Only a definite 404 means the upstream source is gone; a 429/5xx
+        // must keep the committed copy rather than unpublish a live page.
+        if (status === 404 && fs.existsSync(stale)) {
+          fs.rmSync(stale);
+          console.warn(`${msg} — removed stale ${p.project}/${f.target}`);
+        } else {
+          console.warn(`${msg} — skipped`);
+        }
         continue;
       }
       const page = await renderPage(p, f, body, outDir);

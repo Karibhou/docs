@@ -40,13 +40,17 @@ let origFetch: typeof globalThis.fetch;
 let origEnv: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>>;
 let fetchedUrls: string[];
 
-type Responses = Record<string, string | { binary: string }>;
+type Responses = Record<
+  string,
+  string | { binary: string } | { status: number }
+>;
 
 /**
  * Install a fetch stub that serves `responses` keyed by the
  * raw.githubusercontent path after the host (e.g. "hivecommons/pluk/main/README.md").
- * Any URL not listed answers 404. Every fetched URL is recorded in
- * `fetchedUrls` so tests can assert what main() asked for.
+ * Any URL not listed answers 404; a `{ status }` entry answers that status
+ * with an empty body. Every fetched URL is recorded in `fetchedUrls` so tests
+ * can assert what main() asked for.
  */
 function stubFetch(responses: Responses) {
   fetchedUrls = [];
@@ -59,6 +63,7 @@ function stubFetch(responses: Responses) {
       return new Response("missing", { status: 404, statusText: "Not Found" });
     }
     if (typeof hit === "string") return new Response(hit, { status: 200 });
+    if ("status" in hit) return new Response("", { status: hit.status });
     return new Response(Buffer.from(hit.binary, "base64"), { status: 200 });
   }) as typeof fetch;
 }
@@ -70,7 +75,7 @@ function joinCalls(spy: { mock: { calls: unknown[][] } }): string {
 /**
  * Import the script (firing the direct-run guard) and settle once main() has
  * either exited or dealt with the last file of the last project — which is
- * logged as `synced` or warned as `skipped`.
+ * logged as `synced` or warned as `skipped` / `removed stale`.
  */
 async function runSync(): Promise<{ out: string; warn: string; err: string }> {
   const lastProject = PROJECTS[PROJECTS.length - 1];
@@ -79,12 +84,16 @@ async function runSync(): Promise<{ out: string; warn: string; err: string }> {
   await import("./sync-sibling-docs");
   await vi.waitFor(
     () => {
+      const warned = joinCalls(warnSpy);
       const done =
         exitSpy.mock.calls.length > 0 ||
         joinCalls(logSpy).includes(
           `synced ${lastProject.project}/${lastFile.target}`
         ) ||
-        joinCalls(warnSpy).includes(`${lastFile.source} not found — skipped`);
+        warned.includes(`${lastFile.source} not found — skipped`) ||
+        warned.includes(
+          `${lastFile.source} not found — removed stale ${lastProject.project}/${lastFile.target}`
+        );
       if (!done) throw new Error("sync still running");
     },
     { timeout: 5_000, interval: 5 }
@@ -206,6 +215,55 @@ describe("sync-sibling-docs main()", () => {
     expect(out).toContain(
       "synced pluk/readme.md <- hivecommons/pluk/README.md"
     );
+  });
+
+  it("removes a previously synced optional page once its upstream source 404s", async () => {
+    const stale = outPath("hotshot", "linux.md");
+    fs.mkdirSync(path.dirname(stale), { recursive: true });
+    fs.writeFileSync(stale, "stale upstream copy\n");
+    stubFetch(allReadmes());
+    const { warn } = await runSync();
+
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(fs.existsSync(stale)).toBe(false);
+    expect(warn).toContain(
+      "hivecommons/hotshot@main/linux/README.md not found — removed stale hotshot/linux.md"
+    );
+  });
+
+  it.each([429, 500])(
+    "keeps a previously synced optional page when its source answers %i",
+    async status => {
+      const live = outPath("hotshot", "linux.md");
+      fs.mkdirSync(path.dirname(live), { recursive: true });
+      fs.writeFileSync(live, "live committed copy\n");
+      const responses = allReadmes();
+      responses["hivecommons/hotshot/main/linux/README.md"] = { status };
+      stubFetch(responses);
+      const { warn } = await runSync();
+
+      expect(exitSpy).not.toHaveBeenCalled();
+      expect(fs.existsSync(live)).toBe(true);
+      expect(fs.readFileSync(live, "utf8")).toBe("live committed copy\n");
+      expect(warn).toContain(
+        "hivecommons/hotshot@main/linux/README.md not found — skipped"
+      );
+      expect(warn).not.toContain("removed stale");
+    }
+  );
+
+  it("keeps a required page's existing copy and still fails when its source 404s", async () => {
+    const existing = outPath("pluk", "readme.md");
+    fs.mkdirSync(path.dirname(existing), { recursive: true });
+    fs.writeFileSync(existing, "existing\n");
+    const responses = allReadmes();
+    delete responses["hivecommons/pluk/main/README.md"];
+    stubFetch(responses);
+    const { err } = await runSync();
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(err).toContain("hivecommons/pluk@main/README.md not found");
+    expect(fs.existsSync(existing)).toBe(true);
   });
 
   it("writes markdown pages with the synced header and rewritten links", async () => {
