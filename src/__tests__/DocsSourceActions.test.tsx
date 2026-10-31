@@ -91,6 +91,24 @@ describe("DocsSourceActions — edit URL resolution", () => {
     expect(html).not.toContain("hivecommons/pluk/edit");
   });
 
+  it("points a locally authored hive page (no upstream twin) at this repo", () => {
+    const local =
+      "https://github.com/hivecommons/docs/blob/main/docs/content/hive/governor.md";
+    const html = render({
+      projectId: "hive",
+      filePath: "governor.md",
+      sourceUrl: local,
+    });
+    const links = hrefs(html);
+
+    expect(links[0]).toBe(
+      "https://github.com/hivecommons/docs/edit/main/docs/content/hive/governor.md?fork=true"
+    );
+    expect(links[1]).toBe(local);
+    expect(links[2]).toContain(encodeURIComponent(`Source file:\n${local}`));
+    expect(html).not.toContain("hivecommons/hive/");
+  });
+
   it("falls back to the project edit base when sourceUrl is not a GitHub blob URL", () => {
     const html = render({
       sourceUrl: "https://gitlab.com/hivecommons/docs/blob/main/README.md",

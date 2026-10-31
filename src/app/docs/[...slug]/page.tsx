@@ -317,7 +317,10 @@ export default async function DocPage({ params }: Props) {
   // General-section files live in this repo, not in any synced project.
   const sourceUrl = isGeneralSectionFile(filePath)
     ? `https://github.com/hivecommons/docs/blob/main/docs/content/${filePath}`
-    : page.sourceUrl
+    : (page.sourceUrl ??
+      // No "Synced from" banner: the page is authored in this repo, so the
+      // project's upstream path would 404.
+      `https://github.com/hivecommons/docs/blob/main/docs/content/${projectId ?? 'hive'}/${filePath}`)
 
   // Extract the layout wrapper (DocsLayout: prose typography, table of
   // contents, edit-page actions) so it can be rendered explicitly around the
