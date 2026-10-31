@@ -158,6 +158,16 @@ describe("sync-hive-docs main()", () => {
     expect(
       fs.existsSync(outPath("integrations/work-source-providers.md"))
     ).toBe(true);
+    for (const sub of [
+      "dashboard-sections/overview-and-metrics.md",
+      "dashboard-sections/workflow-and-agents.md",
+      "dashboard-sections/activity-monitor.md",
+      "labels-and-control-signals/reference.md",
+      "labels-and-control-signals/stage-labels.md",
+      "labels-and-control-signals/glossary-and-operations.md",
+    ]) {
+      expect(fs.existsSync(outPath(sub))).toBe(true);
+    }
 
     // One output file per fetched source.
     const written = fs

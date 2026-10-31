@@ -50,7 +50,13 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   // Dashboard section help pages (hivecommons/docs#253, hivecommons/hive#10915).
   { source: "dashboard-sections.md" },
   { source: "dashboard-glossary.md" },
+  { source: "dashboard-sections/overview-and-metrics.md" },
+  { source: "dashboard-sections/workflow-and-agents.md" },
+  { source: "dashboard-sections/activity-monitor.md" },
   { source: "labels-and-control-signals.md" },
+  { source: "labels-and-control-signals/reference.md" },
+  { source: "labels-and-control-signals/stage-labels.md" },
+  { source: "labels-and-control-signals/glossary-and-operations.md" },
   { source: "backup-restore.md", target: "backup-dr.md" },
   { source: "env-vars.md" },
   // Third-party integration guide (hivecommons/hive#10171).

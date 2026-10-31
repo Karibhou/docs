@@ -134,7 +134,13 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
     items: [
       { 'Dashboard sections explained': 'dashboard-sections.md' },
       { 'Dashboard glossary': 'dashboard-glossary.md' },
+      { 'Dashboard overview and metrics': 'dashboard-sections/overview-and-metrics.md' },
+      { 'Dashboard workflow and agents': 'dashboard-sections/workflow-and-agents.md' },
+      { 'Dashboard activity monitor': 'dashboard-sections/activity-monitor.md' },
       { 'Labels and control signals': 'labels-and-control-signals.md' },
+      { 'Labels reference': 'labels-and-control-signals/reference.md' },
+      { 'Stage labels': 'labels-and-control-signals/stage-labels.md' },
+      { 'Labels glossary and operations': 'labels-and-control-signals/glossary-and-operations.md' },
     ]
   },
   {
