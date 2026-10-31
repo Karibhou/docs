@@ -33,8 +33,9 @@ const nextConfig: NextConfig = {
     //   <style> blocks Mermaid injects into rendered SVGs.
     // - img-src includes data: for base64-encoded diagrams and blob: for
     //   canvas snapshots; https: covers external avatars/badges in docs content.
-    // - connect-src covers the docs search API, GitHub API (for version data),
-    //   and Netlify analytics endpoints.
+    // - connect-src covers the docs search API, GitHub API (version data),
+    //   img.shields.io (navbar GitHub stats, useGithubStats.ts), the production
+    //   docs host (shared.json fetched on preview deploys), and analytics.
     // - worker-src blob: is required by the Mermaid diagram renderer.
     // - frame-ancestors 'none' replaces X-Frame-Options: DENY (equivalent
     //   but CSP-native; X-Frame-Options kept for older browser compat).
@@ -44,7 +45,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://api.github.com https://www.google-analytics.com",
+      "connect-src 'self' https://api.github.com https://img.shields.io https://docs.hivecommons.dev https://www.google-analytics.com",
       "worker-src blob:",
       "frame-src https://www.youtube-nocookie.com",
       "frame-ancestors 'none'",

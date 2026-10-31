@@ -137,6 +137,10 @@ describe("next.config.ts Content-Security-Policy", () => {
     // src/components/navbar/useGithubStats.ts and the version switcher fetch
     // GitHub; the YouTube embed on the meetings page uses the nocookie host.
     expect(csp.get("connect-src")).toContain("https://api.github.com");
+    // useGithubStats.ts fetches shields.io; useSharedConfig.ts fetches the
+    // production shared.json cross-origin on preview deploys.
+    expect(csp.get("connect-src")).toContain("https://img.shields.io");
+    expect(csp.get("connect-src")).toContain("https://docs.hivecommons.dev");
     expect(csp.get("frame-src")).toEqual(["https://www.youtube-nocookie.com"]);
     // Mermaid renders in a blob: worker and needs WASM, but not eval.
     expect(csp.get("worker-src")).toEqual(["blob:"]);
