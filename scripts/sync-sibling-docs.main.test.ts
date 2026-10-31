@@ -231,6 +231,29 @@ describe("sync-sibling-docs main()", () => {
     );
   });
 
+  it("prunes assets copied for a removed optional page but keeps ones another page uses", async () => {
+    const stale = outPath("hotshot", "linux.md");
+    const own = outPath("hotshot", "images/linux-only.png");
+    const shared = outPath("hotshot", "images/shared.png");
+    fs.mkdirSync(path.dirname(own), { recursive: true });
+    fs.writeFileSync(own, "png");
+    fs.writeFileSync(shared, "png");
+    fs.writeFileSync(
+      stale,
+      "![a](images/linux-only.png)\n![b](images/shared.png)\n"
+    );
+    const other = outPath("hotshot", "windows.md");
+    fs.writeFileSync(other, "![c](images/shared.png)\n");
+    const responses = allReadmes();
+    responses["hivecommons/hotshot/main/windows/README.md"] = { status: 500 };
+    stubFetch(responses);
+    await runSync();
+
+    expect(fs.existsSync(stale)).toBe(false);
+    expect(fs.existsSync(own)).toBe(false);
+    expect(fs.existsSync(shared)).toBe(true);
+  });
+
   it.each([429, 500])(
     "keeps a previously synced optional page when its source answers %i",
     async status => {

@@ -516,6 +516,38 @@ async function copyAssets(
   return rewritten;
 }
 
+const MARKDOWN_IMAGE = /!\[[^\]]*\]\(\s*<?([^)\s>]+)/g;
+
+function localImageRefs(markdown: string, outDir: string): Set<string> {
+  const refs = new Set<string>();
+  for (const m of markdown.matchAll(MARKDOWN_IMAGE)) {
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(m[1])) continue;
+    refs.add(path.resolve(outDir, m[1].replace(/^\/+/, "")));
+  }
+  return refs;
+}
+
+/**
+ * Remove the images copyAssets wrote for a page that is being unpublished.
+ * Only files under outDir that no other synced page still references are
+ * deleted.
+ */
+function pruneAssets(p: ProjectSync, stale: string, outDir: string): void {
+  const root = path.resolve(outDir) + path.sep;
+  const kept = new Set<string>();
+  for (const other of p.files) {
+    const file = path.join(outDir, other.target);
+    if (file === stale || !fs.existsSync(file)) continue;
+    for (const ref of localImageRefs(fs.readFileSync(file, "utf8"), outDir)) {
+      kept.add(ref);
+    }
+  }
+  for (const asset of localImageRefs(fs.readFileSync(stale, "utf8"), outDir)) {
+    if (!asset.startsWith(root) || kept.has(asset)) continue;
+    if (fs.existsSync(asset) && fs.statSync(asset).isFile()) fs.rmSync(asset);
+  }
+}
+
 async function renderPage(
   p: ProjectSync,
   f: SyncedFile,
@@ -554,6 +586,7 @@ async function main() {
         // Only a definite 404 means the upstream source is gone; a 429/5xx
         // must keep the committed copy rather than unpublish a live page.
         if (status === 404 && fs.existsSync(stale)) {
+          pruneAssets(p, stale, outDir);
           fs.rmSync(stale);
           console.warn(`${msg} — removed stale ${p.project}/${f.target}`);
         } else {
