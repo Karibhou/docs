@@ -470,10 +470,12 @@ async function fetchFile(
   return { status: res.status, body: res.ok ? res.body : null };
 }
 
-async function fetchBinary(r: RepoRef, source: string): Promise<Buffer | null> {
+async function fetchBinary(
+  r: RepoRef,
+  source: string
+): Promise<{ status: number; body: Buffer | null }> {
   const res = await fetchBytesWithTimeout(rawUrl(r, source));
-  if (!res.ok) return null;
-  return res.body;
+  return { status: res.status, body: res.ok ? res.body : null };
 }
 
 /**
@@ -501,8 +503,8 @@ async function copyAssets(
       continue;
     }
     const source = path.posix.join(f.assetsRoot ?? "", rel);
-    const bytes = await fetchBinary(r, source);
-    if (bytes === null) {
+    const { body } = await fetchBinary(r, source);
+    if (body === null) {
       console.warn(
         `sync-sibling-docs: ${r.owner}/${r.repo}@${r.branch}/${source} not found — linking to ${f.siteBase}${img}`
       );
@@ -510,7 +512,7 @@ async function copyAssets(
       continue;
     }
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.writeFileSync(dest, bytes);
+    fs.writeFileSync(dest, body);
     rewritten.set(img, rel);
   }
   return rewritten;
