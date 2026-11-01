@@ -1,8 +1,6 @@
 import type { MetadataRoute } from "next";
-import fs from "fs";
-import path from "path";
 import { PROJECTS, type ProjectId } from "@/config/versions";
-import { buildPageMap, docsContentPath } from "@/app/docs/page-map";
+import { buildPageMap } from "@/app/docs/page-map";
 
 const SITE_URL = "https://docs.hivecommons.dev";
 
@@ -49,18 +47,6 @@ function collectPageRoutes(nodes: PageMapNode[], routes: string[] = []) {
   return routes;
 }
 
-/**
- * Get the last modified date for a file, falling back to current date.
- */
-function getLastModified(filePath: string): Date {
-  try {
-    const stats = fs.statSync(filePath);
-    return stats.mtime;
-  } catch {
-    return new Date();
-  }
-}
-
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
   const seen = new Set<string>();
@@ -69,7 +55,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const projectIds = Object.keys(PROJECTS) as ProjectId[];
 
   for (const projectId of projectIds) {
-    const { pageMap, routeMap, contentPath } = buildPageMap(projectId);
+    const { pageMap, routeMap } = buildPageMap(projectId);
     const projectPrefix = `/docs/${PROJECTS[projectId].basePath}/`;
 
     for (const route of collectPageRoutes(pageMap as PageMapNode[])) {
@@ -85,9 +71,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
       entries.push({
         url,
-        lastModified: getLastModified(
-          path.join(isProjectRoute ? contentPath : docsContentPath, file)
-        ),
         changeFrequency: DOCS_CHANGE_FREQ,
         priority: PRIORITY_OVERRIDES.get(url) ?? DOCS_PAGE_PRIORITY,
       });

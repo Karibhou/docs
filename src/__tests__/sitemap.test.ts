@@ -107,9 +107,9 @@ describe("sitemap generated from fixture content", () => {
     }
   });
 
-  it("maps navigation-linked files to routes, priorities, frequencies, and mtimes", () => {
+  it("maps navigation-linked files to routes, priorities, and frequencies", () => {
     fixtureRoot = fs.mkdtempSync(path.join(realCwd, ".sitemap-fixture-"));
-    const archPath = write("docs/content/hive/architecture.md");
+    write("docs/content/hive/architecture.md");
     write("docs/content/hive/unlinked/page.md");
     vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot);
 
@@ -122,38 +122,9 @@ describe("sitemap generated from fixture content", () => {
     }
     expect(arch?.priority).toBe(0.7);
     expect(arch?.changeFrequency).toBe("weekly");
-    expect(arch?.lastModified).toEqual(fs.statSync(archPath).mtime);
+    expect(arch).not.toHaveProperty("lastModified");
     expect(byUrl.has(`${SITE_URL}/docs/hive/architecture`)).toBe(false);
     expect(byUrl.has(`${SITE_URL}/docs/hive/unlinked/page`)).toBe(false);
-  });
-
-  it("falls back to the current time when a linked file cannot be stat'ed", () => {
-    fixtureRoot = fs.mkdtempSync(path.join(realCwd, ".sitemap-stat-"));
-    const archPath = write("docs/content/hive/architecture.md");
-    vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot);
-    const realStat = fs.statSync;
-    vi.spyOn(fs, "statSync").mockImplementation(((
-      p: fs.PathLike,
-      ...rest: unknown[]
-    ) => {
-      if (String(p) === archPath) {
-        throw Object.assign(new Error("EACCES"), { code: "EACCES" });
-      }
-      return (realStat as (...a: unknown[]) => fs.Stats)(p, ...rest);
-    }) as typeof fs.statSync);
-
-    const before = Date.now();
-    const entries = sitemap();
-    const after = Date.now();
-    const arch = entries.find(
-      entry => entry.url === `${SITE_URL}/docs/hive/overview/architecture`
-    );
-
-    expect(arch).toBeDefined();
-    expect(arch?.lastModified).toBeInstanceOf(Date);
-    const stamp = (arch?.lastModified as Date).getTime();
-    expect(stamp).toBeGreaterThanOrEqual(before);
-    expect(stamp).toBeLessThanOrEqual(after);
   });
 
   it("omits generated routes and redirect-only URLs for missing content", () => {

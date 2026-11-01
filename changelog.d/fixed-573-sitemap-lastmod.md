@@ -1,0 +1,1 @@
+- `sitemap.xml` no longer emits a `<lastmod>` for every page: the value was always the build time because the prebuild sync rewrites each synced page, so it told crawlers every page changed on every deploy (#573).
