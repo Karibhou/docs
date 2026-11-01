@@ -1260,3 +1260,240 @@ describe("request logging", () => {
     expect(JSON.stringify(rec)).not.toContain("secret-id");
   });
 });
+
+describe("quota invariant on refused requests", () => {
+  // Three fixes in a row (#555, #558, #560) each closed one path where a
+  // slot was reserved and a later refusal forgot to give it back. This pins
+  // the class rather than the sites: whatever reason a request is refused
+  // for, it must leave every quota record holding exactly the live slots it
+  // held before.
+  const RATE_PREFIXES = [
+    IP_RATE_PREFIX,
+    REGISTER_IP_RATE_PREFIX,
+    INSTALL_RATE_PREFIX,
+  ];
+
+  /**
+   * Live slots held per quota key. A record that exists but holds nothing is
+   * omitted, so a slot taken and released compares equal to one never taken.
+   */
+  function heldSlots(s: MemoryStore): Map<string, number> {
+    const held = new Map<string, number>();
+    for (const [key, value] of s.data) {
+      let n = 0;
+      if (key.startsWith(REGISTER_DAY_PREFIX)) {
+        n = (value as { count: number }).count;
+      } else if (RATE_PREFIXES.some(p => key.startsWith(p))) {
+        n = (value as { times: number[] }).times.filter(
+          t => now - t < RATE_WINDOW_MS
+        ).length;
+      }
+      if (n > 0) held.set(key, n);
+    }
+    return held;
+  }
+
+  interface Refusal {
+    /** The request and deps to send, after any per-case arrangement. */
+    arrange: () => Promise<{ req: Request; d: RelayDeps }>;
+    status: number;
+    /**
+     * True when the refusal happens after at least one slot was reserved, so
+     * the handler must have written to the store to put it back; false when
+     * the request is turned away before any reservation, so no quota record
+     * may have been created (the nonce record is not a quota).
+     */
+    reserves: boolean;
+  }
+
+  const dayKey = () =>
+    `${REGISTER_DAY_PREFIX}${new Date(now).toISOString().slice(0, 10)}`;
+
+  /** Writes to `store` but refuses to create any install record. */
+  const losingStore = (): RelayStore => ({
+    ...store,
+    get: k => store.get(k),
+    getWithMetadata: k => store.getWithMetadata(k),
+    delete: k => store.delete(k),
+    list: o => store.list(o),
+    setJSON: async (k, v, o) =>
+      k.startsWith(INSTALL_PREFIX) && o?.onlyIfNew
+        ? { modified: false }
+        : store.setJSON(k, v, o),
+  });
+
+  const registerCases: Record<string, Refusal> = {
+    "day cap already reached": {
+      arrange: async () => {
+        store.data.set(dayKey(), { count: MAX_REGISTRATIONS_PER_DAY });
+        return { req: register(), d: deps() };
+      },
+      status: 429,
+      reserves: true,
+    },
+    "create-only install write loses the race": {
+      arrange: async () => ({
+        req: register(),
+        d: deps({ store: losingStore() }),
+      }),
+      status: 409,
+      reserves: true,
+    },
+    "per-IP registration window already full": {
+      arrange: async () => {
+        store.data.set(`${REGISTER_IP_RATE_PREFIX}${sha256("203.0.113.7")}`, {
+          times: Array.from(
+            { length: MAX_REGISTRATIONS_PER_IP_PER_WINDOW },
+            () => now - 1
+          ),
+        });
+        return { req: register(), d: deps() };
+      },
+      status: 429,
+      reserves: false,
+    },
+    "install id already bound to a different key": {
+      arrange: async () => {
+        await registerOk();
+        const other = newHive();
+        const req = register(
+          other,
+          { headerInstallId: hive.installId },
+          { install_id: hive.installId, public_key: other.publicKey }
+        );
+        return { req, d: deps() };
+      },
+      status: 409,
+      reserves: false,
+    },
+    "malformed registration body": {
+      arrange: async () => ({
+        req: register(hive, {}, { install_id: hive.installId }),
+        d: deps(),
+      }),
+      status: 400,
+      reserves: false,
+    },
+  };
+
+  const submitCases: Record<string, Refusal> = {
+    "install limit refuses after the IP slot is taken": {
+      arrange: async () => {
+        // The plain-read pre-check lags one slot behind the conditional read,
+        // so only the install reservation refuses — after the IP reservation.
+        const stale = new (class extends MemoryStore {
+          async get(key: string): Promise<unknown> {
+            const rec = await super.get(key);
+            if (!key.startsWith(INSTALL_RATE_PREFIX) || !rec) return rec;
+            const { times } = rec as { times: number[] };
+            return { times: times.slice(1) };
+          }
+
+          async getWithMetadata(
+            key: string
+          ): Promise<{ data: unknown; etag?: string } | null> {
+            const data = await super.get(key);
+            if (data === null) return null;
+            return { data, etag: this.etags.get(key) };
+          }
+        })();
+        store = stale;
+        await registerOk();
+        store.data.set(`${INSTALL_RATE_PREFIX}${hive.installId}`, {
+          times: Array.from(
+            { length: MAX_PER_INSTALL_PER_WINDOW },
+            () => now - 1
+          ),
+        });
+        return { req: submit(GOOD), d: deps() };
+      },
+      status: 429,
+      reserves: true,
+    },
+    "per-IP submission window already full": {
+      arrange: async () => {
+        await registerOk();
+        store.data.set(`${IP_RATE_PREFIX}${sha256("203.0.113.7")}`, {
+          times: Array.from({ length: MAX_PER_IP_PER_WINDOW }, () => now - 1),
+        });
+        return { req: submit(GOOD), d: deps() };
+      },
+      status: 429,
+      reserves: false,
+    },
+    "per-install pre-check already at the cap": {
+      arrange: async () => {
+        await registerOk();
+        store.data.set(`${INSTALL_RATE_PREFIX}${hive.installId}`, {
+          times: Array.from(
+            { length: MAX_PER_INSTALL_PER_WINDOW },
+            () => now - 1
+          ),
+        });
+        return { req: submit(GOOD), d: deps() };
+      },
+      status: 429,
+      reserves: false,
+    },
+    "unknown install": {
+      arrange: async () => ({ req: submit(GOOD), d: deps() }),
+      status: 401,
+      reserves: false,
+    },
+    "malformed submission body": {
+      arrange: async () => {
+        await registerOk();
+        return { req: submit({ hive_id: "solo-hive", score: 99 }), d: deps() };
+      },
+      status: 400,
+      reserves: false,
+    },
+  };
+
+  async function assertQuotaUntouched(
+    { arrange, status, reserves }: Refusal,
+    quotaPrefixes: string[]
+  ): Promise<void> {
+    const quotaKeys = () =>
+      [...store.data.keys()]
+        .filter(k =>
+          [...RATE_PREFIXES, REGISTER_DAY_PREFIX].some(p => k.startsWith(p))
+        )
+        .sort();
+    const { req, d } = await arrange();
+    const before = heldSlots(store);
+    const keysBefore = quotaKeys();
+    const writesBefore = store.writes;
+    const res = await handleRelayRequest(req, d);
+    expect(res.status).toBe(status);
+    expect(heldSlots(store)).toEqual(before);
+    if (reserves) {
+      // The path really did reserve and release: both are conditional
+      // writes, so the equality above is not vacuous.
+      expect(store.writes).toBeGreaterThan(writesBefore);
+      for (const prefix of quotaPrefixes) {
+        expect(quotaKeys().some(k => k.startsWith(prefix))).toBe(true);
+      }
+    } else {
+      expect(quotaKeys()).toEqual(keysBefore);
+    }
+  }
+
+  describe("POST /api/nps/register", () => {
+    it.each(Object.entries(registerCases))(
+      "leaves every quota record as it was when refused: %s",
+      async (_name, refusal) => {
+        await assertQuotaUntouched(refusal, [REGISTER_IP_RATE_PREFIX]);
+      }
+    );
+  });
+
+  describe("POST /api/nps (submit)", () => {
+    it.each(Object.entries(submitCases))(
+      "leaves every quota record as it was when refused: %s",
+      async (_name, refusal) => {
+        await assertQuotaUntouched(refusal, [IP_RATE_PREFIX]);
+      }
+    );
+  });
+});
