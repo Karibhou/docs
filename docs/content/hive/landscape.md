@@ -201,7 +201,7 @@ The project is evaluating stronger isolation runtimes. One candidate is
 "safe, private runtime for fleets of autonomous AI agents" with kernel-level
 file, syscall and network policy per sandbox. AAIF's
 [OpenSandbox](https://github.com/opensandbox-group/OpenSandbox) is another.
-[ADR-0026](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0026-sandbox-runtime-selection.md) (Proposed) compares both
+[ADR-0026](/docs/hive/adr/0026-sandbox-runtime-selection) (Proposed) compares both
 against the sandbox contract and recommends OpenShell, pending a prototype on
 a hive spoke. No integration exists today.
 

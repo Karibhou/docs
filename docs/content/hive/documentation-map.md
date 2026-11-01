@@ -19,6 +19,7 @@ Documentation for the current Hive line (branch `v5`; the code and docs live und
 ### First installation
 
 - [Hosted Hive Hub onboarding](https://github.com/hivecommons/hive/blob/v5/src/docs/hosted-hub.md) — signing in at `https://hive.hivecommons.dev`, requesting a hosted hive, installing the GitHub App, configuring model gateways and Copilot login, reading `/fleet`, and fixing common setup problems.
+- [Hub Fleet activity page](https://github.com/hivecommons/hive/blob/v5/src/docs/hub-fleet-activity.md) — the read-only `/activity` board of open issues and PRs across the hives you can see: per-viewer scoping, hive chips, group-by-hive freshness headers, always-visible truncation and stale-source disclosures, 15-second ETag polling, and display mode (`?kiosk=1`, `?display=1`, `am.*` views and `hub-activity` playlists).
 - [Docker Compose quick start](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-docker-compose.md) — default standalone installation, prerequisites, and verification.
 - [Podman quick start](https://github.com/hivecommons/hive/blob/v5/src/docs/quickstart-podman.md) — standalone Quadlet/systemd installation, with rootless/rootful prerequisites.
 - [Kubernetes deployment](https://github.com/hivecommons/hive/blob/v5/src/docs/kubernetes-deployment.md) — standalone cluster installation, storage, authentication, and dashboard access. Related: [health checks](https://github.com/hivecommons/hive/blob/v5/src/docs/health-checks.md).

@@ -81,4 +81,4 @@ sequencing; ADR-0019/0025 give their current action/mode contract first.
 - [ADR-0023: Hive may merge PRs whose author could merge them](/docs/hive/adr/0023-trusted-author-automerge)
 - [ADR-0024: Provider credential lifecycle](/docs/hive/adr/0024-provider-credential-lifecycle) — **Proposed**, not a credential-pool or refresh-service setup guide.
 - [ADR-0025: One stage engine derives and writes every `stage/*` label](/docs/hive/adr/0025-central-stage-engine)
-- [ADR-0026: Sandbox runtime selection](https://github.com/hivecommons/hive/blob/v5/src/docs/adr/0026-sandbox-runtime-selection.md) (Proposed)
+- [ADR-0026: Sandbox runtime selection](/docs/hive/adr/0026-sandbox-runtime-selection) (Proposed)
