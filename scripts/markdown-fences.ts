@@ -27,6 +27,44 @@ function isFenceCloser(open: OpenFence, marker: string, info: string): boolean {
 }
 
 /**
+ * Split content into consecutive segments that are either inside a fenced code
+ * block (opener and closer lines included) or outside one. Concatenating the
+ * `text` of every segment reproduces `content` exactly. An unclosed fence runs
+ * to the end of the content.
+ */
+export function splitFencedSegments(
+  content: string
+): Array<{ text: string; fenced: boolean }> {
+  const segments: Array<{ text: string; fenced: boolean }> = [];
+  let open: OpenFence | null = null;
+
+  for (const line of content.split(/(?<=\n)/)) {
+    const m = line.replace(/\r?\n$/, "").match(FENCE_RE);
+    let fenced = open !== null;
+    if (open) {
+      if (m && isFenceCloser(open, m[2], m[3])) open = null;
+    } else if (m && !(m[2][0] === "`" && m[3].includes("`"))) {
+      open = { marker: m[2] };
+      fenced = true;
+    }
+    const last = segments[segments.length - 1];
+    if (last && last.fenced === fenced) last.text += line;
+    else segments.push({ text: line, fenced });
+  }
+  return segments;
+}
+
+/** Apply `fn` to the text outside fenced code blocks; fences are untouched. */
+export function mapOutsideFences(
+  content: string,
+  fn: (text: string) => string
+): string {
+  return splitFencedSegments(content)
+    .map(seg => (seg.fenced ? seg.text : fn(seg.text)))
+    .join("");
+}
+
+/**
  * Ensure every fenced code block declares a language and is surrounded by
  * blank lines. Fence content is never touched; only opener lines and the
  * lines adjacent to a fence are rewritten.

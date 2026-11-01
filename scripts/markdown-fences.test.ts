@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { normalizeFences, DEFAULT_FENCE_LANGUAGE } from "./markdown-fences";
+import {
+  normalizeFences,
+  splitFencedSegments,
+  mapOutsideFences,
+  DEFAULT_FENCE_LANGUAGE,
+} from "./markdown-fences";
 
 describe("normalizeFences", () => {
   it("adds the default language to a bare fence opener (MD040)", () => {
@@ -62,6 +67,56 @@ describe("normalizeFences", () => {
     const input = "text\n```\ncode\n```";
     expect(normalizeFences(input)).toBe(
       `text\n\n\`\`\`${DEFAULT_FENCE_LANGUAGE}\ncode\n\`\`\``
+    );
+  });
+});
+
+describe("splitFencedSegments", () => {
+  it("separates fenced and unfenced text and round-trips", () => {
+    const input = "a\n```js\nb\n```\nc\n";
+    const segs = splitFencedSegments(input);
+    expect(segs).toEqual([
+      { text: "a\n", fenced: false },
+      { text: "```js\nb\n```\n", fenced: true },
+      { text: "c\n", fenced: false },
+    ]);
+    expect(segs.map(s => s.text).join("")).toBe(input);
+  });
+
+  it("handles ~~~ fences and does not close on a different marker", () => {
+    const segs = splitFencedSegments("~~~\n```\nx\n~~~\ny");
+    expect(segs).toEqual([
+      { text: "~~~\n```\nx\n~~~\n", fenced: true },
+      { text: "y", fenced: false },
+    ]);
+  });
+
+  it("closes on a longer marker but not a shorter one", () => {
+    const segs = splitFencedSegments("````\n```\n`````\nz");
+    expect(segs).toEqual([
+      { text: "````\n```\n`````\n", fenced: true },
+      { text: "z", fenced: false },
+    ]);
+  });
+
+  it("runs an unclosed fence to EOF", () => {
+    expect(splitFencedSegments("a\n```\nb\nc")).toEqual([
+      { text: "a\n", fenced: false },
+      { text: "```\nb\nc", fenced: true },
+    ]);
+  });
+
+  it("does not treat a backtick fence with a backtick in its info as a fence", () => {
+    expect(splitFencedSegments("```a`b\nx\n")).toEqual([
+      { text: "```a`b\nx\n", fenced: false },
+    ]);
+  });
+});
+
+describe("mapOutsideFences", () => {
+  it("only transforms unfenced text", () => {
+    expect(mapOutsideFences("a\n```\na\n```\na", t => t.toUpperCase())).toBe(
+      "A\n```\na\n```\nA"
     );
   });
 });

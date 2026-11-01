@@ -9,6 +9,7 @@
  */
 import path from "node:path";
 import ts from "typescript";
+import { mapOutsideFences } from "./markdown-fences";
 
 /**
  * Convert a human-readable nav title into a URL slug.
@@ -272,4 +273,21 @@ export function resolveInternalLink(
     resolved = path.posix.normalize(path.posix.join(baseDir, pathPart));
   }
   return resolved.replace(/\.mdx?$/i, "");
+}
+
+const INLINE_LINK = /\]\(\s*([^)\s]+)(?:\s+[^)]*)?\)/g;
+const REF_LINK = /^\s*\[[^\]]+\]:\s*(\S+)/gm;
+
+/**
+ * Collect inline and reference-definition link targets from markdown,
+ * ignoring anything inside fenced code blocks.
+ */
+export function extractLinkTargets(content: string): string[] {
+  const targets: string[] = [];
+  mapOutsideFences(content, text => {
+    for (const m of text.matchAll(INLINE_LINK)) targets.push(m[1]);
+    for (const m of text.matchAll(REF_LINK)) targets.push(m[1]);
+    return text;
+  });
+  return targets;
 }

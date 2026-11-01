@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ASSET_EXT,
   PROJECT_FOR_NAV,
+  extractLinkTargets,
   isExternalOrAnchor,
   navEntryRoute,
   normRoute,
@@ -433,5 +434,20 @@ describe("resolveInternalLink", () => {
     expect(resolveInternalLink("./target", "/docs/hive/overview")).toBe(
       "/docs/hive/target"
     );
+  });
+});
+
+describe("extractLinkTargets", () => {
+  it("collects inline and reference targets outside fences only", () => {
+    const md = [
+      "[a](/docs/a)",
+      "```md",
+      "[b](/docs/nope)",
+      "[r]: /docs/nope2",
+      "```",
+      "[r]: /docs/c",
+      "",
+    ].join("\n");
+    expect(extractLinkTargets(md)).toEqual(["/docs/a", "/docs/c"]);
   });
 });

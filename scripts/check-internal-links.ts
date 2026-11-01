@@ -31,6 +31,7 @@ import {
   PROJECT_FOR_NAV,
   parseNavStructures,
   navEntryRoute,
+  extractLinkTargets,
 } from "./check-internal-links-helpers";
 
 const contentRoot = path.join(process.cwd(), "docs", "content");
@@ -102,21 +103,13 @@ function fileRoute(fileAbs: string): string {
   return `/docs/${rel}`;
 }
 
-const INLINE_LINK = /\]\(\s*([^)\s]+)(?:\s+[^)]*)?\)/g;
-const REF_LINK = /^\s*\[[^\]]+\]:\s*(\S+)/gm;
-
-// INLINE_LINK / REF_LINK regexes remain local (script-only).
-
 function checkFile(fileAbs: string) {
   const content = fs.readFileSync(fileAbs, "utf8");
   const fileRel = path.relative(process.cwd(), fileAbs).replace(/\\/g, "/");
   const baseRoute = fileRoute(fileAbs);
   const baseDir = path.posix.dirname(baseRoute);
 
-  const targets: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = INLINE_LINK.exec(content))) targets.push(m[1]);
-  while ((m = REF_LINK.exec(content))) targets.push(m[1]);
+  const targets = extractLinkTargets(content);
 
   for (const raw of targets) {
     if (isExternalOrAnchor(raw)) continue;

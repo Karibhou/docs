@@ -122,3 +122,18 @@ describe("rewriteMarkdownLinks", () => {
     expect(rewriteMarkdownLinks(html, opts)).toBe(html);
   });
 });
+
+describe("rewriteMarkdownLinks fences", () => {
+  it("leaves links inside fenced code blocks untouched", () => {
+    const fenced =
+      "```md\n[x](./guide.md)\n![img](./a.png)\n[ref]: ./other.md\n```\n";
+    const outside = "[x](./guide.md)\n![img](./a.png)\n[ref]: ./other.md\n";
+    const o = { ...opts, rawBase: RAW };
+    const out = rewriteMarkdownLinks(`${fenced}\n${outside}`, o);
+    const [inside, after] = out.split("```\n\n");
+    expect(`${inside}\`\`\`\n`).toBe(fenced);
+    expect(after).toBe(
+      `[x](${BLOB}/docs/guide/guide.md)\n![img](${RAW}/docs/guide/a.png)\n[ref]: ${BLOB}/docs/guide/other.md\n`
+    );
+  });
+});

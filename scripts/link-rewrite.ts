@@ -21,6 +21,7 @@
  * sources `![alt](src)` are pointed at raw file URLs instead.
  */
 import path from "path";
+import { mapOutsideFences } from "./markdown-fences";
 
 export interface LinkRewriteOptions {
   /** Repo-root-relative path of the file whose content is being rewritten. */
@@ -101,11 +102,16 @@ export function rewriteImageTarget(
 }
 
 // Apply link rewriting to a file's markdown content.
+// Fenced code blocks are left byte-for-byte unchanged.
 export function rewriteMarkdownLinks(
   content: string,
   opts: LinkRewriteOptions
 ): string {
-  let out = content;
+  return mapOutsideFences(content, text => rewriteLinksInText(text, opts));
+}
+
+function rewriteLinksInText(text: string, opts: LinkRewriteOptions): string {
+  let out = text;
 
   // Images first: they become absolute raw URLs, which the link pass below
   // then leaves untouched.
