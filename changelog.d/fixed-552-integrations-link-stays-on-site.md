@@ -1,0 +1,1 @@
+- The Hive introduction, documentation map and landscape pages now link to the on-site Supported agents & inference engines page (/docs/hive/integrations) instead of the GitHub copy of integrations.md (#552).

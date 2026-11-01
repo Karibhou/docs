@@ -96,7 +96,10 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
 
 // Hive pages authored in this repo (docs/content/hive/) rather than synced,
 // listed so links from synced pages resolve to their site routes.
-const localHiveDocs: Array<{ source: string; target?: string }> = [];
+const localHiveDocs: Array<{ source: string; target?: string }> = [
+  // Supported agents & inference engines page authored here, published at /docs/hive/integrations (#552).
+  { source: "integrations.md" },
+];
 
 // ---------------------------------------------------------------------------
 // Brand scrub

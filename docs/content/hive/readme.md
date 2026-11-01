@@ -2,7 +2,7 @@
 
 # Hive introduction
 
-Hive helps maintain a GitHub project. It watches reports and tasks (issues), proposed code changes (pull requests, or PRs), failed automated build and test checks (CI), known security vulnerabilities (CVEs), and Dependabot alerts. It sends AI coding agents to sort reports, make fixes, review changes, and prepare releases. See [Integrations](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations.md) for supported agent backends.
+Hive helps maintain a GitHub project. It watches reports and tasks (issues), proposed code changes (pull requests, or PRs), failed automated build and test checks (CI), known security vulnerabilities (CVEs), and Dependabot alerts. It sends AI coding agents to sort reports, make fixes, review changes, and prepare releases. See [Integrations](/docs/hive/integrations) for supported agent backends.
 
 For example, Hive can spot a missing test, record the finding on its dashboard, and — if the configured permissions allow it — ask the quality agent to propose a test in a pull request. At lower levels, a person reviews and merges that change. Autonomous merging is optional, not the starting goal.
 
@@ -55,7 +55,7 @@ A terminal agent is a power tool: you hold it, aim it, and it stops when you sto
 ## Where to go next
 
 - [Architecture](/docs/hive/architecture)
-- [Integrations](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations.md) — backends, trackers, forges and sandboxes Hive works with, at a glance.
+- [Integrations](/docs/hive/integrations) — backends, trackers, forges and sandboxes Hive works with, at a glance.
 - [Getting started](/docs/hive/getting-started)
 - [Operator reference](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md)
 - [GitHub webhooks: cadence, patch and reconcile](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md) — polling fallback, webhook patch and reconcile, and the state-accuracy guarantees.

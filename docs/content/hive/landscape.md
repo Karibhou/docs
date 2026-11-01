@@ -230,7 +230,7 @@ GitHub.com or GitHub Enterprise. Hive has GitLab and Gitea/Forgejo adapters
 but the governor, merge gate and agent `gh` path are not yet forge-neutral
 ([#14096](https://github.com/hivecommons/hive/issues/14096)). Fullsend
 already ships GitHub, GitLab and Forgejo. See [Forges](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/forges.md).
-The [integrations page](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations.md) lists every tracker, forge and backend
+The [integrations page](/docs/hive/integrations) lists every tracker, forge and backend
 with its status.
 
 ## Related projects and vendors
@@ -258,7 +258,7 @@ three: open-source, self-hosted, fleet-scale, with explicit policy.
 - **Hive**: operating a live agent fleet across any work source, with many
   runtimes, ACMM gates, fixed merge policy, hub/spoke provisioning,
   contributor compute, cost visibility and proxy-level write checks. See
-  [integrations.md](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations.md) for what Hive works with today.
+  [integrations.md](/docs/hive/integrations) for what Hive works with today.
 
 ## Hive claims checked against this repo
 

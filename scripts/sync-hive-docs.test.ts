@@ -46,6 +46,18 @@ describe("rewriteLinkTarget — Case 1: in-tree synced docs -> site route", () =
     ).toBe("/docs/hive/adr/0026-sandbox-runtime-selection");
   });
 
+  it("rewrites the local integrations page link from src/docs/README.md to its site route (#552)", () => {
+    expect(rewriteLinkTarget("integrations.md", README)).toBe(
+      "/docs/hive/integrations"
+    );
+  });
+
+  it("rewrites the local integrations page link from src/docs/landscape.md to its site route (#552)", () => {
+    expect(rewriteLinkTarget("integrations.md", "src/docs/landscape.md")).toBe(
+      "/docs/hive/integrations"
+    );
+  });
+
   it("preserves an #anchor on an in-tree link", () => {
     expect(rewriteLinkTarget("architecture.md#the-governor-loop", README)).toBe(
       "/docs/hive/architecture#the-governor-loop"
