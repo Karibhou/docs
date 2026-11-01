@@ -137,8 +137,19 @@ async function main() {
   const byId = new Map<string, Recording>();
   for (const recording of existing.recordings)
     byId.set(recording.id, recording);
-  for (const recording of fetched)
-    byId.set(recording.id, { ...byId.get(recording.id), ...recording });
+  for (const recording of fetched) {
+    const previous = byId.get(recording.id);
+    const merged = { ...previous, ...recording };
+    // YouTube bumps <updated> on its own schedule and nothing renders it, so
+    // an updatedAt-only difference keeps the committed record.
+    if (
+      previous &&
+      JSON.stringify({ ...merged, updatedAt: undefined }) ===
+        JSON.stringify({ ...previous, updatedAt: undefined })
+    )
+      continue;
+    byId.set(recording.id, merged);
+  }
 
   const recordings = [...byId.values()].sort(
     (a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt)

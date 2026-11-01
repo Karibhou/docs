@@ -1,0 +1,1 @@
+- The daily meeting-recordings refresh no longer rewrites `data/meeting-recordings.json` (and opens a PR) when only a recording's feed `updatedAt` moved (hivecommons/docs#565).

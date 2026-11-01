@@ -353,4 +353,53 @@ describe("update-meeting-recordings (in-process)", () => {
     expect(data.source).toBe(FEED_URL);
     expect(data.recordings).toEqual(recordings);
   });
+
+  it("does not rewrite the store when only a recording's feed <updated> moved", async () => {
+    const store = {
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      source: FEED_URL,
+      channelId: CHANNEL_ID,
+      recordings: [
+        {
+          id: "bumpvid0001",
+          title: "Community meeting bump",
+          publishedAt: "2026-01-01T00:00:00Z",
+          updatedAt: "2026-01-02T11:59:21Z",
+          url: "https://www.youtube.com/watch?v=bumpvid0001",
+          thumbnail: "https://i.ytimg.com/vi/bumpvid0001/hqdefault.jpg",
+          description: "Notes",
+        },
+      ],
+    };
+    const feed = (title: string, updated: string) => `<feed>
+      <entry>
+        <yt:videoId>bumpvid0001</yt:videoId>
+        <title>${title}</title>
+        <published>2026-01-01T00:00:00Z</published>
+        <updated>${updated}</updated>
+        <media:description>Notes</media:description>
+      </entry>
+    </feed>`;
+    writeExisting(store);
+    stubFeed(feed("Community meeting bump", "2026-01-02T12:33:33Z"));
+
+    await runInProcess();
+
+    expect(logSpy).toHaveBeenCalledWith("meeting recordings: 1 (unchanged)");
+    expect(readData()).toEqual(store);
+
+    logSpy.mockClear();
+    stubFeed(feed("Community meeting renamed", "2026-01-02T12:33:33Z"));
+
+    await runInProcess();
+
+    expect(logSpy).toHaveBeenCalledWith("meeting recordings: 1");
+    expect(readData().recordings[0]).toMatchObject({
+      title: "Community meeting renamed",
+      updatedAt: "2026-01-02T12:33:33Z",
+    });
+    expect(Date.parse(readData().updatedAt)).toBeGreaterThan(
+      Date.parse(store.updatedAt)
+    );
+  });
 });
