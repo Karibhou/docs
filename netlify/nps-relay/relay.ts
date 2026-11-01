@@ -571,6 +571,20 @@ function reserveSlot(
   });
 }
 
+/** Gives back one slot taken by `reserveSlot` at `now`. */
+function releaseSlot(
+  store: RelayStore,
+  key: string,
+  now: number
+): Promise<Response | null> {
+  return compareAndSwap(store, key, current => {
+    const times = liveTimes(current, now);
+    const i = times.indexOf(now);
+    if (i !== -1) times.splice(i, 1);
+    return { next: { times } satisfies RateRecord };
+  });
+}
+
 /** Whether a windowed rate record is already at `max`, without reserving. */
 async function atLimit(
   store: RelayStore,
@@ -835,8 +849,11 @@ async function handleSubmit(
   if (await atLimit(store, installKey, MAX_PER_INSTALL_PER_WINDOW, now))
     return RATE_LIMITED();
 
-  // Reserve both slots atomically before storing the entry, so concurrent
-  // submissions cannot all squeeze into the same remaining slot.
+  // Reserve each slot with its own conditional write before storing the
+  // entry, so concurrent submissions cannot all squeeze into the same
+  // remaining slot. The two writes are not atomic together: if the install
+  // reservation is refused, the IP slot is released so a rejected submission
+  // does not consume the independent IP quota.
   const ipDenied = await reserveSlot(store, ipKey, MAX_PER_IP_PER_WINDOW, now);
   if (ipDenied) return ipDenied;
   const installDenied = await reserveSlot(
@@ -845,7 +862,10 @@ async function handleSubmit(
     MAX_PER_INSTALL_PER_WINDOW,
     now
   );
-  if (installDenied) return installDenied;
+  if (installDenied) {
+    await releaseSlot(store, ipKey, now);
+    return installDenied;
+  }
 
   const entry: RelayEntry = {
     id: newEntryId(now),

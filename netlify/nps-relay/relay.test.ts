@@ -19,6 +19,7 @@ import {
   HEADER_TIMESTAMP,
   INSTALL_PREFIX,
   INSTALL_RATE_PREFIX,
+  IP_RATE_PREFIX,
   MAX_ACK_BODY_BYTES,
   MAX_ENTRIES,
   MAX_FEEDBACK_CHARS,
@@ -671,6 +672,53 @@ describe("POST /api/nps (submit)", () => {
     expect(res.status).toBe(429);
     expect(await res.json()).toEqual({ error: "rate limit exceeded" });
     expect(store.entries()).toHaveLength(MAX_PER_INSTALL_PER_WINDOW);
+  });
+
+  it("releases the per-IP slot when the install limit refuses the submission", async () => {
+    // The pre-check read (plain get) lags one slot behind, so it passes and
+    // only the install reservation (conditional read via getWithMetadata)
+    // refuses; the IP slot taken just before must go back.
+    const stale = new (class extends MemoryStore {
+      async get(key: string): Promise<unknown> {
+        const rec = await super.get(key);
+        if (!key.startsWith(INSTALL_RATE_PREFIX) || !rec) return rec;
+        const { times } = rec as { times: number[] };
+        return { times: times.slice(1) };
+      }
+
+      async getWithMetadata(
+        key: string
+      ): Promise<{ data: unknown; etag?: string } | null> {
+        const data = await super.get(key);
+        if (data === null) return null;
+        return { data, etag: this.etags.get(key) };
+      }
+    })();
+    store = stale;
+    await registerOk();
+    store.data.set(`${INSTALL_RATE_PREFIX}${hive.installId}`, {
+      times: Array.from({ length: MAX_PER_INSTALL_PER_WINDOW }, () => now - 1),
+    });
+    const res = await handleRelayRequest(submit(GOOD), deps());
+    expect(res.status).toBe(429);
+    const installRec = store.data.get(
+      `${INSTALL_RATE_PREFIX}${hive.installId}`
+    ) as { times: number[] };
+    expect(installRec.times).toHaveLength(MAX_PER_INSTALL_PER_WINDOW);
+    const ipRecords = [...store.data.entries()].filter(([k]) =>
+      k.startsWith(IP_RATE_PREFIX)
+    );
+    for (const [, rec] of ipRecords) {
+      expect((rec as { times: number[] }).times).toEqual([]);
+    }
+
+    const other = newHive();
+    await registerOk(other, "198.18.0.2");
+    const next = await handleRelayRequest(
+      submit(GOOD, { signer: other }),
+      deps()
+    );
+    expect(next.status).toBe(201);
   });
 
   it("omits feedback and dashboard_version from the entry when not supplied", async () => {
