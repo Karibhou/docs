@@ -22,7 +22,7 @@
  * Fenced code blocks are never parsed for components or rewritten.
  */
 
-import { FenceTracker } from "./markdown-fences";
+import { FenceTracker, splitFencedSegments } from "./markdown-fences";
 
 export interface MdxConvertOptions {
   /** Canonical site the page is published on, e.g. https://spektacular.dev. */
@@ -248,15 +248,25 @@ function convertBlocks(lines: string[], notes: string[]): string[] {
 // Inline pass (links, images, leftovers) with code protected
 // ---------------------------------------------------------------------------
 
+/**
+ * Run `fn` with fenced code blocks and inline code spans swapped for
+ * placeholders. Fences come from the shared FenceTracker rule, so this pass
+ * and convertBlocks agree on what is code. A fence's trailing newline stays
+ * visible so line-anchored patterns in `fn` still see the next line's start.
+ */
 function withCodeProtected(src: string, fn: (s: string) => string): string {
   const slots: string[] = [];
   const keep = (m: string) => {
     slots.push(m);
     return `\u0000${slots.length - 1}\u0000`;
   };
-  let s = src
-    .replace(/^([ \t]*)(`{3,}|~{3,})[\s\S]*?^\1\2[ \t]*$/gm, keep)
-    .replace(/`[^`\n]*`/g, keep);
+  let s = splitFencedSegments(src)
+    .map(seg => {
+      if (!seg.fenced) return seg.text.replace(/`[^`\n]*`/g, keep);
+      const nl = seg.text.endsWith("\n") ? "\n" : "";
+      return keep(seg.text.slice(0, seg.text.length - nl.length)) + nl;
+    })
+    .join("");
   s = fn(s);
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => slots[Number(i)]);
 }
