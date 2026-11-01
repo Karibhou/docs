@@ -193,6 +193,23 @@ describe("block parsing — structure and fences", () => {
     const out = convert("<Step number={1}>\nno indent\n  some indent\n</Step>");
     expect(out.markdown).toBe("### Step 1\n\nno indent\n  some indent\n");
   });
+
+  it("rewrites a link after a backtick run whose info string has a backtick", () => {
+    // ```not`a`fence is not a fence opener, so the link below it is prose.
+    const out = convert("```not`a`fence\n[a](/install/)\n\n```text\nx\n```\n");
+    expect(out.markdown).toBe(
+      `\`\`\`not\`a\`fence\n[a](${SITE}/install/)\n\n\`\`\`text\nx\n\`\`\`\n`
+    );
+  });
+
+  it("rewrites a link after a fence closed by a longer marker run", () => {
+    const out = convert(
+      "```\n[x](/in/)\n`````\n[a](/install/)\n\n```text\nx\n```\n"
+    );
+    expect(out.markdown).toBe(
+      `\`\`\`\n[x](/in/)\n\`\`\`\`\`\n[a](${SITE}/install/)\n\n\`\`\`text\nx\n\`\`\`\n`
+    );
+  });
 });
 
 describe("convertMdxToMarkdown — options and frontmatter fallbacks", () => {
