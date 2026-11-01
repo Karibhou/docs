@@ -37,6 +37,7 @@ import {
   PURPOSE_SUBMIT,
   RATE_WINDOW_MS,
   REGISTER_DAY_PREFIX,
+  REGISTER_IP_RATE_PREFIX,
   REGISTER_PATH,
   RELAY_BASE_PATH,
   SIGNATURE_MAX_SKEW_MS,
@@ -487,6 +488,20 @@ describe("POST /api/nps/register", () => {
     expect(store.data.has(`${INSTALL_PREFIX}${late.installId}`)).toBe(false);
     // An already-registered install can still re-register idempotently.
     expect((await handleRelayRequest(register(), deps())).status).toBe(200);
+  });
+
+  it("releases the per-IP slot when the day cap refuses the registration", async () => {
+    const dayKey = `${REGISTER_DAY_PREFIX}${new Date(now).toISOString().slice(0, 10)}`;
+    store.data.set(dayKey, { count: MAX_REGISTRATIONS_PER_DAY });
+    const res = await handleRelayRequest(register(), deps());
+    expect(res.status).toBe(429);
+    expect(store.data.has(`${INSTALL_PREFIX}${hive.installId}`)).toBe(false);
+    const ipRecords = [...store.data.entries()].filter(([k]) =>
+      k.startsWith(REGISTER_IP_RATE_PREFIX)
+    );
+    for (const [, rec] of ipRecords) {
+      expect((rec as { times: number[] }).times).toEqual([]);
+    }
   });
 });
 

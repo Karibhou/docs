@@ -743,10 +743,13 @@ async function handleRegister(
   }
 
   // Reserve the per-IP and per-day slots before creating the install, so a
-  // limit that is hit never leaves a registration behind.
+  // limit that is hit never leaves a registration behind. The two writes are
+  // not atomic together: if the day cap refuses, the IP slot is released so a
+  // rejected registration does not consume the independent IP quota.
+  const ipKey = `${REGISTER_IP_RATE_PREFIX}${ipHash(deps)}`;
   const ipDenied = await reserveSlot(
     store,
-    `${REGISTER_IP_RATE_PREFIX}${ipHash(deps)}`,
+    ipKey,
     MAX_REGISTRATIONS_PER_IP_PER_WINDOW,
     now
   );
@@ -760,7 +763,10 @@ async function handleRegister(
     if (count >= MAX_REGISTRATIONS_PER_DAY) return { reject: RATE_LIMITED() };
     return { next: { count: count + 1 } satisfies DayCounter };
   });
-  if (dayDenied) return dayDenied;
+  if (dayDenied) {
+    await releaseSlot(store, ipKey, now);
+    return dayDenied;
+  }
 
   const record: InstallRecord = {
     public_key: reg.public_key,
