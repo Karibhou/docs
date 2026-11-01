@@ -86,6 +86,19 @@ describe("convertMdxToMarkdown", () => {
     );
   });
 
+  it("does not let a backtick run with a backtick in its info string hide a closing tag (CommonMark)", () => {
+    const src = [
+      '<Step number="1" heading="Quote">',
+      "",
+      "  ```not`a`fence",
+      "",
+      "</Step>",
+    ].join("\n");
+    const out = convertMdxToMarkdown(src, { siteBase: SITE });
+    expect(out.markdown).toBe("### Step 1: Quote\n\n```not`a`fence\n");
+    expect(out.notes).toEqual([]);
+  });
+
   it("converts nested <AgentBlock> inside <Step> to labelled sections", () => {
     const src = [
       '<Step number="4" heading="Init">',
