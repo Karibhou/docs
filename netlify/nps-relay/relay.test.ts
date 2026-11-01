@@ -490,6 +490,31 @@ describe("POST /api/nps/register", () => {
     expect((await handleRelayRequest(register(), deps())).status).toBe(200);
   });
 
+  it("releases the per-IP slot and day count when the create-only write loses the race", async () => {
+    const dayKey = `${REGISTER_DAY_PREFIX}${new Date(now).toISOString().slice(0, 10)}`;
+    const losing: RelayStore = {
+      ...store,
+      get: k => store.get(k),
+      getWithMetadata: k => store.getWithMetadata(k),
+      delete: k => store.delete(k),
+      list: o => store.list(o),
+      setJSON: async (k, v, o) =>
+        k.startsWith(INSTALL_PREFIX) && o?.onlyIfNew
+          ? { modified: false }
+          : store.setJSON(k, v, o),
+    };
+    const res = await handleRelayRequest(register(), deps({ store: losing }));
+    expect(res.status).toBe(409);
+    expect(store.data.get(dayKey)).toEqual({ count: 0 });
+    const ipRecords = [...store.data.entries()].filter(([k]) =>
+      k.startsWith(REGISTER_IP_RATE_PREFIX)
+    );
+    expect(ipRecords.length).toBeGreaterThan(0);
+    for (const [, rec] of ipRecords) {
+      expect((rec as { times: number[] }).times).toEqual([]);
+    }
+  });
+
   it("releases the per-IP slot when the day cap refuses the registration", async () => {
     const dayKey = `${REGISTER_DAY_PREFIX}${new Date(now).toISOString().slice(0, 10)}`;
     store.data.set(dayKey, { count: MAX_REGISTRATIONS_PER_DAY });

@@ -781,6 +781,15 @@ async function handleRegister(
     { onlyIfNew: true }
   );
   if (!created.modified) {
+    // The registration was not created here, so give back both reservations.
+    await releaseSlot(store, ipKey, now);
+    await compareAndSwap(store, dayKey, current => {
+      const count =
+        current && typeof (current as DayCounter).count === "number"
+          ? (current as DayCounter).count
+          : 0;
+      return { next: { count: Math.max(0, count - 1) } satisfies DayCounter };
+    });
     const winner = await getInstall(store, reg.install_id);
     if (winner && winner.public_key === reg.public_key)
       return json(200, { ok: true, registered: false });
