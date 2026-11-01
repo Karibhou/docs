@@ -192,6 +192,7 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
         { '0023 Trusted-author automerge': 'adr/0023-trusted-author-automerge.md' },
         { '0024 Provider credential lifecycle': 'adr/0024-provider-credential-lifecycle.md' },
         { '0025 Central stage engine': 'adr/0025-central-stage-engine.md' },
+        { '0026 Sandbox runtime selection': 'adr/0026-sandbox-runtime-selection.md' },
       ] },
       { 'Environment variable reference': 'env-vars.md' },
     ]

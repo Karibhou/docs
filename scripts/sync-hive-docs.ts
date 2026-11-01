@@ -91,6 +91,7 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "adr/0023-trusted-author-automerge.md" },
   { source: "adr/0024-provider-credential-lifecycle.md" },
   { source: "adr/0025-central-stage-engine.md" },
+  { source: "adr/0026-sandbox-runtime-selection.md" },
 ];
 
 // Hive pages authored in this repo (docs/content/hive/) rather than synced,

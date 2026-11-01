@@ -65,7 +65,7 @@ async function runSync(): Promise<{ out: string; err: string }> {
     () => {
       const done =
         exitSpy.mock.calls.length > 0 ||
-        joinCalls(logSpy).includes("adr/0025-central-stage-engine.md");
+        joinCalls(logSpy).includes("adr/0026-sandbox-runtime-selection.md");
       if (!done) throw new Error("sync still running");
     },
     { timeout: 5_000, interval: 5 }

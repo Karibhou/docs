@@ -40,6 +40,12 @@ describe("rewriteLinkTarget — Case 1: in-tree synced docs -> site route", () =
     ).toBe("/docs/hive/adr/0001-record-architecture-decisions");
   });
 
+  it("rewrites ADR-0026 sandbox runtime selection link from adr/README.md to its adr/ route", () => {
+    expect(
+      rewriteLinkTarget("0026-sandbox-runtime-selection.md", ADR_README)
+    ).toBe("/docs/hive/adr/0026-sandbox-runtime-selection");
+  });
+
   it("preserves an #anchor on an in-tree link", () => {
     expect(rewriteLinkTarget("architecture.md#the-governor-loop", README)).toBe(
       "/docs/hive/architecture#the-governor-loop"

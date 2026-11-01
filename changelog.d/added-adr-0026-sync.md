@@ -1,0 +1,1 @@
+- Sync Hive ADR 0026 (sandbox runtime selection) to the docs site and list it in the ADR nav (#550).
