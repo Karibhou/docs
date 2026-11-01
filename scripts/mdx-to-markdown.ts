@@ -22,6 +22,8 @@
  * Fenced code blocks are never parsed for components or rewritten.
  */
 
+import { FenceTracker } from "./markdown-fences";
+
 export interface MdxConvertOptions {
   /** Canonical site the page is published on, e.g. https://spektacular.dev. */
   siteBase: string;
@@ -46,7 +48,6 @@ export interface MdxConversion {
 }
 
 const DEFAULT_IMAGE_PREFIX = "/images/";
-const FENCE_RE = /^\s*(`{3,}|~{3,})(.*)$/;
 // A JSX tag on a line of its own: `<Name attrs>`, `<Name attrs />` or `</Name>`.
 const BLOCK_OPEN_RE = /^\s*<([A-Z][A-Za-z0-9.]*)((?:\s+[^>]*?)?)\s*(\/?)>\s*$/;
 const BLOCK_CLOSE_RE = /^\s*<\/([A-Z][A-Za-z0-9.]*)\s*>\s*$/;
@@ -173,23 +174,9 @@ function dedent(lines: string[]): string[] {
 
 function findClose(lines: string[], from: number, name: string): number {
   let depth = 0;
-  let fence: string | null = null;
+  const fences = new FenceTracker();
   for (let i = from; i < lines.length; i++) {
-    const f = lines[i].match(FENCE_RE);
-    if (fence) {
-      if (
-        f &&
-        f[1][0] === fence[0] &&
-        f[1].length >= fence.length &&
-        f[2].trim() === ""
-      )
-        fence = null;
-      continue;
-    }
-    if (f) {
-      fence = f[1];
-      continue;
-    }
+    if (fences.next(lines[i]) !== "outside") continue;
     const open = lines[i].match(BLOCK_OPEN_RE);
     if (open && open[1] === name && open[3] !== "/") depth++;
     const close = lines[i].match(BLOCK_CLOSE_RE);
@@ -203,24 +190,11 @@ function findClose(lines: string[], from: number, name: string): number {
 
 function convertBlocks(lines: string[], notes: string[]): string[] {
   const out: string[] = [];
-  let fence: string | null = null;
+  const fences = new FenceTracker();
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const f = line.match(FENCE_RE);
-    if (fence) {
-      out.push(line);
-      if (
-        f &&
-        f[1][0] === fence[0] &&
-        f[1].length >= fence.length &&
-        f[2].trim() === ""
-      )
-        fence = null;
-      continue;
-    }
-    if (f) {
-      fence = f[1];
+    if (fences.next(line) !== "outside") {
       out.push(line);
       continue;
     }
