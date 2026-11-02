@@ -64,6 +64,7 @@ describe("netlify.toml [context.deploy-preview] ignore", () => {
     "fix/typo",
     "generated/update",
     "docs-rot-2026-10-24",
+    "docs/runbook-postmortem-template",
   ])("skips the preview for bot branch %s", head => {
     expect(runIgnore(ignore!, { HEAD: head, BRANCH: head })).toBe(SKIP);
   });
