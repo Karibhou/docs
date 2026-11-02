@@ -585,6 +585,51 @@ function releaseSlot(
   });
 }
 
+type ReleaseReservation = () => Promise<Response | null>;
+
+class ReservationCleanupError extends AggregateError {
+  constructor(errors: unknown[], cause: unknown) {
+    super(errors, "reservation cleanup failed", { cause });
+    this.name = "ReservationCleanupError";
+  }
+}
+
+/**
+ * Register compensation only after a successful reservation; clear it at the
+ * commit write, not at the response, since post-commit errors must not refund.
+ */
+async function withReservations(
+  action: (releases: ReleaseReservation[]) => Promise<Response>
+): Promise<Response> {
+  const releases: ReleaseReservation[] = [];
+  let outcome: { response: Response } | { error: unknown };
+  try {
+    outcome = { response: await action(releases) };
+  } catch (err) {
+    outcome = { error: err };
+  }
+  const errors: unknown[] = [];
+  for (const release of releases.reverse()) {
+    try {
+      if (await release()) {
+        const err = new Error("reservation release exhausted CAS retries");
+        err.name = "ReservationReleaseContention";
+        throw err;
+      }
+    } catch (err) {
+      errors.push(err);
+    }
+  }
+  if (errors.length) {
+    throw new ReservationCleanupError(
+      "error" in outcome ? [outcome.error, ...errors] : errors,
+      "error" in outcome ? outcome.error : undefined
+    );
+  }
+  if ("error" in outcome) throw outcome.error;
+  return outcome.response;
+}
+
 /** Whether a windowed rate record is already at `max`, without reserving. */
 async function atLimit(
   store: RelayStore,
@@ -742,60 +787,59 @@ async function handleRegister(
     return json(409, { error: "install_id is registered to a different key" });
   }
 
-  // Reserve the per-IP and per-day slots before creating the install, so a
-  // limit that is hit never leaves a registration behind. The two writes are
-  // not atomic together: if the day cap refuses, the IP slot is released so a
-  // rejected registration does not consume the independent IP quota.
+  // These reservations are independent; compensate every pre-commit failure.
   const ipKey = `${REGISTER_IP_RATE_PREFIX}${ipHash(deps)}`;
-  const ipDenied = await reserveSlot(
-    store,
-    ipKey,
-    MAX_REGISTRATIONS_PER_IP_PER_WINDOW,
-    now
-  );
-  if (ipDenied) return ipDenied;
-  const dayKey = `${REGISTER_DAY_PREFIX}${new Date(now).toISOString().slice(0, ISO_DATE_LENGTH)}`;
-  const dayDenied = await compareAndSwap(store, dayKey, current => {
-    const count =
-      current && typeof (current as DayCounter).count === "number"
-        ? (current as DayCounter).count
-        : 0;
-    if (count >= MAX_REGISTRATIONS_PER_DAY) return { reject: RATE_LIMITED() };
-    return { next: { count: count + 1 } satisfies DayCounter };
-  });
-  if (dayDenied) {
-    await releaseSlot(store, ipKey, now);
-    return dayDenied;
-  }
-
-  const record: InstallRecord = {
-    public_key: reg.public_key,
-    ...(reg.hive_version ? { hive_version: reg.hive_version } : {}),
-    registered_at: new Date(now).toISOString(),
-  };
-  // Create-only: two registrations racing for the same install id cannot both
-  // win, so the id is bound to exactly one key — the first write's.
-  const created = await store.setJSON(
-    `${INSTALL_PREFIX}${reg.install_id}`,
-    record,
-    { onlyIfNew: true }
-  );
-  if (!created.modified) {
-    // The registration was not created here, so give back both reservations.
-    await releaseSlot(store, ipKey, now);
-    await compareAndSwap(store, dayKey, current => {
+  return withReservations(async releases => {
+    const ipDenied = await reserveSlot(
+      store,
+      ipKey,
+      MAX_REGISTRATIONS_PER_IP_PER_WINDOW,
+      now
+    );
+    if (ipDenied) return ipDenied;
+    releases.push(() => releaseSlot(store, ipKey, now));
+    const dayKey = `${REGISTER_DAY_PREFIX}${new Date(now).toISOString().slice(0, ISO_DATE_LENGTH)}`;
+    const dayDenied = await compareAndSwap(store, dayKey, current => {
       const count =
         current && typeof (current as DayCounter).count === "number"
           ? (current as DayCounter).count
           : 0;
-      return { next: { count: Math.max(0, count - 1) } satisfies DayCounter };
+      if (count >= MAX_REGISTRATIONS_PER_DAY) return { reject: RATE_LIMITED() };
+      return { next: { count: count + 1 } satisfies DayCounter };
     });
-    const winner = await getInstall(store, reg.install_id);
-    if (winner && winner.public_key === reg.public_key)
-      return json(200, { ok: true, registered: false });
-    return json(409, { error: "install_id is registered to a different key" });
-  }
-  return json(201, { ok: true, registered: true });
+    if (dayDenied) return dayDenied;
+    releases.push(() =>
+      compareAndSwap(store, dayKey, current => {
+        const count =
+          current && typeof (current as DayCounter).count === "number"
+            ? (current as DayCounter).count
+            : 0;
+        return { next: { count: Math.max(0, count - 1) } satisfies DayCounter };
+      })
+    );
+
+    const record: InstallRecord = {
+      public_key: reg.public_key,
+      ...(reg.hive_version ? { hive_version: reg.hive_version } : {}),
+      registered_at: new Date(now).toISOString(),
+    };
+    // Create-only: an install id stays bound to the first write's key.
+    const created = await store.setJSON(
+      `${INSTALL_PREFIX}${reg.install_id}`,
+      record,
+      { onlyIfNew: true }
+    );
+    if (!created.modified) {
+      const winner = await getInstall(store, reg.install_id);
+      if (winner && winner.public_key === reg.public_key)
+        return json(200, { ok: true, registered: false });
+      return json(409, {
+        error: "install_id is registered to a different key",
+      });
+    }
+    releases.length = 0;
+    return json(201, { ok: true, registered: true });
+  });
 }
 
 /**
@@ -864,46 +908,49 @@ async function handleSubmit(
   if (await atLimit(store, installKey, MAX_PER_INSTALL_PER_WINDOW, now))
     return RATE_LIMITED();
 
-  // Reserve each slot with its own conditional write before storing the
-  // entry, so concurrent submissions cannot all squeeze into the same
-  // remaining slot. The two writes are not atomic together: if the install
-  // reservation is refused, the IP slot is released so a rejected submission
-  // does not consume the independent IP quota.
-  const ipDenied = await reserveSlot(store, ipKey, MAX_PER_IP_PER_WINDOW, now);
-  if (ipDenied) return ipDenied;
-  const installDenied = await reserveSlot(
-    store,
-    installKey,
-    MAX_PER_INSTALL_PER_WINDOW,
-    now
-  );
-  if (installDenied) {
-    await releaseSlot(store, ipKey, now);
-    return installDenied;
-  }
-
-  const entry: RelayEntry = {
-    id: newEntryId(now),
-    install_id: signed.installId,
-    hive_id: parsed.value.hive_id,
-    score: parsed.value.score,
-    ...(parsed.value.feedback ? { feedback: parsed.value.feedback } : {}),
-    ...(parsed.value.dashboard_version
-      ? { dashboard_version: parsed.value.dashboard_version }
-      : {}),
-    timestamp: new Date(now).toISOString(),
-  };
-  await store.setJSON(`${ENTRY_PREFIX}${entry.id}`, entry);
-
-  // Rolling window: drop the oldest entries beyond the cap.
-  const keys = await entryKeysOldestFirst(store);
-  const overflow = keys.length - MAX_ENTRIES;
-  if (overflow > 0) {
-    await Promise.allSettled(
-      keys.slice(0, overflow).map(key => store.delete(key))
+  return withReservations(async releases => {
+    const ipDenied = await reserveSlot(
+      store,
+      ipKey,
+      MAX_PER_IP_PER_WINDOW,
+      now
     );
-  }
-  return json(201, { ok: true });
+    if (ipDenied) return ipDenied;
+    releases.push(() => releaseSlot(store, ipKey, now));
+    const installDenied = await reserveSlot(
+      store,
+      installKey,
+      MAX_PER_INSTALL_PER_WINDOW,
+      now
+    );
+    if (installDenied) return installDenied;
+    releases.push(() => releaseSlot(store, installKey, now));
+
+    const entry: RelayEntry = {
+      id: newEntryId(now),
+      install_id: signed.installId,
+      hive_id: parsed.value.hive_id,
+      score: parsed.value.score,
+      ...(parsed.value.feedback ? { feedback: parsed.value.feedback } : {}),
+      ...(parsed.value.dashboard_version
+        ? { dashboard_version: parsed.value.dashboard_version }
+        : {}),
+      timestamp: new Date(now).toISOString(),
+    };
+    const created = await store.setJSON(`${ENTRY_PREFIX}${entry.id}`, entry);
+    if (!created.modified) return json(500, { error: "internal server error" });
+    releases.length = 0;
+
+    // Rolling window: drop the oldest entries beyond the cap.
+    const keys = await entryKeysOldestFirst(store);
+    const overflow = keys.length - MAX_ENTRIES;
+    if (overflow > 0) {
+      await Promise.allSettled(
+        keys.slice(0, overflow).map(key => store.delete(key))
+      );
+    }
+    return json(201, { ok: true });
+  });
 }
 
 function hubAuthorized(req: Request, env: RelayEnv): Response | null {
@@ -1020,7 +1067,12 @@ async function routeRelayRequest(
     // Never echo request data (signatures and secrets live in headers) into logs.
     console.error(
       "nps relay: internal error:",
-      err instanceof Error ? err.name : "unknown"
+      err instanceof Error ? err.name : "unknown",
+      ...(err instanceof ReservationCleanupError
+        ? err.errors.map(cause =>
+            cause instanceof Error ? cause.name : "unknown"
+          )
+        : [])
     );
     return json(500, { error: "internal server error" });
   }
