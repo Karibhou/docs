@@ -1,9 +1,12 @@
-name: Refresh Hive docs mirror
+name: Refresh docs/content mirrors
 
 # The committed mirrors under docs/content/ (hive, crux, dibs, hotshot, pluk,
 # promptargs, rationguard, spektacular) drift from their upstream repos between
 # hand-run resyncs (#496). This mirrors meeting-recordings-refresh.yml: resync
-# daily and open a signed PR when anything changed.
+# daily and open a signed PR when anything changed. Mirrors hivecommons/hive
+# and sibling repos (crux, dibs, hotshot, pluk, promptargs, rationguard,
+# spektacular) into docs/content/ via npm run sync-hive-docs and
+# npm run sync-sibling-docs.
 
 on:
   workflow_dispatch:
