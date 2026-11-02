@@ -1,0 +1,1 @@
+- `sanitizeHtmlForMdx`, `removeCommentPatterns` and the sync `rewriteMarkdownLinks` pass no longer rewrite fenced code blocks and inline code (for example `class=` shown as `className=` in published HTML examples, or a documented `[x](rel.md)` turned into a GitHub URL); a new fence-invariance test covers every markdown transform (#594).

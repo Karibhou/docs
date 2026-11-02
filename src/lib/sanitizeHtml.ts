@@ -19,7 +19,11 @@ export function stripUntilStable(content: string, pattern: RegExp): string {
 }
 
 export function removeCommentPatterns(content: string): string {
-  let cleaned = content;
+  return withCodeProtected(content, stripCommentsOutsideCode);
+}
+
+function stripCommentsOutsideCode(masked: string): string {
+  let cleaned = masked;
 
   // Remove all HTML comments — loop until stable to prevent partial-comment bypass
   let prev = "";
@@ -97,6 +101,31 @@ const CODE_PLACEHOLDER = /\u0000MDX_CODE_(\d+)\u0000/g;
 // GFM splits table cells on `|` even inside backticks, so on such a row the
 // code-span boundaries the regex sees are not the ones the parser will use.
 // Leave those rows to the escaping pass rather than protect the wrong span.
+/**
+ * Run `fn` on `content` with fenced blocks and reliable inline code spans
+ * swapped for placeholders, then restore them byte-for-byte.
+ */
+export function withCodeProtected(
+  content: string,
+  fn: (masked: string) => string
+): string {
+  const codeSpans: string[] = [];
+  const put = (match: string) => {
+    codeSpans.push(match);
+    return `\u0000MDX_CODE_${codeSpans.length - 1}\u0000`;
+  };
+  const masked = content
+    .replace(MARKDOWN_FENCE, put)
+    .split("\n")
+    .map(line =>
+      inlineCodeIsReliable(line)
+        ? line.replace(MARKDOWN_INLINE_CODE, put)
+        : line
+    )
+    .join("\n");
+  return fn(masked).replace(CODE_PLACEHOLDER, (_m, i) => codeSpans[Number(i)]);
+}
+
 function inlineCodeIsReliable(line: string): boolean {
   if (!TABLE_ROW.test(line)) return true;
   return !(line.match(MARKDOWN_INLINE_CODE) ?? []).some(span =>
@@ -108,7 +137,6 @@ function inlineCodeIsReliable(line: string): boolean {
 // path-relative and fragment URLs (no scheme at all) are always allowed.
 const ALLOWED_URL_SCHEMES = new Set(["http", "https", "mailto"]);
 const URL_ATTR = /(\s(?:href|src)\s*=\s*)("[^"]*"|'[^']*')/gi;
-const URL_PLACEHOLDER = /\u0000MDX_URL_(\d+)\u0000/g;
 
 // Decide whether an href/src attribute value resolves to an allowed scheme.
 // The value is normalized first — numeric character references and named
@@ -148,20 +176,10 @@ function urlAttrValueIsAllowed(raw: string): boolean {
 // inline code spans are placeholder-protected so documentation examples
 // remain untouched.
 function neutralizeDangerousUrlAttributes(content: string): string {
-  const codeSpans: string[] = [];
-  const put = (match: string) => {
-    codeSpans.push(match);
-    return `\u0000MDX_URL_${codeSpans.length - 1}\u0000`;
-  };
-  const withPlaceholders = content
-    .replace(MARKDOWN_FENCE, put)
-    .split("\n")
-    .map(line =>
-      inlineCodeIsReliable(line)
-        ? line.replace(MARKDOWN_INLINE_CODE, put)
-        : line
-    )
-    .join("\n");
+  return withCodeProtected(content, rewriteUrlAttributes);
+}
+
+function rewriteUrlAttributes(withPlaceholders: string): string {
   const rewritten = withPlaceholders.replace(
     URL_ATTR,
     (match, prefix: string, quoted: string) => {
@@ -172,24 +190,14 @@ function neutralizeDangerousUrlAttributes(content: string): string {
         : `${prefix}${quote}#${quote}`;
     }
   );
-  return rewritten.replace(URL_PLACEHOLDER, (_m, i) => codeSpans[Number(i)]);
+  return rewritten;
 }
 
 function escapeMdxAmbiguousAngles(content: string): string {
-  const codeSpans: string[] = [];
-  const put = (match: string) => {
-    codeSpans.push(match);
-    return `\u0000MDX_CODE_${codeSpans.length - 1}\u0000`;
-  };
-  const withPlaceholders = content
-    .replace(MARKDOWN_FENCE, put)
-    .split("\n")
-    .map(line =>
-      inlineCodeIsReliable(line)
-        ? line.replace(MARKDOWN_INLINE_CODE, put)
-        : line
-    )
-    .join("\n");
+  return withCodeProtected(content, escapeAnglesOutsideCode);
+}
+
+function escapeAnglesOutsideCode(withPlaceholders: string): string {
   // The tag-name group is followed by an optional `\s[^<>]*` run so that
   // placeholders with embedded spaces or attribute-like text (e.g. the prose
   // `<branch tip>`) are recognized too — not just bare `<word>` forms. Without
@@ -206,7 +214,7 @@ function escapeMdxAmbiguousAngles(content: string): string {
           : escapeAngle(match);
       }
     );
-  return escaped.replace(CODE_PLACEHOLDER, (_m, i) => codeSpans[Number(i)]);
+  return escaped;
 }
 
 /**
@@ -306,49 +314,53 @@ export function sanitizeHtmlForMdx(content: string): string {
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/gu, "");
 
   // Convert contributors table to a grid of contributor cards
-  sanitized = sanitized.replace(/<table>[\s\S]*?<\/table>/gi, tableMatch => {
-    const contributors: Array<{
-      name: string;
-      github: string;
-      avatar: string;
-      profileUrl: string;
-    }> = [];
-    const tdRegex =
-      /<td[^>]*>[\s\S]*?<a href="([^"]+)"[^>]*><img src="([^"]+)"[^>]*\/?><br\s*\/?><sub><b>([^<]+)<\/b><\/sub><\/a>[\s\S]*?<\/td>/gi;
+  sanitized = withCodeProtected(sanitized, masked => {
+    let sanitized = masked;
+    sanitized = sanitized.replace(/<table>[\s\S]*?<\/table>/gi, tableMatch => {
+      const contributors: Array<{
+        name: string;
+        github: string;
+        avatar: string;
+        profileUrl: string;
+      }> = [];
+      const tdRegex =
+        /<td[^>]*>[\s\S]*?<a href="([^"]+)"[^>]*><img src="([^"]+)"[^>]*\/?><br\s*\/?><sub><b>([^<]+)<\/b><\/sub><\/a>[\s\S]*?<\/td>/gi;
 
-    let tdMatch;
-    while ((tdMatch = tdRegex.exec(tableMatch)) !== null) {
-      const profileUrl = tdMatch[1];
-      const avatar = tdMatch[2];
-      const name = tdMatch[3];
-      const githubMatch = profileUrl.match(/github\.com\/([^/]+)/);
-      const github = githubMatch ? githubMatch[1] : "";
+      let tdMatch;
+      while ((tdMatch = tdRegex.exec(tableMatch)) !== null) {
+        const profileUrl = tdMatch[1];
+        const avatar = tdMatch[2];
+        const name = tdMatch[3];
+        const githubMatch = profileUrl.match(/github\.com\/([^/]+)/);
+        const github = githubMatch ? githubMatch[1] : "";
 
-      // No `name && avatar` guard here: every capture group in tdRegex is
-      // `+`-quantified (`[^"]+` for href and src, `[^<]+` for the name), so a cell
-      // with an empty href, src or name fails to match and never reaches this line.
-      // A guard would be unreachable, and coverage would flag it as such.
-      contributors.push({ name, github, avatar, profileUrl });
-    }
+        // No `name && avatar` guard here: every capture group in tdRegex is
+        // `+`-quantified (`[^"]+` for href and src, `[^<]+` for the name), so a cell
+        // with an empty href, src or name fails to match and never reaches this line.
+        // A guard would be unreachable, and coverage would flag it as such.
+        contributors.push({ name, github, avatar, profileUrl });
+      }
 
-    if (contributors.length === 0) return "";
+      if (contributors.length === 0) return "";
 
-    const cards = contributors
-      .map(
-        c =>
-          `<a href="${escapeAngle(c.profileUrl)}" className="contributor-card" target="_blank" rel="noopener noreferrer">
+      const cards = contributors
+        .map(
+          c =>
+            `<a href="${escapeAngle(c.profileUrl)}" className="contributor-card" target="_blank" rel="noopener noreferrer">
         <img src="${escapeAngle(c.avatar)}" alt="${escapeAngle(c.name)}" />
         <span>${escapeAngle(c.name)}</span>
       </a>`
-      )
-      .join("\n");
+        )
+        .join("\n");
 
-    return `<div className="contributors-grid">\n${cards}\n</div>`;
+      return `<div className="contributors-grid">\n${cards}\n</div>`;
+    });
+
+    // Remove leftover tr/td that aren't part of tables we converted
+    sanitized = sanitized.replace(/<tr>[\s\S]*?<\/tr>/gi, "");
+    sanitized = sanitized.replace(/<td[^>]*>[\s\S]*?<\/td>/gi, "");
+    return sanitized;
   });
-
-  // Remove leftover tr/td that aren't part of tables we converted
-  sanitized = sanitized.replace(/<tr>[\s\S]*?<\/tr>/gi, "");
-  sanitized = sanitized.replace(/<td[^>]*>[\s\S]*?<\/td>/gi, "");
 
   // Remove all iframe tags — handles closed, self-closing, and unclosed <iframe> forms.
   // Use stripUntilStable for both patterns to prevent multi-character bypass via
@@ -359,33 +371,40 @@ export function sanitizeHtmlForMdx(content: string): string {
   sanitized = stripUntilStable(sanitized, /<iframe\b[^>]*\/?>/gi);
 
   // Normalize all img tags - handle both <img ...> and <img ... />
-  sanitized = sanitized.replace(/<img\s+([^>]*?)\/?>/gi, (match, attrs) => {
-    const srcMatch = attrs.match(/src=["']([^"']+)["']/i);
-    const altMatch = attrs.match(/alt=["']([^"']*)["']/i);
-    const titleMatch = attrs.match(/title=["']([^"']*)["']/i);
+  sanitized = withCodeProtected(sanitized, masked => {
+    let sanitized = masked;
+    sanitized = sanitized.replace(/<img\s+([^>]*?)\/?>/gi, (match, attrs) => {
+      const srcMatch = attrs.match(/src=["']([^"']+)["']/i);
+      const altMatch = attrs.match(/alt=["']([^"']*)["']/i);
+      const titleMatch = attrs.match(/title=["']([^"']*)["']/i);
 
-    const src = srcMatch ? srcMatch[1] : "";
-    if (!src) return "";
-    const alt = altMatch ? altMatch[1] : "";
+      const src = srcMatch ? srcMatch[1] : "";
+      if (!src) return "";
+      const alt = altMatch ? altMatch[1] : "";
 
-    return `<img src="${escapeAngle(src)}" alt="${escapeAngle(alt)}"${titleMatch ? ` title="${escapeAngle(titleMatch[1])}"` : ""} />`;
+      return `<img src="${escapeAngle(src)}" alt="${escapeAngle(alt)}"${titleMatch ? ` title="${escapeAngle(titleMatch[1])}"` : ""} />`;
+    });
+
+    // Fix self-closing tags
+    sanitized = sanitized.replace(/<br\s*\/?>/gi, "<br />");
+    sanitized = sanitized.replace(/<hr\s*\/?>/gi, "<hr />");
+
+    // Remove other problematic attributes from remaining tags
+    sanitized = sanitized.replace(/\s+align=["']?[^"'\s>]+["']?/gi, "");
+    sanitized = sanitized.replace(/\s+width=["']?[^"'\s>]+["']?/gi, "");
+    sanitized = sanitized.replace(/\s+height=["']?[^"'\s>]+["']?/gi, "");
+    sanitized = sanitized.replace(/\s+frameborder=["']?[^"'\s>]+["']?/gi, "");
+    sanitized = sanitized.replace(
+      /\s+allowfullscreen(?:=["'][^"']*["'])?/gi,
+      ""
+    );
+    sanitized = sanitized.replace(/\s+scrolling=["']?[^"'\s>]+["']?/gi, "");
+    sanitized = sanitized.replace(/\sclass=/gi, " className=");
+
+    // Remove style attributes that might cause issues
+    sanitized = sanitized.replace(/\s+style=["'][^"']*["']/gi, "");
+    return sanitized;
   });
-
-  // Fix self-closing tags
-  sanitized = sanitized.replace(/<br\s*\/?>/gi, "<br />");
-  sanitized = sanitized.replace(/<hr\s*\/?>/gi, "<hr />");
-
-  // Remove other problematic attributes from remaining tags
-  sanitized = sanitized.replace(/\s+align=["']?[^"'\s>]+["']?/gi, "");
-  sanitized = sanitized.replace(/\s+width=["']?[^"'\s>]+["']?/gi, "");
-  sanitized = sanitized.replace(/\s+height=["']?[^"'\s>]+["']?/gi, "");
-  sanitized = sanitized.replace(/\s+frameborder=["']?[^"'\s>]+["']?/gi, "");
-  sanitized = sanitized.replace(/\s+allowfullscreen(?:=["'][^"']*["'])?/gi, "");
-  sanitized = sanitized.replace(/\s+scrolling=["']?[^"'\s>]+["']?/gi, "");
-  sanitized = sanitized.replace(/\sclass=/gi, " className=");
-
-  // Remove style attributes that might cause issues
-  sanitized = sanitized.replace(/\s+style=["'][^"']*["']/gi, "");
 
   // Strip all security-critical patterns (script, style tags, event handlers)
   // in a unified stability loop.  This prevents "spacer" exploits where one

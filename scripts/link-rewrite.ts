@@ -102,12 +102,20 @@ export function rewriteImageTarget(
 }
 
 // Apply link rewriting to a file's markdown content.
-// Fenced code blocks are left byte-for-byte unchanged.
+// Fenced code blocks and inline code spans are left byte-for-byte unchanged.
 export function rewriteMarkdownLinks(
   content: string,
   opts: LinkRewriteOptions
 ): string {
-  return mapOutsideFences(content, text => rewriteLinksInText(text, opts));
+  return mapOutsideFences(content, text => rewriteProse(text, opts));
+}
+
+// Rewrite a prose segment, skipping inline code spans.
+function rewriteProse(text: string, opts: LinkRewriteOptions): string {
+  return text
+    .split(/(`+[^`]*?`+)/)
+    .map((chunk, i) => (i % 2 === 1 ? chunk : rewriteLinksInText(chunk, opts)))
+    .join("");
 }
 
 function rewriteLinksInText(text: string, opts: LinkRewriteOptions): string {

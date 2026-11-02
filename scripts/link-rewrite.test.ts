@@ -136,4 +136,15 @@ describe("rewriteMarkdownLinks fences", () => {
       `[x](${BLOB}/docs/guide/guide.md)\n![img](${RAW}/docs/guide/a.png)\n[ref]: ${BLOB}/docs/guide/other.md\n`
     );
   });
+
+  it("leaves links inside inline code spans untouched", () => {
+    const o = { ...opts, rawBase: RAW };
+    const out = rewriteMarkdownLinks(
+      "Use `[x](./guide.md)` or `![img](./a.png)`, then [y](./guide.md).\n",
+      o
+    );
+    expect(out).toBe(
+      `Use \`[x](./guide.md)\` or \`![img](./a.png)\`, then [y](${BLOB}/docs/guide/guide.md).\n`
+    );
+  });
 });
