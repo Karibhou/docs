@@ -105,4 +105,36 @@ describe("rewriteRelativeImagePaths", () => {
       "![a](/docs-images/images/a.png)"
     );
   });
+
+  it("leaves image syntax inside a ``` fence untouched", () => {
+    const md = ["```md", "![Alt](images/foo.png)", "```"].join("\n");
+    expect(rewriteRelativeImagePaths(md, "console")).toBe(md);
+  });
+
+  it("leaves image syntax inside a ~~~ fence untouched", () => {
+    const md = ["~~~md", "![Alt](images/foo.png)", "~~~"].join("\n");
+    expect(rewriteRelativeImagePaths(md, "console")).toBe(md);
+  });
+
+  it("leaves image syntax inside an inline code span untouched", () => {
+    const md = "Write `![Alt](images/foo.png)` to embed an image.";
+    expect(rewriteRelativeImagePaths(md, "console")).toBe(md);
+  });
+
+  it("still rewrites images after a closed fence", () => {
+    const md = [
+      "```md",
+      "![Alt](images/foo.png)",
+      "```",
+      "![Real](images/bar.png)",
+    ].join("\n");
+    expect(rewriteRelativeImagePaths(md, "console")).toBe(
+      [
+        "```md",
+        "![Alt](images/foo.png)",
+        "```",
+        "![Real](/docs-images/console/images/bar.png)",
+      ].join("\n")
+    );
+  });
 });

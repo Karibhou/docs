@@ -7,16 +7,15 @@
  * rule in next.config.ts proxies these requests to /api/docs-image/* which serves
  * static assets from docs/content/.
  *
+ * Fenced code blocks and inline code are left untouched.
+ *
  * @param content  Raw Markdown/MDX source string.
  * @param baseDir  Directory of the source file relative to docs/content/ (e.g. "console"
  *                 or "hive").  Pass an empty string when the file lives directly
  *                 under docs/content/.
  */
-export function rewriteRelativeImagePaths(
-  content: string,
-  baseDir: string
-): string {
-  return content.replace(
+function rewriteText(text: string, baseDir: string): string {
+  return text.replace(
     /!\[([^\]]*)\]\(([^)]+)\)/g,
     (match, alt: string, src: string) => {
       const raw = src.trim();
@@ -52,4 +51,47 @@ export function rewriteRelativeImagePaths(
       return `![${alt}](/docs-images/${segments.join("/")}${title})`;
     }
   );
+}
+
+// Rewrites a prose segment, skipping inline code spans.
+function rewriteProse(text: string, baseDir: string): string {
+  return text
+    .split(/(`+[^`]*?`+)/)
+    .map((chunk, i) => (i % 2 === 1 ? chunk : rewriteText(chunk, baseDir)))
+    .join("");
+}
+
+export function rewriteRelativeImagePaths(
+  content: string,
+  baseDir: string
+): string {
+  const lines = content.split("\n");
+  const out: string[] = [];
+  let prose: string[] = [];
+  let fence: string | null = null;
+
+  const flush = () => {
+    if (prose.length) out.push(rewriteProse(prose.join("\n"), baseDir));
+    prose = [];
+  };
+
+  for (const line of lines) {
+    const m = /^ {0,3}(`{3,}|~{3,})/.exec(line);
+    if (fence === null) {
+      if (m) {
+        flush();
+        fence = m[1];
+        out.push(line);
+      } else {
+        prose.push(line);
+      }
+    } else {
+      out.push(line);
+      if (m && m[1][0] === fence[0] && m[1].length >= fence.length) {
+        fence = null;
+      }
+    }
+  }
+  flush();
+  return out.join("\n");
 }

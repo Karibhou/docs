@@ -1,0 +1,1 @@
+- Relative image paths inside fenced code blocks and inline code spans are no longer rewritten to `/docs-images/`, so documented Markdown examples render as written (#587).
