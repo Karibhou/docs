@@ -59,10 +59,13 @@ Not ready to bring a whole project? You're still welcome:
   [hivecommons-dev@googlegroups.com](https://hivecommons.dev/join),
   [Discord](https://hivecommons.dev/discord), or the biweekly
   [community meeting](/docs/community/meetings).
+- **Watch the hive live** on [Twitch](https://www.twitch.tv/hivecommons) —
+  the hosted hive's Activity Monitor, with issues and PRs moving through the
+  pipeline in real time.
 
 ## Community basics
 
 - [Governance](https://github.com/hivecommons/.github/blob/main/GOVERNANCE.md), [Maintainers](https://github.com/hivecommons/.github/blob/main/MAINTAINERS.md), [Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md), and [Security policy](https://github.com/hivecommons/.github/blob/main/SECURITY.md) live in the shared community repository.
 - **Mailing list:** [hivecommons-dev@googlegroups.com](https://hivecommons.dev/join) — joining adds the community meeting to your calendar.
 - **Community meeting:** every other Thursday, 10:00 AM ET — [meeting page](/docs/community/meetings), [agenda and notes](https://hivecommons.dev/agenda), and [recordings](https://hivecommons.dev/tv).
-- **Chat:** [Discord](https://hivecommons.dev/discord). **Website:** [hivecommons.dev](https://hivecommons.dev).
+- **Chat:** [Discord](https://hivecommons.dev/discord). **Live stream:** [Twitch](https://www.twitch.tv/hivecommons). **Website:** [hivecommons.dev](https://hivecommons.dev).

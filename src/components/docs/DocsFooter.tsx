@@ -459,6 +459,20 @@ export default function Footer() {
                     YouTube
                   </a>
                 </li>
+                <li>
+                  <a
+                    href="https://www.twitch.tv/hivecommons"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-xs sm:text-sm transition-colors duration-200 inline-block ${
+                      isDark
+                        ? 'text-ink-3 hover:text-ink'
+                        : 'text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    Twitch (live)
+                  </a>
+                </li>
               </ul>
             </div>
 

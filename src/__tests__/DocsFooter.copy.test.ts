@@ -32,6 +32,7 @@ describe("DocsFooter copy and links", () => {
     expect(footer).toContain('href="https://hive.hivecommons.dev"');
     expect(footer).toContain('href="https://hivecommons.dev/discord"');
     expect(footer).toContain('href="https://hivecommons.dev/tv"');
+    expect(footer).toContain('href="https://www.twitch.tv/hivecommons"');
   });
 
   it("keeps social links accessible and removes unsupported networks", () => {

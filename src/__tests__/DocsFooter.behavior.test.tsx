@@ -122,6 +122,7 @@ describe("DocsFooter content", () => {
     for (const href of [
       "https://hivecommons.dev/discord",
       "https://hivecommons.dev/tv",
+      "https://www.twitch.tv/hivecommons",
       "https://hivecommons.dev/join",
       "https://hive.hivecommons.dev",
     ]) {

@@ -30,4 +30,5 @@ Hive Commons thanks Akamai (Linode), Oracle Cloud (OKE), Cloudflare, GitHub Copi
 - [Community meetings](https://docs.hivecommons.dev/docs/community/meetings): every other Thursday, 10:00 AM Eastern time
 - [Mailing list](https://hivecommons.dev/join): hivecommons-dev@googlegroups.com; joining adds the community meeting to your calendar
 - [Discord](https://hivecommons.dev/discord): community chat
+- [Twitch](https://www.twitch.tv/hivecommons): live stream of the hosted hive's Activity Monitor
 - [Meeting recordings](https://hivecommons.dev/tv): past community meetings on YouTube
