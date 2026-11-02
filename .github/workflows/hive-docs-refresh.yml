@@ -56,8 +56,11 @@ jobs:
           branch: ${{ env.REFRESH_BRANCH }}
           delete-branch: true
           add-paths: docs/content
-          commit-message: "📖 docs: resync the Hive docs mirror from hive@v5"
-          title: "📖 docs: resync the Hive docs mirror from hive@v5"
+          # Neutral on purpose: a run may change only the hive mirror, only
+          # the sibling mirrors (sync-sibling-docs, from each repo's own
+          # branch), or both, so the title must not name one source (#586).
+          commit-message: "📖 docs: resync the docs/content mirrors from upstream"
+          title: "📖 docs: resync the docs/content mirrors from upstream"
           body: |
             Automated daily resync of the committed mirrors under `docs/content/`
             via `npm run sync-hive-docs` and `npm run sync-sibling-docs`.
