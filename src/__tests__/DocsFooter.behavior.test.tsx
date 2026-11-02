@@ -83,7 +83,27 @@ describe("DocsFooter content", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
     }
     expect(
-      screen.getByText(new RegExp(`© ${new Date().getFullYear()} Hive Commons`))
+      screen.getByText(
+        new RegExp(
+          `© ${new Date().getFullYear()} The Linux Foundation / The Hive Commons authors`
+        )
+      )
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/Cloud Native Computing Foundation sandbox project/)
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "Trademark Usage page" })
+        .getAttribute("href")
+    ).toBe("https://www.linuxfoundation.org/trademark-usage");
+    expect(
+      screen.getByText(
+        /Code is licensed under Apache 2\.0\. Security contact: security@hivecommons\.dev\./
+      )
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("img", { name: "Cloud Native Computing Foundation" })
     ).toBeTruthy();
   });
 
@@ -249,14 +269,14 @@ describe("DocsFooter back-to-top button", () => {
 describe("DocsFooter theming", () => {
   it("uses the dark text classes when resolvedTheme is dark", () => {
     render(<DocsFooter />);
-    const copyright = screen.getByText(/© \d{4} Hive Commons/);
+    const copyright = screen.getByText(/© \d{4} The Linux Foundation/);
     expect(copyright.className).toContain("text-ink-3");
   });
 
   it("uses the light text classes when resolvedTheme is light", () => {
     resolvedTheme = "light";
     render(<DocsFooter />);
-    const copyright = screen.getByText(/© \d{4} Hive Commons/);
+    const copyright = screen.getByText(/© \d{4} The Linux Foundation/);
     expect(copyright.className).toContain("text-ink-2");
   });
 });

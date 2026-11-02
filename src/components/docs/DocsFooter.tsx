@@ -614,17 +614,53 @@ export default function Footer() {
         <div className={`border-t pt-4 sm:pt-6 md:pt-8 ${
           'border-line'
         }`}>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
-            {/* Left side - copyright */}
-            <p className={`text-xs sm:text-sm text-center md:text-left order-2 md:order-1 ${
-              isDark ? 'text-ink-3' : 'text-ink-2'
-            }`}>
-              © {new Date().getFullYear()} Hive Commons. All rights reserved. Apache 2.0 Licence
-            </p>
+          <div className="flex flex-col md:flex-row justify-between items-start gap-6 sm:gap-8">
+            {/* Left side - copyright and CNCF info */}
+            <div className="flex flex-col gap-4 md:text-left text-center flex-1">
+              <div className="flex flex-col gap-2">
+                <p className={`text-xs sm:text-sm ${
+                  isDark ? 'text-ink-3' : 'text-ink-2'
+                }`}>
+                  © {new Date().getFullYear()} The Linux Foundation / The Hive Commons authors. Code is licensed under Apache 2.0. Security contact: security@hivecommons.dev. The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our{" "}
+                  <a
+                    href="https://www.linuxfoundation.org/trademark-usage"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`underline transition-colors ${
+                      isDark
+                        ? 'text-ink hover:text-ink-1'
+                        : 'text-ink-1 hover:text-ink'
+                    }`}
+                  >
+                    Trademark Usage page
+                  </a>
+                  .
+                </p>
+                <p className={`text-xs sm:text-sm ${
+                  isDark ? 'text-ink-3' : 'text-ink-2'
+                }`}>
+                  We are a Cloud Native Computing Foundation sandbox project.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 justify-center md:justify-start">
+                <span className={`text-xs sm:text-sm ${
+                  isDark ? 'text-ink-3' : 'text-ink-2'
+                }`}>
+                  Hosted by:
+                </span>
+                <Image
+                  src="/cncf-color.png"
+                  alt="Cloud Native Computing Foundation"
+                  width={120}
+                  height={40}
+                  className="h-6 sm:h-7 w-auto"
+                />
+              </div>
+            </div>
 
             {/* Right side - policy links. These pages are not published on
                 the docs site, so point at the canonical files on GitHub. */}
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 order-1 md:order-2">
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 md:justify-end">
               {POLICY_LINKS.map(link => (
                 <a
                   key={link.href}
