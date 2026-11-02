@@ -128,6 +128,8 @@ tmux attach -t my-agent
 | `PLUK_RATIONGUARD_BIN` | *(unset)* | Rationguard command for `pluk attach --rationguard` when it is not on `PATH`; same as `--rationguard-bin` |
 | `NO_COLOR` | *(unset)* | When set, `pluk --help`, `pluk sessions`, `pluk patterns` and all stderr diagnostics are written without ANSI colour codes even on a TTY (colour is already off when the stream is not a TTY) |
 
+`PLUK_LOG_MAX_BYTES` and `PLUK_LOG_KEEP_LINES` are read by the `pluk watch` that writes the log. `tmux pipe-pane` runs that watcher under the tmux server's environment, not your shell's, so `pluk attach` forwards both on the pipe-pane command line (alongside `PLUK_RUN_DIR`) when they are set in the shell that runs it. When wiring `pipe-pane` by hand as above, prefix them onto the command yourself, e.g. `"PLUK_RUN_DIR=$PLUK_RUN_DIR PLUK_LOG_MAX_BYTES=1000000 pluk watch ..."`.
+
 </details>
 
 ## CLI Commands
