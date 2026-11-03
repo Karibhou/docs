@@ -55,8 +55,10 @@ Navigation is defined in `src/app/docs/page-map.ts`; project registry in
 ## Observability
 
 The site exposes per-instance API metrics via `/api/metrics` in Prometheus text format.
-The endpoint serves bounded, in-process counters and histograms for the `search` and
-`docs-image` API handlers only (not static assets or page traffic).
+The endpoint serves bounded, in-process counters and histograms for the `search`,
+`docs-image` and `healthz` API handlers only (not static assets or page traffic); the
+route labels match `ApiRoutes` in `src/lib/metrics.ts` and the alert rules in
+`monitoring/docs-api-alerts.yml`.
 
 **Scope and durability:** The registry is process-local with no configured exporter or
 backend. On Netlify, instances are ephemeral, so the `/api/metrics` snapshot is not
