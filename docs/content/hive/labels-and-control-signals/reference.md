@@ -940,7 +940,7 @@ Formerly marked which hive filed or touched an item. Replaced by the `<!-- hive:
 
 **Configuration and implementation.** Hive id (`src/pkg/github/origin_marker.go`, `src/pkg/github/hive_id_label_retire.go`)
 
-#### `🐝 covered by PR` (formerly `hive/covered-by-pr`; **retired in favour of `stage/040-covered-by-pr`**, see [Stage labels](/docs/hive/labels-and-control-signals/stage-labels#stage-labels-stagennn--the-pipeline-state-machine); the stage reconciler removes it from open items)
+#### `🐝 covered by PR` (formerly `hive/covered-by-pr`; **retired in favour of `stage/040-covered-by-pr`**, see [Stage labels](stage-labels.md#stage-labels-stagennn--the-pipeline-state-machine); the stage reconciler removes it from open items)
 
 **Applies to:** Issues. **Kind:** Display-only.
 

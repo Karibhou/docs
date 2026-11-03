@@ -22,6 +22,9 @@ For example, Hive can send an allowed task to an external runtime, poll until it
 
 In this codebase, **ClankeR** is the contributor relay: a contributor-owned process connects to a hive over `/api/contribute/ws`, advertises backend/model/capabilities, receives one task at a time, heartbeats, and reports completion metadata. The user-facing setup is documented in [ClankeR contributor relay](/docs/hive/contributor-relay).
 
+For the opt-in Cline CLI worker, including provider-qualified models, isolated
+credentials and deployment prerequisites, see [Cline coding workers](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/cline.md).
+
 Flue's v5 adapter lives in this repository under `pkg/extwork/flue`. The contract and pinned upstream version are implementation reference below, not an instruction to install an arbitrary latest Flue release.
 
 ## Interface

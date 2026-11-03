@@ -206,7 +206,9 @@ rationguard watch my-agent
 # Auto-rebut: send rebuttals back to the agent
 rationguard watch my-agent --rebuttal=send
 
-# JSON output for dashboards
+# JSON output for dashboards (with --rebuttal=send each match carries `delivery`:
+# sent | failed | suppressed | project-local | low-confidence, and the line carries
+# `sentRebuttals` / `failedRebuttals` when present)
 rationguard watch my-agent --json
 
 # Classify stdin through pluk's pattern matcher instead of tailing the JSONL log
@@ -440,7 +442,7 @@ const fullBlock = generatePromptBlock({ excuses: getAllExcuses() });
 |---------|-------------|
 | `rationguard attach <session> --dangerous` | Start agent + pluk + rationguard + terminal (skip permissions) |
 | `rationguard <command> --help` (or `-h`) | Show usage from any position, without running the command |
-| `rationguard sessions` | List active pluk-monitored agent sessions |
+| `rationguard sessions` (alias: `ls`) | List active pluk-monitored agent sessions |
 | `rationguard watch <session>` | Real-time detection via pluk |
 | `rationguard watch <session> --rebuttal=send` | Detect and auto-rebut (30s cooldown + 60s quiet period) |
 | `rationguard check <text>` | Check for excuse patterns |
@@ -494,10 +496,11 @@ rationguard is part of [Hive Commons](https://hivecommons.dev), a family of tool
 
 - Want to contribute? See [CONTRIBUTING.md](https://github.com/hivecommons/rationguard/blob/main/CONTRIBUTING.md) for local setup, the test and coverage gates, and pull request guidelines.
 - rationguard flagged text that is not an excuse, missed one that is, or you want to propose a new default excuse? Open an [excuse pattern report](https://github.com/hivecommons/rationguard/issues/new?template=excuse_pattern.yml).
-- Curious what 1.0 requires or which CLIs are first-class? See [ROADMAP.md](https://github.com/hivecommons/rationguard/blob/main/ROADMAP.md).
+- Curious what 1.0 requires or which CLIs are first-class? See [ROADMAP.md](/docs/rationguard/roadmap).
 - Found a bug or have an idea? Open an [issue](https://github.com/hivecommons/rationguard/issues/new/choose).
 - Reporting a security vulnerability? Follow [SECURITY.md](https://github.com/hivecommons/rationguard/blob/main/SECURITY.md) to report it privately, not through public issues.
 - Questions? Join the [Hive Commons Discord](https://hivecommons.dev/discord).
+- Want to see the hive at work? [Watch the hive live on Twitch](https://www.twitch.tv/hivecommons).
 - Please follow the [Hive Commons Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md).
 
 ---

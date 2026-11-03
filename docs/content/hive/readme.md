@@ -58,6 +58,7 @@ A terminal agent is a power tool: you hold it, aim it, and it stops when you sto
 - [Integrations](/docs/hive/integrations) — backends, trackers, forges and sandboxes Hive works with, at a glance.
 - [Getting started](/docs/hive/getting-started)
 - [Operator reference](https://github.com/hivecommons/hive/blob/v5/src/docs/operator-reference.md)
+- [Attention episodes](https://github.com/hivecommons/hive/blob/v5/src/docs/attention-episodes.md) — single-admitter condition episodes, flap window, and the `github.attention` rollout controls.
 - [GitHub webhooks: cadence, patch and reconcile](https://github.com/hivecommons/hive/blob/v5/src/docs/webhooks.md) — polling fallback, webhook patch and reconcile, and the state-accuracy guarantees.
 - [Dashboard sections explained](/docs/hive/dashboard-sections) — what each dashboard section shows and what to do about it.
 - [Activity monitor copy inventory](https://github.com/hivecommons/hive/blob/v5/src/docs/dashboard-copy-inventory.md) — every operator-visible string builder in the activity monitor, with before/after word counts and the hover budget.

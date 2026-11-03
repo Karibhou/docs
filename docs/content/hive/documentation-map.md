@@ -107,6 +107,7 @@ Documentation for the current Hive line (branch `v5`; the code and docs live und
 - [Security notes](https://github.com/hivecommons/hive/blob/v5/src/docs/security.md) — log scrubbing and secret redaction guarantees/limits.
 - [Token collection and usage tracking](https://github.com/hivecommons/hive/blob/v5/src/docs/token-tracking.md) — session JSONL, `/api/cost`, and hub usage rollups.
 - [Notifications](https://github.com/hivecommons/hive/blob/v5/src/docs/notifications.md) — ntfy, Slack, and Discord alert channels, plus the two-way [Discord bot](https://github.com/hivecommons/hive/blob/v5/discord/README.md).
+- [Attention episodes](https://github.com/hivecommons/hive/blob/v5/src/docs/attention-episodes.md) — single-admitter condition episodes, flap window, and the `github.attention` rollout controls.
 - [State-triggered hooks](https://github.com/hivecommons/hive/blob/v5/src/docs/hooks.md) — declarative `transition → action` rules, the transition catalog, the vetted action set, and the security model (RFC #4001).
 - [CEL-based agent triggers](https://github.com/hivecommons/hive/blob/v5/src/docs/cel-triggers.md) — the `triggers:` config key: declarative CEL rules that kick an agent on a normalized source-control event, additive to built-in label/governor triggering, the `event.*` field reference, and the fail-closed compile/runtime contract.
 
@@ -225,7 +226,7 @@ Documentation for the current Hive line (branch `v5`; the code and docs live und
 - [Automatic repo ACMM onboarding reconciler](https://github.com/hivecommons/hive/blob/v5/src/docs/design/repo-acmm-onboarding.md) — proposed design for per-repo ACMM targets, gap-to-work reconciliation, human hand-off, waivers, and anti-gaming controls (RFC #6235).
 - [Hive federation design](https://github.com/hivecommons/hive/blob/v5/docs/federation-design.md) — the multi-hive registry: live `/api/hives` endpoints, project onboarding, contributor flow across hubs, and what remains future design work.
 - [Public roadmap](/docs/hive/roadmap) — available foundations, current/future direction, release-line status, completed work, and dated decision evidence. Not a delivery promise.
-- [Integrations](/docs/hive/integrations) — one page of logos and status (Supported / Opt-in / Planned) for agent backends, work sources, forges, sandboxes and upstream projects.
+- [Integrations](/docs/hive/integrations) — one page of logos and status (Supported / Opt-in / In progress / Planned) for agent backends, work sources, forges, sandboxes and upstream projects.
 - [Landscape and positioning](/docs/hive/landscape) — how Hive's operations-plane design compares to nearby agentic orchestration tools, with public references per project. Explicitly time-sensitive; check the conducted date in its header before quoting product details.
 - [CNCF sandbox onboarding status](https://github.com/hivecommons/hive/blob/v5/src/docs/cncf-sandbox-onboarding.md) — repo-local map of the onboarding tracker and repository evidence (LICENSE, governance, security, OWNERS, DCO).
 - [CNCF reference architecture](https://github.com/hivecommons/hive/blob/v5/src/docs/cncf-reference-architecture.md) — CNCF submission/reference template.
