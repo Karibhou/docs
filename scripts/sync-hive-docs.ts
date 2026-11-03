@@ -32,6 +32,10 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "running-at-level-6.md" },
   { source: "agent-configuration.md" },
   { source: "hivectl.md" },
+  // Crux operator pages (hivecommons/docs#604)
+  { source: "crux-cli.md" },
+  { source: "crux-serve.md" },
+  { source: "crux-publish.md" },
   { source: "manual-provisioning.md" },
   { source: "work-sources.md" },
   { source: "getting-started.md" },
