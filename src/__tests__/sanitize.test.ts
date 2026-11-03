@@ -108,6 +108,17 @@ describe("sanitizeHtmlForMdx — comment removal (via removeCommentPatterns)", (
     expect(result).toBe("abc");
   });
 
+  it("does not expand a placeholder-shaped sequence present in raw input", () => {
+    const forged = removeCommentPatterns(
+      "x \u0000MDX_CODE_0\u0000 y `code` <!-- c -->"
+    );
+    expect(forged).toBe("x MDX_CODE_0 y `code` ");
+
+    const outOfRange = removeCommentPatterns("x \u0000MDX_CODE_5\u0000 y");
+    expect(outOfRange).toBe("x MDX_CODE_5 y");
+    expect(outOfRange).not.toContain("undefined");
+  });
+
   it("removes multiline comments", () => {
     const result = removeCommentPatterns(
       "before<!--\nmultiline\ncomment\n-->after"

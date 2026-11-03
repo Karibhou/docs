@@ -104,6 +104,11 @@ const CODE_PLACEHOLDER = /\u0000MDX_CODE_(\d+)\u0000/g;
 /**
  * Run `fn` on `content` with fenced blocks and reliable inline code spans
  * swapped for placeholders, then restore them byte-for-byte.
+ *
+ * The placeholder is delimited by NUL, so NUL is dropped from the input
+ * first: a caller may run this before sanitizeHtmlForMdx strips control
+ * characters, and a pre-existing `\u0000MDX_CODE_n\u0000` would otherwise
+ * be expanded at restore time.
  */
 export function withCodeProtected(
   content: string,
@@ -115,6 +120,7 @@ export function withCodeProtected(
     return `\u0000MDX_CODE_${codeSpans.length - 1}\u0000`;
   };
   const masked = content
+    .replace(/\u0000/g, "")
     .replace(MARKDOWN_FENCE, put)
     .split("\n")
     .map(line =>

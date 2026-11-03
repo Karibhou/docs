@@ -1,0 +1,1 @@
+- `withCodeProtected` drops NUL bytes before masking code spans, so a placeholder-shaped sequence in raw synced markdown is no longer expanded or rendered as `undefined` by `removeCommentPatterns` (#599).
