@@ -234,6 +234,7 @@ const NAV_STRUCTURE_RATIONGUARD: Array<{ title: string; items: NavItem[] }> = [
     title: 'Overview',
     items: [
       { 'Introduction': 'readme.md' },
+      { 'Roadmap': 'roadmap.md' },
     ]
   }
 ]

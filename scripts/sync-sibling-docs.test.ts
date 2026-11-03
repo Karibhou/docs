@@ -36,6 +36,15 @@ describe("PROJECTS", () => {
     ]);
   });
 
+  it("syncs the rationguard roadmap", () => {
+    expect(project("rationguard").files.map(f => [f.source, f.target])).toEqual(
+      [
+        ["README.md", "readme.md"],
+        ["ROADMAP.md", "roadmap.md"],
+      ]
+    );
+  });
+
   it("requires a readme for every project", () => {
     for (const p of PROJECTS) {
       expect(p.files.some(f => f.target === "readme.md" && f.required)).toBe(

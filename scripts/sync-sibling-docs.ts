@@ -100,7 +100,10 @@ export const PROJECTS: ProjectSync[] = [
     owner: SIBLING_OWNER,
     repo: "rationguard",
     branch: process.env.RATIONGUARD_DOCS_REF || "main",
-    files: [{ source: "README.md", target: "readme.md", required: true }],
+    files: [
+      { source: "README.md", target: "readme.md", required: true },
+      { source: "ROADMAP.md", target: "roadmap.md" },
+    ],
   },
   {
     project: "promptargs",
