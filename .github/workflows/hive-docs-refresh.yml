@@ -45,7 +45,13 @@ jobs:
       # Both scripts fetch from hivecommons/hive@v5 and the sibling repos over
       # raw.githubusercontent.com; they fail (rather than silently keep stale
       # content) if upstream is unreachable, so a bad run opens no PR.
+      # Heal mode: pages added upstream next to synced pages, or linked from
+      # them, are appended to scripts/sync-hive-docs.files.json and synced
+      # (hivecommons/docs#612). Fails only if the heal cannot be applied.
       - run: npm run sync-hive-docs
+        env:
+          SYNC_HIVE_DOCS_HEAL: "1"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npm run sync-sibling-docs
       - name: Open PR with resynced mirror
         id: pr
@@ -58,7 +64,9 @@ jobs:
           signoff: true
           branch: ${{ env.REFRESH_BRANCH }}
           delete-branch: true
-          add-paths: docs/content
+          add-paths: |
+            docs/content
+            scripts/sync-hive-docs.files.json
           # Neutral on purpose: a run may change only the hive mirror, only
           # the sibling mirrors (sync-sibling-docs, from each repo's own
           # branch), or both, so the title must not name one source (#586).
