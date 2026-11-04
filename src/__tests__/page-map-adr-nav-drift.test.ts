@@ -11,7 +11,7 @@ function adrEntries(file: string): string[] {
 
 describe("hive navigation stays in step with sync-hive-docs", () => {
   it("lists every synced ADR in NAV_STRUCTURE_HIVE", () => {
-    const synced = adrEntries("scripts/sync-hive-docs.ts");
+    const synced = adrEntries("scripts/sync-hive-docs.files.json");
     const inNav = adrEntries("src/app/docs/page-map.ts");
     expect(synced.length).toBeGreaterThan(0);
     expect(inNav).toEqual(synced);
@@ -31,12 +31,21 @@ describe("hive navigation stays in step with sync-hive-docs", () => {
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
     const nav = map.slice(start, end);
-    // Scans every `source:` entry in the sync script, so this deliberately
-    // covers both the synced `files` list and `localHiveDocs`: local hive
-    // pages must be in the nav too.
+    // Covers both the synced files list (scripts/sync-hive-docs.files.json)
+    // and every `source:` entry in the sync script (`localHiveDocs`): local
+    // hive pages must be in the nav too.
+    const listed: Array<{ source: string; target?: string }> = JSON.parse(
+      fs.readFileSync(
+        path.join(process.cwd(), "scripts/sync-hive-docs.files.json"),
+        "utf8"
+      )
+    );
     const targets = [
-      ...sync.matchAll(/source:\s*"([^"]+)"(?:,\s*target:\s*"([^"]+)")?/g),
-    ].map(m => m[2] ?? m[1]);
+      ...listed.map(f => f.target ?? f.source),
+      ...[
+        ...sync.matchAll(/source:\s*"([^"]+)"(?:,\s*target:\s*"([^"]+)")?/g),
+      ].map(m => m[2] ?? m[1]),
+    ];
     // Pages intentionally reachable by URL only; add a comment per entry.
     const urlOnly = new Set<string>([]);
     expect(targets.length).toBeGreaterThan(0);

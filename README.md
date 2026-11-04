@@ -24,7 +24,12 @@ Hive, hotshot, pluk, rationguard, promptargs, dibs, Crux, and Spektacular docs a
 **single-sourced from their repositories** and pulled at build time:
 
 - `scripts/sync-hive-docs.ts` pulls Hive docs from `hivecommons/hive` (`src/docs/`, branch `v5`;
-  override with `HIVE_DOCS_OWNER` / `HIVE_DOCS_REPO` / `HIVE_DOCS_REF`).
+  override with `HIVE_DOCS_OWNER` / `HIVE_DOCS_REPO` / `HIVE_DOCS_REF`). The pages it pulls are listed in
+  `scripts/sync-hive-docs.files.json`. After syncing it reports file-list drift: upstream pages next to synced
+  subdirectory pages, or linked from synced pages, that are not listed (so their links fall back to GitHub URLs).
+  The report is printed and added to `$GITHUB_STEP_SUMMARY` and never fails the build; with `SYNC_HIVE_DOCS_HEAL=1`
+  (or `--heal`), used by the scheduled docs refresh, it appends the drift to the list and syncs the new pages.
+  List intentional omissions in `scripts/sync-hive-docs.unsynced-allowlist.txt`.
 - `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, dibs, Crux, and Spektacular docs from their repos.
   Spektacular also pulls its tutorials from `hivecommons/spektacular-website` (MDX, converted to Markdown by
   `scripts/mdx-to-markdown.ts`; override the ref with `SPEKTACULAR_WEBSITE_DOCS_REF`).

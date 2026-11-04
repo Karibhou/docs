@@ -2,13 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import filesData from "./sync-hive-docs.files.json";
 
 // Drives scripts/sync-hive-docs.ts main() end to end, IN PROCESS, the same
 // way scripts/check-internal-links.main.test.ts does: point process.cwd() at
 // a throwaway dir, set process.argv[1] so the direct-run guard fires, replace
 // globalThis.fetch with a scripted stub, and dynamic-import the module after
 // vi.resetModules(). main() is fire-and-forget at module top level, so each
-// case waits for either the final `synced` log line or process.exit.
+// case waits for either the closing drift report or process.exit. The
+// upstream src/docs listing (GitHub trees API) is stubbed too, via
+// `upstreamTree`; fetches to it are kept out of `fetched`.
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -21,6 +24,10 @@ const ENV_KEYS = [
   "HIVE_DOCS_OWNER",
   "HIVE_DOCS_REPO",
   "HIVE_DOCS_REF",
+  "SYNC_HIVE_DOCS_HEAL",
+  "GITHUB_STEP_SUMMARY",
+  "GITHUB_TOKEN",
+  "GH_TOKEN",
 ] as const;
 
 let caseDir: string;
@@ -32,14 +39,40 @@ let origArgv1: string | undefined;
 let origFetch: typeof globalThis.fetch;
 let origEnv: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>>;
 let fetched: string[];
+// Paths under upstream src/docs served by the trees API; null -> 404.
+let upstreamTree: string[] | null;
+let treeTruncated = false;
+let treeRequests: Array<{ url: string; init?: RequestInit }>;
 
 type Responder = (url: string) => string | null;
 
 /** Install a fetch stub: `responder` returns the body, or null for a 404. */
 function stubFetch(responder: Responder) {
   fetched = [];
-  globalThis.fetch = (async (input: string | URL | Request) => {
+  treeRequests = [];
+  globalThis.fetch = (async (
+    input: string | URL | Request,
+    init?: RequestInit
+  ) => {
     const url = String(input instanceof Request ? input.url : input);
+    if (url.startsWith("https://api.github.com/")) {
+      treeRequests.push({ url, init });
+      if (upstreamTree === null) {
+        return new Response("missing", {
+          status: 404,
+          statusText: "Not Found",
+        });
+      }
+      const tree = [
+        ...upstreamTree.map(p => ({ path: `src/docs/${p}`, type: "blob" })),
+        // Outside src/docs, and a directory entry: both ignored.
+        { path: "README.md", type: "blob" },
+        { path: "src/docs/integrations", type: "tree" },
+      ];
+      return new Response(JSON.stringify({ tree, truncated: treeTruncated }), {
+        status: 200,
+      });
+    }
     fetched.push(url);
     const body = responder(url);
     if (body === null) {
@@ -65,7 +98,7 @@ async function runSync(): Promise<{ out: string; err: string }> {
     () => {
       const done =
         exitSpy.mock.calls.length > 0 ||
-        joinCalls(logSpy).includes("adr/0026-sandbox-runtime-selection.md");
+        joinCalls(logSpy).includes("### sync-hive-docs file-list drift");
       if (!done) throw new Error("sync still running");
     },
     { timeout: 5_000, interval: 5 }
@@ -82,6 +115,7 @@ function readOut(target: string): string {
 }
 
 beforeEach(() => {
+  treeTruncated = false;
   fs.mkdirSync(workRoot, { recursive: true });
   caseDir = fs.mkdtempSync(path.join(workRoot, "case-"));
 
@@ -91,6 +125,7 @@ beforeEach(() => {
     delete process.env[k];
   }
   origFetch = globalThis.fetch;
+  upstreamTree = null;
   cwdSpy = vi.spyOn(process, "cwd").mockReturnValue(caseDir);
   origArgv1 = process.argv[1];
   process.argv[1] = scriptPath;
@@ -285,5 +320,230 @@ describe("sync-hive-docs main()", () => {
     expect(out).toContain("synced architecture.md");
     expect(out).not.toContain("synced roadmap.md");
     expect(fetched[fetched.length - 1]).toMatch(/\/roadmap\.md$/);
+  });
+});
+
+describe("sync-hive-docs main() file-list drift (#612)", () => {
+  const listed = filesData.map(f => f.source);
+  // Upstream has two unlisted siblings of synced integrations/ pages, an
+  // unlisted root page nothing links to, and a non-markdown asset.
+  const upstream = [
+    ...listed,
+    "integrations/cline.md",
+    "integrations/forges.md",
+    "orphan.md",
+    "integrations/logo.svg",
+    "new-root.md",
+  ];
+  const landscape = [
+    "# Landscape",
+    "See [forges](integrations/forges.md#gitlab) and [gone](missing.md).",
+    "",
+  ].join("\n");
+
+  function stubUpstream(extra: Record<string, string> = {}) {
+    upstreamTree = upstream;
+    stubFetch(url => {
+      const source = sourceOf(url);
+      if (source in extra) return extra[source];
+      return source === "landscape.md" ? landscape : `# ${source}\n`;
+    });
+  }
+
+  function filesListPath(): string {
+    return path.join(caseDir, "scripts", "sync-hive-docs.files.json");
+  }
+
+  it("reports unlisted siblings and linked pages without failing (report-only)", async () => {
+    const summary = path.join(caseDir, "summary.md");
+    fs.writeFileSync(summary, "existing\n");
+    process.env.GITHUB_STEP_SUMMARY = summary;
+    stubUpstream();
+
+    const { out, err } = await runSync();
+
+    expect(err).toBe("");
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(treeRequests.map(r => r.url)).toEqual([
+      "https://api.github.com/repos/hivecommons/hive/git/trees/v5?recursive=1",
+    ]);
+    expect(treeRequests[0].init?.headers).toEqual({});
+    expect(out).toContain(
+      "2 upstream page(s) are not in `scripts/sync-hive-docs.files.json`."
+    );
+    expect(out).toContain(
+      "- `integrations/cline.md` — unlisted sibling of synced pages"
+    );
+    expect(out).toContain(
+      "- `integrations/forges.md` — unlisted sibling of synced pages; linked from landscape.md"
+    );
+    expect(out).not.toContain("orphan.md");
+    expect(out).not.toContain("missing.md");
+    expect(out).not.toContain("logo.svg");
+
+    const written = fs.readFileSync(summary, "utf8");
+    expect(
+      written.startsWith("existing\n### sync-hive-docs file-list drift")
+    ).toBe(true);
+    expect(written).toContain("`integrations/forges.md`");
+
+    // Report-only: the list is untouched and the link stays on GitHub.
+    expect(fs.existsSync(filesListPath())).toBe(false);
+    expect(fs.existsSync(outPath("integrations/forges.md"))).toBe(false);
+    expect(readOut("landscape.md")).toContain(
+      "[forges](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/forges.md#gitlab)"
+    );
+  });
+
+  it("suppresses pages listed in the committed allowlist", async () => {
+    fs.mkdirSync(path.join(caseDir, "scripts"), { recursive: true });
+    fs.writeFileSync(
+      path.join(caseDir, "scripts", "sync-hive-docs.unsynced-allowlist.txt"),
+      "# intentional omissions\nintegrations/cline.md # not for the site\n"
+    );
+    stubUpstream();
+
+    const { out } = await runSync();
+
+    expect(out).not.toContain("integrations/cline.md");
+    expect(out).toContain("1 upstream page(s) are not in");
+    expect(out).toContain("- `integrations/forges.md`");
+  });
+
+  it("reports linked pages only, and still exits 0, when upstream cannot be listed", async () => {
+    process.env.GH_TOKEN = "t0ken";
+    stubFetch(url =>
+      sourceOf(url) === "landscape.md" ? landscape : `# ${sourceOf(url)}\n`
+    );
+
+    const { out, err } = await runSync();
+
+    expect(err).toBe("");
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(treeRequests[0].init?.headers).toEqual({
+      Authorization: "Bearer t0ken",
+    });
+    expect(out).toContain(
+      "drift check: failed to list https://api.github.com/repos/hivecommons/hive/git/trees/v5?recursive=1: 404 Not Found"
+    );
+    expect(out).toContain(
+      "Upstream `src/docs` could not be listed; only linked pages were checked."
+    );
+    expect(out).toContain(
+      "- `integrations/forges.md` — linked from landscape.md"
+    );
+    // Without the listing a dangling link cannot be told apart from drift.
+    expect(out).toContain("- `missing.md` — linked from landscape.md");
+    expect(out).not.toContain("integrations/cline.md");
+  });
+
+  it("prints a clean report when nothing drifted", async () => {
+    upstreamTree = listed;
+    stubFetch(url => `# ${sourceOf(url)}\n`);
+
+    const { out } = await runSync();
+
+    expect(out).toContain("No unlisted upstream pages.");
+    expect(out).not.toContain("Healed");
+  });
+
+  it("heal mode appends the drift to the files list and syncs the new pages", async () => {
+    process.env.SYNC_HIVE_DOCS_HEAL = "1";
+    process.env.GITHUB_TOKEN = "gh-t0ken";
+    stubUpstream({
+      "integrations/forges.md": "# Forges\nSee [new](../new-root.md).\n",
+    });
+
+    const { out, err } = await runSync();
+
+    expect(err).toBe("");
+    expect(exitSpy).not.toHaveBeenCalled();
+    expect(treeRequests[0].init?.headers).toEqual({
+      Authorization: "Bearer gh-t0ken",
+    });
+
+    const list = JSON.parse(fs.readFileSync(filesListPath(), "utf8"));
+    expect(list).toEqual([
+      ...filesData,
+      { source: "integrations/cline.md" },
+      { source: "integrations/forges.md" },
+    ]);
+    expect(fs.readFileSync(filesListPath(), "utf8")).toBe(
+      JSON.stringify(list, null, 2) + "\n"
+    );
+
+    // New pages are synced, and existing links to them become site routes.
+    expect(readOut("integrations/cline.md")).toContain(
+      "# integrations/cline.md\n"
+    );
+    expect(readOut("integrations/forges.md")).toContain("# Forges\n");
+    expect(readOut("landscape.md")).toContain(
+      "[forges](/docs/hive/integrations/forges#gitlab)"
+    );
+    // Every page is fetched once, even though the sync ran twice.
+    expect(new Set(fetched).size).toBe(fetched.length);
+    expect(fetched.length).toBe(listed.length + 2);
+
+    expect(out).toContain(
+      "Healed: appended 2 page(s) to `scripts/sync-hive-docs.files.json` and synced them:"
+    );
+    // A healed page linking to another unlisted page is reported for the
+    // next refresh rather than chased here.
+    expect(out).toContain(
+      "1 upstream page(s) are not in `scripts/sync-hive-docs.files.json`."
+    );
+    expect(out).toContain(
+      "- `new-root.md` — linked from integrations/forges.md"
+    );
+  });
+
+  it("heal mode (--heal) fails when the upstream listing is truncated", async () => {
+    process.argv.push("--heal");
+    try {
+      upstreamTree = ["README.md"];
+      stubFetch(url => `# ${sourceOf(url)}\n`);
+      treeTruncated = true;
+
+      const { err } = await runSync();
+
+      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(err).toContain("upstream tree listing truncated");
+      expect(fs.existsSync(filesListPath())).toBe(false);
+    } finally {
+      process.argv.pop();
+    }
+  });
+
+  it("heal mode (--heal) fails when the upstream listing is unavailable", async () => {
+    process.argv.push("--heal");
+    try {
+      stubFetch(url => `# ${sourceOf(url)}\n`);
+
+      const { err } = await runSync();
+
+      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(err).toContain(
+        "failed to list https://api.github.com/repos/hivecommons/hive/git/trees/v5?recursive=1: 404 Not Found"
+      );
+      expect(fs.existsSync(filesListPath())).toBe(false);
+    } finally {
+      process.argv.pop();
+    }
+  });
+
+  it("heal mode fails, leaving the files list untouched, when a new page cannot be fetched", async () => {
+    process.env.SYNC_HIVE_DOCS_HEAL = "1";
+    upstreamTree = upstream;
+    stubFetch(url =>
+      sourceOf(url) === "integrations/cline.md" ? null : `# ${sourceOf(url)}\n`
+    );
+
+    const { err } = await runSync();
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(err).toContain(
+      "failed to fetch https://raw.githubusercontent.com/hivecommons/hive/v5/src/docs/integrations/cline.md: 404 Not Found"
+    );
+    expect(fs.existsSync(filesListPath())).toBe(false);
   });
 });

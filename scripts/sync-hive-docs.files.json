@@ -1,0 +1,213 @@
+[
+  {
+    "source": "README.md",
+    "target": "readme.md"
+  },
+  {
+    "source": "documentation-map.md"
+  },
+  {
+    "source": "architecture.md"
+  },
+  {
+    "source": "security-threat-model.md"
+  },
+  {
+    "source": "roadmap.md"
+  },
+  {
+    "source": "landscape.md"
+  },
+  {
+    "source": "acmm-policy-matrix.md",
+    "comment": "Operations pages — single-sourced from hive src/docs (previously hand-copied into docs/content/hive and prone to drift; migrated to auto-sync)."
+  },
+  {
+    "source": "running-at-level-6.md",
+    "comment": "ACMM Level 6 operating guide (hivecommons/hive#10516, #10517)."
+  },
+  {
+    "source": "agent-configuration.md"
+  },
+  {
+    "source": "hivectl.md"
+  },
+  {
+    "source": "crux-cli.md",
+    "comment": "Crux operator pages (hivecommons/docs#604)"
+  },
+  {
+    "source": "crux-lanes.md"
+  },
+  {
+    "source": "crux-serve.md"
+  },
+  {
+    "source": "crux-publish.md"
+  },
+  {
+    "source": "manual-provisioning.md"
+  },
+  {
+    "source": "work-sources.md"
+  },
+  {
+    "source": "getting-started.md"
+  },
+  {
+    "source": "net-admin-requirement.md"
+  },
+  {
+    "source": "release-channels.md"
+  },
+  {
+    "source": "stable-soak-policy.md",
+    "route": "operations/stable-soak-and-promotion-policy",
+    "comment": "Stable soak/promotion policy referenced from release-channels (hivecommons/docs#181). `route` is the nav URL (slug derives from the page-map title), so links land on the page shown in the sidebar."
+  },
+  {
+    "source": "contributor-relay.md"
+  },
+  {
+    "source": "security-model.md"
+  },
+  {
+    "source": "securing-your-hive.md"
+  },
+  {
+    "source": "troubleshooting.md"
+  },
+  {
+    "source": "dashboard-sections.md",
+    "comment": "Dashboard section help pages (hivecommons/docs#253, hivecommons/hive#10915)."
+  },
+  {
+    "source": "dashboard-glossary.md"
+  },
+  {
+    "source": "dashboard-sections/overview-and-metrics.md"
+  },
+  {
+    "source": "dashboard-sections/workflow-and-agents.md"
+  },
+  {
+    "source": "dashboard-sections/activity-monitor.md"
+  },
+  {
+    "source": "labels-and-control-signals.md"
+  },
+  {
+    "source": "labels-and-control-signals/reference.md"
+  },
+  {
+    "source": "labels-and-control-signals/stage-labels.md"
+  },
+  {
+    "source": "labels-and-control-signals/glossary-and-operations.md"
+  },
+  {
+    "source": "backup-restore.md",
+    "target": "backup-dr.md"
+  },
+  {
+    "source": "env-vars.md"
+  },
+  {
+    "source": "integration-guide.md",
+    "comment": "Third-party integration guide (hivecommons/hive#10171)."
+  },
+  {
+    "source": "integrations/work-source-providers.md"
+  },
+  {
+    "source": "integrations/clanker-flue.md"
+  },
+  {
+    "source": "integrations/spektacular.md"
+  },
+  {
+    "source": "public-knowledge-mcp.md"
+  },
+  {
+    "source": "copilot-permissions-comparison.md"
+  },
+  {
+    "source": "adr/README.md",
+    "target": "adr/readme.md"
+  },
+  {
+    "source": "adr/0001-record-architecture-decisions.md"
+  },
+  {
+    "source": "adr/0002-mitm-proxy-network-enforcement.md"
+  },
+  {
+    "source": "adr/0003-acmm-autonomy-levels.md"
+  },
+  {
+    "source": "adr/0004-beads-work-ledger.md"
+  },
+  {
+    "source": "adr/0005-forge-abstraction.md"
+  },
+  {
+    "source": "adr/0006-planning-intelligence.md"
+  },
+  {
+    "source": "adr/0007-token-mint.md"
+  },
+  {
+    "source": "adr/0008-ioscan-untrusted-input.md"
+  },
+  {
+    "source": "adr/0009-trajectory-review.md"
+  },
+  {
+    "source": "adr/0010-escalation-circuit-breaker.md"
+  },
+  {
+    "source": "adr/0011-knowledge-system.md"
+  },
+  {
+    "source": "adr/0012-skill-registry.md"
+  },
+  {
+    "source": "adr/0013-cel-triggers.md"
+  },
+  {
+    "source": "adr/0014-hub-spoke.md"
+  },
+  {
+    "source": "adr/0015-csp-style-src-scope.md"
+  },
+  {
+    "source": "adr/0016-csp-script-src-scope.md"
+  },
+  {
+    "source": "adr/0017-podman-quadlet-lifecycle.md"
+  },
+  {
+    "source": "adr/0018-dashboard-design-tokens.md"
+  },
+  {
+    "source": "adr/0019-escalation-over-stalling.md"
+  },
+  {
+    "source": "adr/0020-spek-continuous-convergence.md"
+  },
+  {
+    "source": "adr/0022-opt-in-earned-codex-reset-redemption.md"
+  },
+  {
+    "source": "adr/0023-trusted-author-automerge.md"
+  },
+  {
+    "source": "adr/0024-provider-credential-lifecycle.md"
+  },
+  {
+    "source": "adr/0025-central-stage-engine.md"
+  },
+  {
+    "source": "adr/0026-sandbox-runtime-selection.md"
+  }
+]

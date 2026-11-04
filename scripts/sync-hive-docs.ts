@@ -7,6 +7,7 @@ import {
 import { fetchTextWithTimeout } from "./fetch-with-timeout";
 import { normalizeFences } from "./markdown-fences";
 import { scrubLegacyBranding } from "./scrub-legacy-branding";
+import filesData from "./sync-hive-docs.files.json";
 
 // Post-migration the canonical hive repo is hivecommons/hive; until the code
 // transfer lands the docs stay in hivecommons/hive. Override with HIVE_DOCS_OWNER.
@@ -18,86 +19,22 @@ const docsRoot = path.join(process.cwd(), "docs", "content", "hive");
 const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/src/docs`;
 const canonicalBase = `https://github.com/${owner}/${repo}/blob/${branch}/src/docs`;
 
-const files: Array<{ source: string; target?: string; route?: string }> = [
-  { source: "README.md", target: "readme.md" },
-  { source: "documentation-map.md" },
-  { source: "architecture.md" },
-  { source: "security-threat-model.md" },
-  { source: "roadmap.md" },
-  { source: "landscape.md" },
-  // Operations pages — single-sourced from hive src/docs (previously hand-copied
-  // into docs/content/hive and prone to drift; migrated to auto-sync).
-  { source: "acmm-policy-matrix.md" },
-  // ACMM Level 6 operating guide (hivecommons/hive#10516, #10517).
-  { source: "running-at-level-6.md" },
-  { source: "agent-configuration.md" },
-  { source: "hivectl.md" },
-  // Crux operator pages (hivecommons/docs#604)
-  { source: "crux-cli.md" },
-  { source: "crux-lanes.md" },
-  { source: "crux-serve.md" },
-  { source: "crux-publish.md" },
-  { source: "manual-provisioning.md" },
-  { source: "work-sources.md" },
-  { source: "getting-started.md" },
-  { source: "net-admin-requirement.md" },
-  { source: "release-channels.md" },
-  // Stable soak/promotion policy referenced from release-channels (hivecommons/docs#181).
-  // `route` is the nav URL (slug derives from the page-map title), so links land on the page shown in the sidebar.
-  {
-    source: "stable-soak-policy.md",
-    route: "operations/stable-soak-and-promotion-policy",
-  },
-  { source: "contributor-relay.md" },
-  { source: "security-model.md" },
-  { source: "securing-your-hive.md" },
-  { source: "troubleshooting.md" },
-  // Dashboard section help pages (hivecommons/docs#253, hivecommons/hive#10915).
-  { source: "dashboard-sections.md" },
-  { source: "dashboard-glossary.md" },
-  { source: "dashboard-sections/overview-and-metrics.md" },
-  { source: "dashboard-sections/workflow-and-agents.md" },
-  { source: "dashboard-sections/activity-monitor.md" },
-  { source: "labels-and-control-signals.md" },
-  { source: "labels-and-control-signals/reference.md" },
-  { source: "labels-and-control-signals/stage-labels.md" },
-  { source: "labels-and-control-signals/glossary-and-operations.md" },
-  { source: "backup-restore.md", target: "backup-dr.md" },
-  { source: "env-vars.md" },
-  // Third-party integration guide (hivecommons/hive#10171).
-  { source: "integration-guide.md" },
-  { source: "integrations/work-source-providers.md" },
-  { source: "integrations/clanker-flue.md" },
-  { source: "integrations/spektacular.md" },
-  { source: "public-knowledge-mcp.md" },
-  { source: "copilot-permissions-comparison.md" },
-  { source: "adr/README.md", target: "adr/readme.md" },
-  { source: "adr/0001-record-architecture-decisions.md" },
-  { source: "adr/0002-mitm-proxy-network-enforcement.md" },
-  { source: "adr/0003-acmm-autonomy-levels.md" },
-  { source: "adr/0004-beads-work-ledger.md" },
-  { source: "adr/0005-forge-abstraction.md" },
-  { source: "adr/0006-planning-intelligence.md" },
-  { source: "adr/0007-token-mint.md" },
-  { source: "adr/0008-ioscan-untrusted-input.md" },
-  { source: "adr/0009-trajectory-review.md" },
-  { source: "adr/0010-escalation-circuit-breaker.md" },
-  { source: "adr/0011-knowledge-system.md" },
-  { source: "adr/0012-skill-registry.md" },
-  { source: "adr/0013-cel-triggers.md" },
-  { source: "adr/0014-hub-spoke.md" },
-  { source: "adr/0015-csp-style-src-scope.md" },
-  { source: "adr/0016-csp-script-src-scope.md" },
-  { source: "adr/0017-podman-quadlet-lifecycle.md" },
-  { source: "adr/0018-dashboard-design-tokens.md" },
-  { source: "adr/0019-escalation-over-stalling.md" },
-  { source: "adr/0020-spek-continuous-convergence.md" },
-  { source: "adr/0022-opt-in-earned-codex-reset-redemption.md" },
-  { source: "adr/0023-trusted-author-automerge.md" },
-  { source: "adr/0024-provider-credential-lifecycle.md" },
-  { source: "adr/0025-central-stage-engine.md" },
-  { source: "adr/0026-sandbox-runtime-selection.md" },
-];
+// The curated list of pages to sync lives in a data file so the scheduled
+// refresh can append to it in heal mode (see "File-list drift" below). Each
+// entry: `source` (path under src/docs), optional `target` (output path under
+// docs/content/hive), optional `route` (nav URL when the page-map slug differs
+// from the target, so links land on the page shown in the sidebar) and an
+// optional free-text `comment`.
+export interface SyncFile {
+  source: string;
+  target?: string;
+  route?: string;
+  comment?: string;
+}
+export const FILES_LIST_PATH = "scripts/sync-hive-docs.files.json";
+export const ALLOWLIST_PATH = "scripts/sync-hive-docs.unsynced-allowlist.txt";
+
+const files: SyncFile[] = filesData.map(f => ({ ...f }));
 
 // Hive pages authored in this repo (docs/content/hive/) rather than synced,
 // listed so links from synced pages resolve to their site routes.
@@ -157,31 +94,33 @@ function canonicalHeader(source: string): string {
 
 // Repo path (relative to the hive repo root) of every source file the sync
 // pulls, e.g. `src/docs/architecture.md`, `src/docs/adr/README.md`.
-const syncedRepoPaths = new Set(files.map(f => `src/docs/${f.source}`));
+const syncedRepoPaths = new Set<string>();
 
 // Map from a synced source's repo path -> its published site route (no `.md`).
 // e.g. `src/docs/README.md` -> `/docs/hive/readme`,
 //      `src/docs/adr/0001-...md` -> `/docs/hive/adr/0001-...`.
 const repoPathToSiteRoute = new Map<string, string>();
-for (const f of [...files, ...localHiveDocs]) {
-  const repoPath = `src/docs/${f.source}`;
-  const target = f.target || f.source;
-  const targetNoExt =
-    ("route" in f && f.route) || target.replace(/\.mdx?$/i, "");
-  repoPathToSiteRoute.set(repoPath, `/docs/hive/${targetNoExt}`);
-}
 
 // Basename -> site route, used only as a recovery fallback (see rewriteLinkTarget).
 // `README.md` is intentionally excluded because it is ambiguous (root README vs
 // adr/README); those are only ever matched by exact path.
 const basenameToSiteRoute = new Map<string, string>();
-for (const f of [...files, ...localHiveDocs]) {
-  const base = f.source.split("/").pop()!;
-  if (base.toLowerCase() === "readme.md") continue;
+
+// Add a page to the route maps. Runs for every listed page at load time and
+// again for pages appended in heal mode, so links to them become Case 1.
+function registerPage(f: SyncFile, synced: boolean) {
+  const repoPath = `src/docs/${f.source}`;
+  if (synced) syncedRepoPaths.add(repoPath);
   const target = f.target || f.source;
-  const route = ("route" in f && f.route) || target.replace(/\.mdx?$/i, "");
-  basenameToSiteRoute.set(base, `/docs/hive/${route}`);
+  const route = f.route || target.replace(/\.mdx?$/i, "");
+  repoPathToSiteRoute.set(repoPath, `/docs/hive/${route}`);
+  const base = f.source.split("/").pop()!;
+  if (base.toLowerCase() !== "readme.md") {
+    basenameToSiteRoute.set(base, `/docs/hive/${route}`);
+  }
 }
+for (const f of files) registerPage(f, true);
+for (const f of localHiveDocs) registerPage(f, false);
 
 const blobBase = `https://github.com/${owner}/${repo}/blob/${branch}`;
 
@@ -216,11 +155,29 @@ function rewriteLinkTarget(target: string, sourceRepoPath: string): string {
 
 // Apply link rewriting to a file's markdown content. Handles inline links
 // `[text](target)` and reference-style definitions `[id]: target`.
-function rewriteLinks(content: string, sourceRepoPath: string): string {
+// When `unsyncedRefs` is given, every `src/docs/**/*.md` target that Case 2
+// pushed out to GitHub is recorded in it (source path -> referencing pages)
+// for the drift check.
+function rewriteLinks(
+  content: string,
+  sourceRepoPath: string,
+  unsyncedRefs?: Map<string, Set<string>>
+): string {
   return rewriteMarkdownLinks(content, {
     sourceRepoPath,
     blobBase,
-    resolveSyncedRoute,
+    resolveSyncedRoute: (resolved, pathPart) => {
+      const route = resolveSyncedRoute(resolved, pathPart);
+      if (route === undefined && unsyncedRefs) {
+        const m = resolved.match(/^src\/docs\/(.+\.md)$/i);
+        if (m) {
+          const from = sourceRepoPath.replace(/^src\/docs\//, "");
+          const refs = unsyncedRefs.get(m[1]) ?? new Set<string>();
+          unsyncedRefs.set(m[1], refs.add(from));
+        }
+      }
+      return route;
+    },
   });
 }
 
@@ -254,15 +211,198 @@ export function resolveSyncTarget(root: string, target: string): string {
   return targetPath;
 }
 
-async function main() {
-  for (const file of files) {
+// ---------------------------------------------------------------------------
+// File-list drift (hivecommons/docs#612)
+// ---------------------------------------------------------------------------
+//
+// `files` is curated, not a mirror of src/docs, so a page added upstream next
+// to pages we sync is easy to miss: links to it silently become GitHub URLs
+// (Case 2) and the site nav has a hole. After every sync this reports:
+//
+//   * unlisted siblings — upstream `src/docs/<dir>/*.md` pages in a
+//     subdirectory with at least one synced page that are not listed
+//     themselves (root-level pages are only reported when linked, below);
+//   * referenced pages — `src/docs/**/*.md` pages a synced page links to that
+//     Case 2 pushed out to a GitHub URL.
+//
+// Pages in scripts/sync-hive-docs.unsynced-allowlist.txt are intentional
+// omissions and are never reported. By default (prebuild, PR builds) the
+// check is report-only: it prints the drift, appends it to
+// $GITHUB_STEP_SUMMARY when set, and never changes the exit code. Heal mode
+// (SYNC_HIVE_DOCS_HEAL=1 or --heal; the scheduled refresh) appends the drift
+// to scripts/sync-hive-docs.files.json and syncs the new pages, failing only
+// if that cannot be applied.
+
+export interface DriftEntry {
+  /** Path under src/docs, as used for `source` in the files list. */
+  source: string;
+  reason: "unlisted-sibling" | "referenced";
+  /** Synced pages that link to it (sources under src/docs). */
+  referencedBy: string[];
+}
+
+/** One `src/docs`-relative path per line; `#` starts a comment. */
+export function parseAllowlist(text: string): Set<string> {
+  return new Set(
+    text
+      .split("\n")
+      .map(line => line.replace(/#.*/, "").trim())
+      .filter(Boolean)
+  );
+}
+
+export function detectDrift(opts: {
+  /** Sources in the files list. */
+  synced: string[];
+  /** Every file under upstream src/docs; undefined if it could not be listed. */
+  upstream?: string[];
+  /** Case 2 targets under src/docs -> pages linking to them. */
+  referenced: Map<string, Set<string>>;
+  allowlist: Set<string>;
+}): DriftEntry[] {
+  const synced = new Set(opts.synced);
+  const upstream = opts.upstream && new Set(opts.upstream);
+  const syncedDirs = new Set(
+    opts.synced.filter(s => s.includes("/")).map(s => path.posix.dirname(s))
+  );
+  const drift = new Map<string, DriftEntry>();
+  for (const source of opts.upstream ?? []) {
+    if (
+      /\.md$/i.test(source) &&
+      syncedDirs.has(path.posix.dirname(source)) &&
+      !synced.has(source)
+    ) {
+      drift.set(source, {
+        source,
+        reason: "unlisted-sibling",
+        referencedBy: [],
+      });
+    }
+  }
+  for (const [source, from] of opts.referenced) {
+    // A link to a page that does not exist upstream is a broken link, not
+    // drift; it cannot be synced.
+    if (upstream && !upstream.has(source)) continue;
+    const entry = drift.get(source) ?? {
+      source,
+      reason: "referenced" as const,
+      referencedBy: [],
+    };
+    entry.referencedBy = [...from].sort();
+    drift.set(source, entry);
+  }
+  return [...drift.values()]
+    .filter(e => !opts.allowlist.has(e.source))
+    .sort((a, b) => a.source.localeCompare(b.source));
+}
+
+/** The files list with every drift entry appended (heal mode). */
+export function healFilesList(
+  list: SyncFile[],
+  drift: DriftEntry[]
+): SyncFile[] {
+  return [
+    ...list,
+    ...drift.map(e => {
+      const target = e.source.replace(/(^|\/)README\.md$/, "$1readme.md");
+      return target === e.source
+        ? { source: e.source }
+        : { source: e.source, target };
+    }),
+  ];
+}
+
+function describeDrift(e: DriftEntry): string {
+  const why = [
+    e.reason === "unlisted-sibling" ? "unlisted sibling of synced pages" : "",
+    e.referencedBy.length ? `linked from ${e.referencedBy.join(", ")}` : "",
+  ].filter(Boolean);
+  return `- \`${e.source}\` — ${why.join("; ")}`;
+}
+
+/** Markdown report printed to stdout and appended to $GITHUB_STEP_SUMMARY. */
+export function formatDriftReport(opts: {
+  drift: DriftEntry[];
+  healed?: DriftEntry[];
+  upstreamListed: boolean;
+}): string {
+  const lines = ["### sync-hive-docs file-list drift", ""];
+  if (!opts.upstreamListed) {
+    lines.push(
+      "Upstream `src/docs` could not be listed; only linked pages were checked.",
+      ""
+    );
+  }
+  if (opts.healed?.length) {
+    lines.push(
+      `Healed: appended ${opts.healed.length} page(s) to \`${FILES_LIST_PATH}\` and synced them:`,
+      "",
+      ...opts.healed.map(describeDrift),
+      ""
+    );
+  }
+  if (opts.drift.length) {
+    lines.push(
+      `${opts.drift.length} upstream page(s) are not in \`${FILES_LIST_PATH}\`. The scheduled refresh adds them; list intentional omissions in \`${ALLOWLIST_PATH}\`:`,
+      "",
+      ...opts.drift.map(describeDrift)
+    );
+  } else {
+    lines.push("No unlisted upstream pages.");
+  }
+  return lines.join("\n") + "\n";
+}
+
+/** Every file path under upstream src/docs (relative to it). */
+async function listUpstreamDocs(): Promise<string[]> {
+  const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  const response = await fetchTextWithTimeout(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) {
+    throw new Error(
+      `failed to list ${url}: ${response.status} ${response.statusText}`
+    );
+  }
+  const parsed: {
+    tree: Array<{ path: string; type: string }>;
+    truncated?: boolean;
+  } = JSON.parse(response.body);
+  if (parsed.truncated) {
+    throw new Error(`upstream tree listing truncated: ${url}`);
+  }
+  const tree = parsed.tree;
+  return tree
+    .filter(t => t.type === "blob" && t.path.startsWith("src/docs/"))
+    .map(t => t.path.slice("src/docs/".length));
+}
+
+function readAllowlist(): Set<string> {
+  const file = path.join(process.cwd(), ALLOWLIST_PATH);
+  return fs.existsSync(file)
+    ? parseAllowlist(fs.readFileSync(file, "utf8"))
+    : new Set();
+}
+
+async function syncFiles(
+  list: SyncFile[],
+  cache: Map<string, string>,
+  unsyncedRefs: Map<string, Set<string>>
+) {
+  for (const file of list) {
     const target = file.target || file.source;
     const sourceURL = `${rawBase}/${file.source}`;
     const targetPath = resolveSyncTarget(docsRoot, target);
-    const content = await fetchText(sourceURL);
+    const content = cache.get(file.source) ?? (await fetchText(sourceURL));
+    cache.set(file.source, content);
     // Rewrite GitHub-relative links so they resolve on the docs site.
     const overlaid = applyLocalHiveOverlays(content, file.source);
-    const rewritten = rewriteLinks(overlaid, `src/docs/${file.source}`);
+    const rewritten = rewriteLinks(
+      overlaid,
+      `src/docs/${file.source}`,
+      unsyncedRefs
+    );
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
     fs.writeFileSync(
       targetPath,
@@ -270,6 +410,59 @@ async function main() {
         normalizeFences(scrubLegacyBranding(rewritten))
     );
     console.log(`synced ${file.source} -> docs/content/hive/${target}`);
+  }
+}
+
+async function main() {
+  const heal =
+    process.env.SYNC_HIVE_DOCS_HEAL === "1" || process.argv.includes("--heal");
+  const cache = new Map<string, string>();
+  let refs = new Map<string, Set<string>>();
+  await syncFiles(files, cache, refs);
+
+  let upstream: string[] | undefined;
+  try {
+    upstream = await listUpstreamDocs();
+  } catch (error) {
+    // Report-only builds must never fail on the drift check; heal mode
+    // cannot apply without the upstream listing.
+    if (heal) throw error;
+    console.log(`drift check: ${(error as Error).message}`);
+  }
+  const allowlist = readAllowlist();
+  const detect = () =>
+    detectDrift({
+      synced: files.map(f => f.source),
+      upstream,
+      referenced: refs,
+      allowlist,
+    });
+  let drift = detect();
+  let healed: DriftEntry[] = [];
+  if (heal && drift.length) {
+    healed = drift;
+    const added = healFilesList(files, drift).slice(files.length);
+    for (const f of added) {
+      files.push(f);
+      registerPage(f, true);
+    }
+    // Re-sync everything: links to the new pages now resolve to site routes.
+    refs = new Map();
+    await syncFiles(files, cache, refs);
+    const listPath = path.join(process.cwd(), FILES_LIST_PATH);
+    fs.mkdirSync(path.dirname(listPath), { recursive: true });
+    fs.writeFileSync(listPath, JSON.stringify(files, null, 2) + "\n");
+    drift = detect();
+  }
+
+  const report = formatDriftReport({
+    drift,
+    healed,
+    upstreamListed: upstream !== undefined,
+  });
+  console.log(report);
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, report);
   }
 }
 
