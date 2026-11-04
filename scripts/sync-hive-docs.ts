@@ -34,6 +34,7 @@ const files: Array<{ source: string; target?: string; route?: string }> = [
   { source: "hivectl.md" },
   // Crux operator pages (hivecommons/docs#604)
   { source: "crux-cli.md" },
+  { source: "crux-lanes.md" },
   { source: "crux-serve.md" },
   { source: "crux-publish.md" },
   { source: "manual-provisioning.md" },
