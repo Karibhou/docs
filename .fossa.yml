@@ -1,0 +1,29 @@
+# FOSSA CLI configuration for hivecommons/docs.
+# Reference: https://github.com/fossas/fossa-cli/blob/master/docs/references/files/fossa-yml.md
+version: 3
+
+project:
+  # Stable project name in the CNCF FOSSA org (the action's `project:` input
+  # mirrors this so UI and CI agree).
+  name: hivecommons/docs
+  # Team NAME in the CNCF FOSSA org (team id 207492). Only applied when the
+  # project is first created; later changes must be made in the FOSSA UI.
+  team: Hive Commons
+  url: https://github.com/hivecommons/docs
+
+# Single npm project at the repo root (the docs site build). FOSSA
+# auto-discovers every manifest; pin the shipped target explicitly so a future
+# re-layout does not silently drop it. Content, tests and tooling are excluded.
+targets:
+  only:
+    - type: npm
+      path: .
+
+paths:
+  exclude:
+    - docs
+    - src/__tests__
+    - changelog.d
+    - runbooks
+    - monitoring
+    - scripts
