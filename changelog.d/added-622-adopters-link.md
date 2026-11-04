@@ -1,0 +1,1 @@
+- The "What is Hive Commons?" page now answers "Who already runs Hive?" and links Hive's ADOPTERS.md from its FAQ and "Where next" list (#622).

@@ -72,6 +72,8 @@ The result is an **elastic swarm**: a three-person project can have a dozen cont
 
 **Our AI policy needs an "Assisted-by" trailer.** [`governor.attribution_trailer`](/docs/hive/governor) (default on) stamps AI-assistance attribution on every commit.
 
+**Who already runs Hive?** Hive's [ADOPTERS.md](https://github.com/hivecommons/hive/blob/v5/ADOPTERS.md) lists the organizations that use it, each marked Production, Pre-production or Evaluation. If you run Hive, add your organization with a pull request against that file.
+
 **Showcase in 5 steps:** fork → pick one clear issue → set Hive to Holdgated on that area → review the PR it opens → push upstream if you like it. That is the intended first run.
 
 ## Projects
@@ -91,6 +93,7 @@ The result is an **elastic swarm**: a three-person project can have a dozen cont
 
 - [Get started with Crux](/docs/crux/overview/introduction)
 - [Getting started](/docs/hive/getting-started)
+- [Who runs Hive (ADOPTERS.md)](https://github.com/hivecommons/hive/blob/v5/ADOPTERS.md)
 - [Hive introduction](/docs/hive/overview/introduction)
 - [Architecture](/docs/hive/architecture)
 - [Join Hive Commons](/docs/community/join-hive-commons)
