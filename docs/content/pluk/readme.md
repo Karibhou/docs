@@ -147,6 +147,8 @@ tmux attach -t my-agent
 
 Unknown, misspelled, or wrong-subcommand `--flags` exit 2 (`unknown flag --name for "pluk <cmd>" (see pluk <cmd> --help)`) instead of being silently ignored. For example, `pluk sessions --cli=claude` is rejected: `--cli` belongs to `attach`, `watch`, and `patterns`, not `sessions`. Run `pluk --help` for the per-command flag lists.
 
+Value flags reject empty or whitespace-only values with exit 2 (`--<flag> requires a non-empty value`) instead of silently reinterpreting them. For example, `--pane=" "` and `--rationguard-bin=" "` are rejected. The one exception is `--run-dir=`, where empty or whitespace-only means "use the default run dir" (so `--run-dir="$PLUK_RUN_DIR"` works with the variable unset).
+
 ### Attach Flags
 
 | Flag | What it does |
@@ -157,7 +159,7 @@ Unknown, misspelled, or wrong-subcommand `--flags` exit 2 (`unknown flag --name 
 | `--rationguard-bin=<cmd>` | Explicit rationguard command to run instead of the one on `PATH`, e.g. `--rationguard-bin='npx --yes @hivecommons/rationguard@0.13.0'` (also `PLUK_RATIONGUARD_BIN`); the flag is ignored with a warning without `--rationguard` |
 | `--rebuttal=log\|send` | Log rebuttals or auto-send them when rationguard detects excuses; other values exit with code 2 before attaching. Ignored with a warning without `--rationguard` |
 | `--dangerous` | Skip CLI permission prompts (`--dangerously-skip-permissions` for claude, `--allow-all-tools` for copilot, `--full-auto` for codex, `GOOSE_MODE=auto` for goose, `--approval-mode yolo` for omp, `--approval-mode yolo` for bob, `--yolo` for gemini, `--yes-always` for aider) |
-| `--dir=/path` | Working directory for the agent |
+| `--dir=/path` | Working directory for the agent (must be an existing directory) |
 | `--cli-args="..."` | Extra arguments to pass to the CLI |
 | `--no-open` | Don't attach: without `--rationguard`, leave the session detached and print the attach hint; with `--rationguard`, don't open a new window (macOS) or print the hint (elsewhere) |
 | `--no-raw` | Suppress `raw_output` events from the watcher `attach` starts (on by default for `attach`, unlike plain `pluk watch`, which requires `--include-raw` to emit them) |

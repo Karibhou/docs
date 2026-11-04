@@ -124,9 +124,10 @@ Documentation for the current Hive line (branch `v5`; the code and docs live und
   terminal dashboard: keybindings, pane cadence, and v1 boundaries. See
   [the design record](https://github.com/hivecommons/hive/blob/v5/src/docs/design/tui.md) for the reasoning behind it.
 - [`bd` beads CLI](https://github.com/hivecommons/hive/blob/v5/src/docs/beads-cli.md) — work-ledger and knowledge command reference for operators and contributors.
-- [`crux` CLI](https://github.com/hivecommons/hive/blob/v5/src/docs/crux-cli.md) — run, list, tail, kick and stop agents through `crux.Runtime` with no governor or dashboard; definition formats, the control socket served by `crux run`, and why the runtime being in-process shapes it.
-- [`crux serve`: the runtime over a local API](https://github.com/hivecommons/hive/blob/v5/src/docs/crux-serve.md) — **Developer:** operate the runtime server through its authenticated API, event stream, CLI, or Go client.
-- [Publishing Crux](https://github.com/hivecommons/hive/blob/v5/src/docs/crux-publish.md) — how `hivecommons/crux` is produced from `src/crux` (plain copy, module path rewritten, fast-forward commits), what is preserved there, the `CRUX_SYNC_TOKEN` credential, manual sync and how a `crux/vX.Y.Z` tag becomes a release.
+- [`crux` CLI](/docs/hive/crux-cli) — run, list, tail, kick and stop agents through `crux.Runtime` with no governor or dashboard; definition formats, the control socket served by `crux run`, and why the runtime being in-process shapes it.
+- [`crux serve`: the runtime over a local API](/docs/hive/crux-serve) — **Developer:** operate the runtime server through its authenticated API, event stream, CLI, or Go client.
+- [Crux durable lanes](https://github.com/hivecommons/hive/blob/v5/src/docs/crux-lanes.md) — **Developer/operator; opt-in:** configure forge-neutral JetStream-backed events and work, project capabilities, replay, leases and explicit recovery through the Crux API; connect Hive as an ordinary participant.
+- [Publishing Crux](/docs/hive/crux-publish) — how `hivecommons/crux` is produced from `src/crux` (plain copy, module path rewritten, fast-forward commits), what is preserved there, the `CRUX_SYNC_TOKEN` credential, manual sync and how a `crux/vX.Y.Z` tag becomes a release.
 ### Backup and API reference
 
 - [Backup and restore](/docs/hive/backup-dr) — choose runtime-specific backups, encryption, safe restoration, and migration. Covers identity checks and rootless ownership traps.
