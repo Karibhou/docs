@@ -15,6 +15,8 @@ Crux is the agent runtime taken from Hive. You do not need to run Hive to use it
 
 **Hive** is a **co-maintainer system** for your GitHub projects. It lets you **run governed agents** against real project work, continuously. Point it at a repo and it watches the things that pile up — issues, pull requests, failing CI, CVEs, dependabot alerts — and sends AI coding agents (Claude, Copilot, Codex, Antigravity, Goose...) to deal with them: triage, fixes, reviews, releases. You decide how much it is allowed to do. **Agents do the chores, while you decide what matters.**
 
+Prefer to watch? See [How Hive works](https://www.youtube.com/watch?v=uo1KGTyJJyU) on the Hive Commons YouTube channel.
+
 ## "I already use an agent. How is this different?"
 
 A terminal agent is a power tool: you hold it, aim it, and it stops when you stop. Hive is the workshop that runs the power tools for you — on three rules the industry is only now discovering:
@@ -95,6 +97,7 @@ The result is an **elastic swarm**: a three-person project can have a dozen cont
 - [Getting started](/docs/hive/getting-started)
 - [Who runs Hive (ADOPTERS.md)](https://github.com/hivecommons/hive/blob/v5/ADOPTERS.md)
 - [Hive introduction](/docs/hive/overview/introduction)
+- [Video: How Hive works](https://www.youtube.com/watch?v=uo1KGTyJJyU)
 - [Architecture](/docs/hive/architecture)
 - [Join Hive Commons](/docs/community/join-hive-commons)
 - [CNCF Sandbox onboarding](https://github.com/cncf/sandbox/issues/545)
