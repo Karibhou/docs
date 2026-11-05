@@ -329,15 +329,15 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
   // unlisted root page nothing links to, and a non-markdown asset.
   const upstream = [
     ...listed,
-    "integrations/cline.md",
-    "integrations/forges.md",
+    "integrations/drift-sibling-a.md",
+    "integrations/drift-sibling-b.md",
     "orphan.md",
     "integrations/logo.svg",
     "new-root.md",
   ];
   const landscape = [
     "# Landscape",
-    "See [forges](integrations/forges.md#gitlab) and [gone](missing.md).",
+    "See [sibling-b](integrations/drift-sibling-b.md#gitlab) and [gone](missing.md).",
     "",
   ].join("\n");
 
@@ -372,10 +372,10 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
       "2 upstream page(s) are not in `scripts/sync-hive-docs.files.json`."
     );
     expect(out).toContain(
-      "- `integrations/cline.md` — unlisted sibling of synced pages"
+      "- `integrations/drift-sibling-a.md` — unlisted sibling of synced pages"
     );
     expect(out).toContain(
-      "- `integrations/forges.md` — unlisted sibling of synced pages; linked from landscape.md"
+      "- `integrations/drift-sibling-b.md` — unlisted sibling of synced pages; linked from landscape.md"
     );
     expect(out).not.toContain("orphan.md");
     expect(out).not.toContain("missing.md");
@@ -385,13 +385,15 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     expect(
       written.startsWith("existing\n### sync-hive-docs file-list drift")
     ).toBe(true);
-    expect(written).toContain("`integrations/forges.md`");
+    expect(written).toContain("`integrations/drift-sibling-b.md`");
 
     // Report-only: the list is untouched and the link stays on GitHub.
     expect(fs.existsSync(filesListPath())).toBe(false);
-    expect(fs.existsSync(outPath("integrations/forges.md"))).toBe(false);
+    expect(fs.existsSync(outPath("integrations/drift-sibling-b.md"))).toBe(
+      false
+    );
     expect(readOut("landscape.md")).toContain(
-      "[forges](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/forges.md#gitlab)"
+      "[sibling-b](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/drift-sibling-b.md#gitlab)"
     );
   });
 
@@ -399,15 +401,15 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     fs.mkdirSync(path.join(caseDir, "scripts"), { recursive: true });
     fs.writeFileSync(
       path.join(caseDir, "scripts", "sync-hive-docs.unsynced-allowlist.txt"),
-      "# intentional omissions\nintegrations/cline.md # not for the site\n"
+      "# intentional omissions\nintegrations/drift-sibling-a.md # not for the site\n"
     );
     stubUpstream();
 
     const { out } = await runSync();
 
-    expect(out).not.toContain("integrations/cline.md");
+    expect(out).not.toContain("integrations/drift-sibling-a.md");
     expect(out).toContain("1 upstream page(s) are not in");
-    expect(out).toContain("- `integrations/forges.md`");
+    expect(out).toContain("- `integrations/drift-sibling-b.md`");
   });
 
   it("reports linked pages only, and still exits 0, when upstream cannot be listed", async () => {
@@ -430,11 +432,11 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
       "Upstream `src/docs` could not be listed; only linked pages were checked."
     );
     expect(out).toContain(
-      "- `integrations/forges.md` — linked from landscape.md"
+      "- `integrations/drift-sibling-b.md` — linked from landscape.md"
     );
     // Without the listing a dangling link cannot be told apart from drift.
     expect(out).toContain("- `missing.md` — linked from landscape.md");
-    expect(out).not.toContain("integrations/cline.md");
+    expect(out).not.toContain("integrations/drift-sibling-a.md");
   });
 
   it("prints a clean report when nothing drifted", async () => {
@@ -451,7 +453,8 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     process.env.SYNC_HIVE_DOCS_HEAL = "1";
     process.env.GITHUB_TOKEN = "gh-t0ken";
     stubUpstream({
-      "integrations/forges.md": "# Forges\nSee [new](../new-root.md).\n",
+      "integrations/drift-sibling-b.md":
+        "# Forges\nSee [new](../new-root.md).\n",
     });
 
     const { out, err } = await runSync();
@@ -465,20 +468,20 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     const list = JSON.parse(fs.readFileSync(filesListPath(), "utf8"));
     expect(list).toEqual([
       ...filesData,
-      { source: "integrations/cline.md" },
-      { source: "integrations/forges.md" },
+      { source: "integrations/drift-sibling-a.md" },
+      { source: "integrations/drift-sibling-b.md" },
     ]);
     expect(fs.readFileSync(filesListPath(), "utf8")).toBe(
       JSON.stringify(list, null, 2) + "\n"
     );
 
     // New pages are synced, and existing links to them become site routes.
-    expect(readOut("integrations/cline.md")).toContain(
-      "# integrations/cline.md\n"
+    expect(readOut("integrations/drift-sibling-a.md")).toContain(
+      "# integrations/drift-sibling-a.md\n"
     );
-    expect(readOut("integrations/forges.md")).toContain("# Forges\n");
+    expect(readOut("integrations/drift-sibling-b.md")).toContain("# Forges\n");
     expect(readOut("landscape.md")).toContain(
-      "[forges](/docs/hive/integrations/forges#gitlab)"
+      "[sibling-b](/docs/hive/integrations/drift-sibling-b#gitlab)"
     );
     // Every page is fetched once, even though the sync ran twice.
     expect(new Set(fetched).size).toBe(fetched.length);
@@ -493,7 +496,7 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
       "1 upstream page(s) are not in `scripts/sync-hive-docs.files.json`."
     );
     expect(out).toContain(
-      "- `new-root.md` — linked from integrations/forges.md"
+      "- `new-root.md` — linked from integrations/drift-sibling-b.md"
     );
   });
 
@@ -535,14 +538,16 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     process.env.SYNC_HIVE_DOCS_HEAL = "1";
     upstreamTree = upstream;
     stubFetch(url =>
-      sourceOf(url) === "integrations/cline.md" ? null : `# ${sourceOf(url)}\n`
+      sourceOf(url) === "integrations/drift-sibling-a.md"
+        ? null
+        : `# ${sourceOf(url)}\n`
     );
 
     const { err } = await runSync();
 
     expect(exitSpy).toHaveBeenCalledWith(1);
     expect(err).toContain(
-      "failed to fetch https://raw.githubusercontent.com/hivecommons/hive/v5/src/docs/integrations/cline.md: 404 Not Found"
+      "failed to fetch https://raw.githubusercontent.com/hivecommons/hive/v5/src/docs/integrations/drift-sibling-a.md: 404 Not Found"
     );
     expect(fs.existsSync(filesListPath())).toBe(false);
   });

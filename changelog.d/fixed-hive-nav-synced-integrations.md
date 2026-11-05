@@ -1,0 +1,1 @@
+- Added the synced Cline and Forges integration pages to the Hive docs sidebar; drift tests now use synthetic page names instead of real upstream ones.

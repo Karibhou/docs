@@ -391,7 +391,7 @@ requires GitHub.com or GitHub Enterprise. Hive has GitLab and Gitea/Forgejo adap
 (`project.forge`) that read, comment, label and hold, and GitLab's can merge,
 but the governor, merge gate and agent `gh` path are not yet forge-neutral
 ([#14096](https://github.com/hivecommons/hive/issues/14096)). Fullsend
-already ships GitHub, GitLab and Forgejo. See [Forges](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/forges.md).
+already ships GitHub, GitLab and Forgejo. See [Forges](/docs/hive/integrations/forges).
 The [integrations page](/docs/hive/integrations) lists every tracker, forge and backend
 with its status.
 

@@ -209,5 +209,11 @@
   },
   {
     "source": "adr/0026-sandbox-runtime-selection.md"
+  },
+  {
+    "source": "integrations/cline.md"
+  },
+  {
+    "source": "integrations/forges.md"
   }
 ]

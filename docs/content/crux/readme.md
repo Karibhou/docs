@@ -49,7 +49,7 @@ brew install hivecommons/hive/crux
 go install github.com/hivecommons/crux/cmd/crux@latest
 
 # Container image (amd64 and arm64; tmux is already inside)
-docker run --rm ghcr.io/hivecommons/crux:0.2.0 --help
+docker run --rm ghcr.io/hivecommons/crux:0.3.0 --help
 ```
 
 Or download a release archive from the
@@ -62,13 +62,13 @@ flags below are required: cosign refuses to run without them, and a
 wildcard would accept a signature from anyone. To check:
 
 ```sh
-# from the v0.2.0 release page, download these three files first
+# from the v0.3.0 release page, download these three files first
 cosign verify-blob checksums.txt \
   --bundle checksums.txt.sigstore.json \
   --certificate-identity-regexp '^https://github\.com/hivecommons/crux/\.github/workflows/release\.yml@' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum -c checksums.txt --ignore-missing
-tar xzf crux_0.2.0_linux_amd64.tar.gz
+tar xzf crux_0.3.0_linux_amd64.tar.gz
 ./crux --version
 ```
 
@@ -79,15 +79,15 @@ the selected archive against its signed checksum before extracting it:
 
 ```sh
 # Apple Silicon example; use darwin_amd64 in both places on Intel
-grep 'crux_0.2.0_darwin_arm64.tar.gz$' checksums.txt | shasum -a 256 -c -
-tar xzf crux_0.2.0_darwin_arm64.tar.gz
+grep 'crux_0.3.0_darwin_arm64.tar.gz$' checksums.txt | shasum -a 256 -c -
+tar xzf crux_0.3.0_darwin_arm64.tar.gz
 ./crux --version
 ```
 
 The container image is signed the same way:
 
 ```sh
-cosign verify ghcr.io/hivecommons/crux:0.2.0 \
+cosign verify ghcr.io/hivecommons/crux:0.3.0 \
   --certificate-identity-regexp '^https://github\.com/hivecommons/crux/\.github/workflows/release\.yml@' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
@@ -193,18 +193,20 @@ lists the controls, which ones belong to Crux, and what is still missing.
 | `crux logs <agent>` | Show recent output. `-n N`, `--buffer`, `--full`, `--json`; `-f` follows when using `--server`. |
 | `crux kick <agent> <message \| ->` | Send work to an agent. `-` reads the message from stdin. |
 | `crux stop <agent>` | Stop an agent. |
-| `crux serve` | Serve the runtime over HTTP+JSON. `--socket`, `--listen`, `--token`, `--hive-callback`. |
+| `crux serve` | Serve the runtime over HTTP+JSON. `--socket`, `--listen`, `--token`, `--hive-callback`, `--lanes-config`. |
 | `crux agy-turn` | Internal. The runtime types this into a pane itself; do not run it by hand. |
+| `crux cline-turn` | Internal. One bounded Cline CLI turn run by the runtime for `backend: cline`; do not run it by hand. |
 | `crux --version` | Print the version. |
 
 Global flags: `--workdir`, `--defs` (same as `--config`), `--socket`,
 `--local`, `--server`, `--token`. Environment variables that stand in for
 them: `CRUX_DEFS`, `CRUX_SERVER`, `CRUX_TOKEN`. (`CRUX_SOCKET` is not used for
-the global `--socket`; it sets the listening socket for `crux serve --socket`.)
+the global `--socket`; it sets the listening socket for `crux serve --socket`.
+`CRUX_LANES_CONFIG` is the default for `crux serve --lanes-config`.)
 
 ## Status
 
-Current release: v0.2.0. This is early software.
+Current release: v0.3.0. This is early software.
 
 What works today: the `crux` CLI (`run`, `ps`, `logs`, `kick`, `stop`),
 `crux serve` with its HTTP+JSON API and Go client, remote mode with
@@ -361,6 +363,26 @@ other route. [`api/client`](https://github.com/hivecommons/crux/blob/main/api/cl
 `client.Runtime` is a full `crux.Runtime` over the API, and is what
 `runtime.New` returns when `CRUX_MODE=sidecar`.
 
+#### Opt-in lane routes
+
+The `/v1/lanes` routes are only present when `crux serve` is started with
+`--lanes-config` (or `$CRUX_LANES_CONFIG` set). They live in a separate
+project-authenticated auth domain; neither the unix socket nor the legacy
+admin token grants lane access — each request must carry a project
+credential in the Bearer token. The full contract, including delivery group
+semantics, receipt fencing, and replay, is at
+https://github.com/hivecommons/hive/blob/v5/src/docs/crux-lanes.md.
+
+| Route | Verb | What it does |
+|---|---|---|
+| `/v1/lanes` | GET | Registry of available lanes. |
+| `/v1/lanes/{lane}/publish` | POST | Publish a message to a lane. |
+| `/v1/lanes/{lane}/events` | GET | Replay messages from a lane. |
+| `/v1/lanes/{lane}/groups/{group}/claim` | POST | Claim delivery of a group. |
+| `/v1/lanes/{lane}/groups/{group}` | GET | State of a delivery group. |
+| `/v1/lanes/{lane}/groups/{group}/recover` | POST | Recover a group. |
+| `/v1/lanes/{lane}/groups/{group}/{ack\|nack\|renew}` | POST | Ack, nack, or renew a receipt. |
+
 ### 3. The hive callback, what crux asks the host for
 
 This layer runs the other way. Crux never holds a long-lived GitHub key, a
@@ -396,9 +418,9 @@ a refusal.
 ### Packages shipped with it
 
 - `agent`: the manager. tmux sessions, launch, restarts, kicks. It knows
-  nine engines by name in `agent/manager_launch.go`: claude, copilot,
-  gemini, agy, pi, goose, bob, codex and omp. `config.CLIBackends` lists
-  fifteen; the other six (aider, opencode, kilo, muse, openhands,
+  ten engines by name in `agent/manager_launch.go`: claude, copilot,
+  gemini, agy, pi, goose, bob, codex, omp and cline. `config.CLIBackends` lists
+  sixteen; the other six (aider, opencode, kilo, muse, openhands,
   omnigent) launch as a bare binary.
 - `proxy`: the GitHub and inference proxy. Policy enforcement at the tool
   boundary: every agent write to GitHub and every model call goes through
@@ -419,6 +441,8 @@ a refusal.
 - `logscrub`: a log handler that masks tokens and other secrets.
 - `pushbroker`: the trusted step that pushes a sandboxed agent's work with
   credentials the sandbox never sees.
+- `lanes`: opt-in JetStream durable event/work lanes with project ACLs,
+  replay, claimable delivery groups and fenced receipts.
 - `gitidentity`: the git identity each agent commits as.
 - `agentmode`: the ladder of GitHub permission tiers, one per trust level.
 - `agentparse`: parsers for the tables and lists agents print.

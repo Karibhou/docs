@@ -79,7 +79,7 @@ and can comment, label and set the `hold` gate; GitLab can also merge. A hive
 still cannot run on them, because enumeration, the merge gate and the agents'
 `gh` path are GitHub-only. Every work source above therefore still targets a
 GitHub repository. See [Forges: GitLab, Gitea and
-Forgejo](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/forges.md) for the operation list and what runs through
+Forgejo](/docs/hive/integrations/forges) for the operation list and what runs through
 the adapters today, and [Forge setup](https://github.com/hivecommons/hive/blob/v5/src/docs/forge-app-setup.md) for the reasons.
 
 ## Run stages (`run_stages: true`)

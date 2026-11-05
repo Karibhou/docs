@@ -126,7 +126,7 @@ The `HIVE_LANES_*` variables belong to the **Hive process** and are read at boot
 `CRUX_LANES_CONFIG` belongs to **`crux serve`**, not to Hive or an agent session.
 The Hive participant uses the Crux HTTP API as an ordinary project principal;
 it does not connect directly to NATS or inherit broker, agent-control or forge
-permissions. See [Crux durable lanes](https://github.com/hivecommons/hive/blob/v5/src/docs/crux-lanes.md) for registry configuration,
+permissions. See [Crux durable lanes](/docs/hive/crux-lanes) for registry configuration,
 project capabilities, deployment requirements and recovery.
 
 | Variable | Required | Default | Purpose |

@@ -232,7 +232,7 @@ describe("rewriteLinks unsynced-reference collection", () => {
     const unsynced = new Map<string, Set<string>>();
     const out = rewriteLinks(
       [
-        "[a](integrations/forges.md) [b](./integrations/forges.md#x)",
+        "[a](integrations/drift-sibling.md) [b](./integrations/drift-sibling.md#x)",
         "[c](architecture.md) [d](../../bin/README.md) [e](assets/logo.svg)",
         "",
       ].join("\n"),
@@ -240,17 +240,17 @@ describe("rewriteLinks unsynced-reference collection", () => {
       unsynced
     );
     rewriteLinks(
-      "[f](forges.md)",
+      "[f](drift-sibling.md)",
       "src/docs/integrations/work-source-providers.md",
       unsynced
     );
 
     expect(out).toContain(
-      "[a](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/forges.md)"
+      "[a](https://github.com/hivecommons/hive/blob/v5/src/docs/integrations/drift-sibling.md)"
     );
     expect(out).toContain("[c](/docs/hive/architecture)");
-    expect([...unsynced.keys()]).toEqual(["integrations/forges.md"]);
-    expect([...unsynced.get("integrations/forges.md")!].sort()).toEqual([
+    expect([...unsynced.keys()]).toEqual(["integrations/drift-sibling.md"]);
+    expect([...unsynced.get("integrations/drift-sibling.md")!].sort()).toEqual([
       "integrations/work-source-providers.md",
       "landscape.md",
     ]);
