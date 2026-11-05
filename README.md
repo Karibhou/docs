@@ -28,7 +28,8 @@ Hive, hotshot, pluk, rationguard, promptargs, dibs, Crux, and Spektacular docs a
   `scripts/sync-hive-docs.files.json`. After syncing it reports file-list drift: upstream pages next to synced
   subdirectory pages, or linked from synced pages, that are not listed (so their links fall back to GitHub URLs).
   The report is printed and added to `$GITHUB_STEP_SUMMARY` and never fails the build; with `SYNC_HIVE_DOCS_HEAL=1`
-  (or `--heal`), used by the scheduled docs refresh, it appends the drift to the list and syncs the new pages.
+  (or `--heal`), used by the scheduled docs refresh, it appends the drift to the list, syncs the new pages and adds
+  them to `NAV_STRUCTURE_HIVE` in `src/app/docs/page-map.ts`.
   List intentional omissions in `scripts/sync-hive-docs.unsynced-allowlist.txt`.
 - `scripts/sync-sibling-docs.ts` pulls the hotshot, pluk, rationguard, promptargs, dibs, Crux, and Spektacular docs from their repos.
   Spektacular also pulls its tutorials from `hivecommons/spektacular-website` (MDX, converted to Markdown by

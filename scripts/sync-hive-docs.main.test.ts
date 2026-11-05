@@ -485,7 +485,7 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     expect(fetched.length).toBe(listed.length + 2);
 
     expect(out).toContain(
-      "Healed: appended 2 page(s) to `scripts/sync-hive-docs.files.json` and synced them:"
+      "Healed: appended 2 page(s) to `scripts/sync-hive-docs.files.json`, synced them and added them to NAV_STRUCTURE_HIVE in `src/app/docs/page-map.ts`:"
     );
     // A healed page linking to another unlisted page is reported for the
     // next refresh rather than chased here.
