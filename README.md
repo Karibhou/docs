@@ -94,6 +94,15 @@ If a deploy ships broken pages or missing content, start at [`runbooks/README.md
 
 PRs welcome. Sign your commits (DCO): `git commit -s`.
 
+Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers local setup
+and tests. Reporting a security vulnerability? Follow [SECURITY.md](SECURITY.md)
+to report it privately, not through public issues. Please follow the
+[Hive Commons Code of Conduct](https://github.com/hivecommons/.github/blob/main/CODE_OF_CONDUCT.md).
+
+Questions? Join the [Hive Commons Discord](https://hivecommons.dev/discord),
+watch the hive live on [Twitch](https://www.twitch.tv/hivecommons), or join a
+[community meeting](https://docs.hivecommons.dev/docs/community/meetings).
+
 ## License
 
 Apache 2.0
