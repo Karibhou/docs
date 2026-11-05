@@ -6,6 +6,9 @@ contact_links:
   - name: Report a problem with Hive or its docs content
     url: https://github.com/hivecommons/hive/issues/new/choose
     about: Hive pages on this site are synced from hivecommons/hive, so content fixes and product issues belong there.
+  - name: Report a problem with another project's docs page
+    url: https://docs.hivecommons.dev/docs/community/what-is-hive-commons#projects
+    about: Find the project's repository in the Projects table and report content problems there.
   - name: Join our Discord
     url: https://hivecommons.dev/discord
     about: Ask questions and talk with the Hive Commons community.

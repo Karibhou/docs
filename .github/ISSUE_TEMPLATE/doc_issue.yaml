@@ -2,7 +2,7 @@ name: Documentation Issue
 description: Report an issue with the documentation
 title: "doc: "
 labels:
-  - kind/documentation
+  - kind/docs
 body:
   - type: markdown
     attributes:
@@ -12,8 +12,8 @@ body:
         Before opening a new issue, look for an overlapping issue that
         you could contribute to.
 
-        Most project pages (Hive, hotshot, pluk, rationguard, promptargs,
-        dibs and Spektacular) are synced from each project's own
+        Most project pages (Hive, Crux, hotshot, pluk, rationguard,
+        promptargs, dibs and Spektacular) are synced from each project's own
         repository at build time — see [How content is
         sourced](https://github.com/hivecommons/docs#how-content-is-sourced).
         Fixes to that content land in the project repository; this

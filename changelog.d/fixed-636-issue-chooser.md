@@ -1,0 +1,1 @@
+- Route sibling-project documentation reports to the project directory and use existing labels in issue forms.
