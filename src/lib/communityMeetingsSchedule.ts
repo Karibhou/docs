@@ -5,7 +5,10 @@ export type MeetingException = {
 
 export type MeetingScheduleConfig = {
   timeZone: string;
-  isoWeekday: number;
+  /** Local date (YYYY-MM-DD) of the first occurrence in the calendar series. */
+  anchorDate: string;
+  /** Days between occurrences; matches the calendar RRULE INTERVAL (in weeks) × 7. */
+  intervalDays: number;
   localTime: { hour: number; minute: number };
   durationMinutes: number;
   exceptions: MeetingException[];
@@ -25,6 +28,7 @@ const DATE_PARTS = [
   "second",
 ] as const;
 const MS_PER_DAY = 86_400_000;
+const MAX_SCAN_SLACK = 4;
 
 export function getTimeZoneParts(date: Date, timeZone: string) {
   const formatter = new Intl.DateTimeFormat("en-US", {
@@ -104,36 +108,49 @@ export function getLocalDateInTimeZone(now: Date, timeZone: string) {
   ].join("-");
 }
 
-export function getUpcomingOddIsoWeekMeetings(
+export function daysBetween(from: string, to: string) {
+  const [fy, fm, fd] = from.split("-").map(Number);
+  const [ty, tm, td] = to.split("-").map(Number);
+  return Math.round(
+    (Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / MS_PER_DAY
+  );
+}
+
+/**
+ * Returns the next `count` meetings from a fixed-interval series anchored on
+ * `config.anchorDate`, mirroring the public calendar's
+ * `RRULE:FREQ=WEEKLY;INTERVAL=2` so the page and invites never disagree.
+ */
+export function getUpcomingMeetings(
   config: MeetingScheduleConfig,
   count: number,
   now = new Date()
 ): UpcomingMeeting[] {
   const cancelled = new Set(config.exceptions.map(item => item.date));
   const upcoming: UpcomingMeeting[] = [];
-  let localDate = addDays(getLocalDateInTimeZone(now, config.timeZone), -1);
-  let scannedDays = 0;
+  const today = getLocalDateInTimeZone(now, config.timeZone);
+  const elapsed = daysBetween(config.anchorDate, addDays(today, -1));
+  const firstIndex = Math.max(0, Math.floor(elapsed / config.intervalDays));
+  // Scan past already-finished and cancelled occurrences; the cap only
+  // guards against a misconfigured count/exception list.
+  const maxScan = count + config.exceptions.length + MAX_SCAN_SLACK;
 
-  while (upcoming.length < count && scannedDays < 370 * 3) {
-    const info = isoWeekInfo(localDate);
-    if (
-      info.isoWeekday === config.isoWeekday &&
-      info.week % 2 === 1 &&
-      !cancelled.has(localDate)
-    ) {
-      const date = zonedTimeToDate(
-        localDate,
-        config.localTime.hour,
-        config.localTime.minute,
-        config.timeZone
-      );
-      const end = date.getTime() + config.durationMinutes * 60_000;
-      if (end >= now.getTime()) {
-        upcoming.push({ date, localDate });
-      }
+  for (let i = 0; i < maxScan && upcoming.length < count; i += 1) {
+    const localDate = addDays(
+      config.anchorDate,
+      (firstIndex + i) * config.intervalDays
+    );
+    if (cancelled.has(localDate)) continue;
+    const date = zonedTimeToDate(
+      localDate,
+      config.localTime.hour,
+      config.localTime.minute,
+      config.timeZone
+    );
+    const end = date.getTime() + config.durationMinutes * 60_000;
+    if (end >= now.getTime()) {
+      upcoming.push({ date, localDate });
     }
-    localDate = addDays(localDate, 1);
-    scannedDays += 1;
   }
 
   return upcoming;

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import recordingsData from "../../../data/meeting-recordings.json";
 import { COMMUNITY_MEETINGS } from "@/config/community-meetings";
 import {
-  getUpcomingOddIsoWeekMeetings,
+  getUpcomingMeetings,
   type UpcomingMeeting,
 } from "@/lib/communityMeetingsSchedule";
 
@@ -205,11 +205,7 @@ export function MeetingsPage() {
       const current = new Date();
       setNow(current);
       setUpcoming(
-        getUpcomingOddIsoWeekMeetings(
-          COMMUNITY_MEETINGS,
-          UPCOMING_COUNT,
-          current
-        )
+        getUpcomingMeetings(COMMUNITY_MEETINGS, UPCOMING_COUNT, current)
       );
     }
 
@@ -287,10 +283,10 @@ export function MeetingsPage() {
         <aside className="hc-meeting-nextHeroAside">
           <h2>Meet the people building Hive Commons.</h2>
           <p>
-            The community call happens on {COMMUNITY_MEETINGS.weekday}s in
-            odd-numbered ISO weeks at {COMMUNITY_MEETINGS.timeLabel}. You can
-            join the video call directly, or subscribe to the group to receive
-            invites for every meeting.
+            The community call happens every other {COMMUNITY_MEETINGS.weekday}{" "}
+            at {COMMUNITY_MEETINGS.timeLabel}. You can join the video call
+            directly, or subscribe to the group to receive invites for every
+            meeting.
           </p>
           <div className="hc-meeting-actions">
             <a
@@ -366,8 +362,9 @@ export function MeetingsPage() {
         <h2>How it self-sustains</h2>
         <ul>
           <li>
-            Dates are computed in {COMMUNITY_MEETINGS.timeZone} as the meeting
-            weekday in every odd-numbered ISO week, so DST stays correct.
+            Dates are computed in {COMMUNITY_MEETINGS.timeZone} every 14 days
+            from the public calendar&apos;s first occurrence, so they match the
+            invites and DST stays correct.
           </li>
           <li>
             The source calendar is available as{" "}

@@ -2,7 +2,7 @@
 //
 // Covers src/components/community/MeetingsPage.tsx (previously ~7%):
 //  - next-meeting hero renders the schedule computed by
-//    getUpcomingOddIsoWeekMeetings for the current time
+//    getUpcomingMeetings for the current time
 //  - countdown branches: "in N min", "in N h M min", "in N day(s) N h",
 //    "Happening now", and the minute-tick interval refresh
 //  - Google Calendar link encodes the meeting window and time zone
@@ -23,7 +23,7 @@ import {
 
 import { MeetingsPage } from "@/components/community/MeetingsPage";
 import { COMMUNITY_MEETINGS } from "@/config/community-meetings";
-import { getUpcomingOddIsoWeekMeetings } from "@/lib/communityMeetingsSchedule";
+import { getUpcomingMeetings } from "@/lib/communityMeetingsSchedule";
 import recordingsData from "../../data/meeting-recordings.json";
 
 // A fixed anchor time; the actual next meeting is derived from the same
@@ -31,7 +31,7 @@ import recordingsData from "../../data/meeting-recordings.json";
 const ANCHOR = new Date("2026-10-06T12:00:00Z");
 
 function nextMeetingAfter(now: Date) {
-  const [next] = getUpcomingOddIsoWeekMeetings(COMMUNITY_MEETINGS, 1, now);
+  const [next] = getUpcomingMeetings(COMMUNITY_MEETINGS, 1, now);
   return next;
 }
 
@@ -84,11 +84,7 @@ describe("MeetingsPage next-meeting hero", () => {
   });
 
   it("lists UPCOMING_COUNT (4) upcoming meetings matching the schedule library", () => {
-    const expected = getUpcomingOddIsoWeekMeetings(
-      COMMUNITY_MEETINGS,
-      4,
-      ANCHOR
-    );
+    const expected = getUpcomingMeetings(COMMUNITY_MEETINGS, 4, ANCHOR);
     renderAt(ANCHOR);
     const items = document.querySelectorAll(".hc-meeting-upcoming ol li");
     expect(items.length).toBe(4);

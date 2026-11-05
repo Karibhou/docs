@@ -9,8 +9,11 @@ export const COMMUNITY_MEETINGS = {
   weekday: "Thursday",
   timeLabel: "10:00 AM Eastern time",
   durationMinutes: 30,
-  isoWeekday: 4,
-  isoWeekParity: "odd",
+  // First occurrence of the public calendar series (DTSTART) and its
+  // RRULE interval (FREQ=WEEKLY;INTERVAL=2;BYDAY=TH). Keep these in sync
+  // with the calendar so the page and invites always agree.
+  anchorDate: "2026-09-10",
+  intervalDays: 14,
   localTime: { hour: 10, minute: 0 },
   calendarName: "Hive Commons",
   calendarId:
