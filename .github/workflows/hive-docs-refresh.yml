@@ -46,8 +46,9 @@ jobs:
       # raw.githubusercontent.com; they fail (rather than silently keep stale
       # content) if upstream is unreachable, so a bad run opens no PR.
       # Heal mode: pages added upstream next to synced pages, or linked from
-      # them, are appended to scripts/sync-hive-docs.files.json and synced
-      # (hivecommons/docs#612). Fails only if the heal cannot be applied.
+      # them, are appended to scripts/sync-hive-docs.files.json, added to the
+      # nav in src/app/docs/page-map.ts, and synced (hivecommons/docs#612,
+      # hivecommons/docs#625). Fails only if the heal cannot be applied.
       - run: npm run sync-hive-docs
         env:
           SYNC_HIVE_DOCS_HEAL: "1"
@@ -67,6 +68,7 @@ jobs:
           add-paths: |
             docs/content
             scripts/sync-hive-docs.files.json
+            src/app/docs/page-map.ts
           # Neutral on purpose: a run may change only the hive mirror, only
           # the sibling mirrors (sync-sibling-docs, from each repo's own
           # branch), or both, so the title must not name one source (#586).
