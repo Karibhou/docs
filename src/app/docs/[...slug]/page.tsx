@@ -134,9 +134,6 @@ function replaceTemplateVariables(content: string): string {
     result = result.replace(new RegExp(`\\{\\{\\s*${key.replace('.', '\\.')}\\s*\\}\\}`, 'g'), value)
   }
   
-  // Remove any remaining template variables
-  result = result.replace(/\{\{[^}]+\}\}/g, '')
-  
   return result
 }
 
