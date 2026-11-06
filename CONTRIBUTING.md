@@ -35,6 +35,11 @@ The TypeScript & Lint Check workflow also runs `typos` with the configuration in
 spelling in the project repository. Add genuine false positives to
 `[default.extend-words]`.
 
+The Vitest `npm test` also validates synced content: every `{{…}}` in
+docs/content prose must be a `config.*` template macro (outside fenced code
+blocks and code spans). Wrap any other token in backticks in the source
+repository to escape it; do not edit `docs/content/` directly.
+
 The Internal Links CI gate re-syncs Hive docs with `npm run sync-hive-docs` and sibling-project docs with `npm run sync-sibling-docs` before running `npm run check-links`, so a local `check-links` alone validates only the committed snapshot. To reproduce the gate exactly, run the sync scripts first (both require network access; they fall back to the committed content offline).
 
 The Vitest workflow runs `npx vitest run --coverage`, which fails if coverage
