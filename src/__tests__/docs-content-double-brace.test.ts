@@ -12,19 +12,12 @@ import { describe, expect, it } from "vitest";
 import fs from "fs";
 import path from "path";
 import { splitFencedSegments } from "../../scripts/markdown-fences";
+import { templateVariables } from "../app/docs/[...slug]/page";
 
 const CONTENT_ROOT = path.resolve(__dirname, "../../docs/content");
 
-// Keys substituted by replaceTemplateVariables in src/app/docs/[...slug]/page.tsx.
-const KNOWN_MACROS = new Set([
-  "config.ks_branch",
-  "config.ks_tag",
-  "config.ks_latest_release",
-  "config.ks_latest_regular_release",
-  "config.docs_url",
-  "config.repo_url",
-  "config.site_url",
-]);
+// Keys substituted by replaceTemplateVariables, derived so the two cannot drift.
+const KNOWN_MACROS = new Set(Object.keys(templateVariables()));
 
 // A code span is a backtick run closed by a run of the same length; it may
 // span lines but, as in CommonMark, never a blank line — otherwise a stray

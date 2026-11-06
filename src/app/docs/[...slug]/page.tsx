@@ -112,15 +112,16 @@ type Props = {
   params: Promise<{ slug: string[] }>
 }
 
-// Replace template variables with actual values
-function replaceTemplateVariables(content: string): string {
+// Template variables substituted into docs content; also the source of truth
+// for the macro allowlist in the docs-content double-brace test.
+export function templateVariables(): Record<string, string> {
   // Use CURRENT_VERSION from config to support versioned documentation
   // When a version branch is created, CURRENT_VERSION is updated to that version
   const version = CURRENT_VERSION as string
   const versionBranch = version === '0.29.0' ? 'main' : `release-${version}`
   const versionTag = version === '0.29.0' ? 'latest' : `v${version}`
 
-  const vars: Record<string, string> = {
+  return {
     'config.ks_branch': versionBranch,
     'config.ks_tag': versionTag,
     'config.ks_latest_release': CURRENT_VERSION,
@@ -129,7 +130,12 @@ function replaceTemplateVariables(content: string): string {
     'config.repo_url': 'https://github.com/hivecommons/hive',
     'config.site_url': 'https://docs.hivecommons.dev'
   }
-  
+}
+
+// Replace template variables with actual values
+function replaceTemplateVariables(content: string): string {
+  const vars = templateVariables()
+
   let result = content
   for (const [key, value] of Object.entries(vars)) {
     result = result.replace(new RegExp(`\\{\\{\\s*${key.replace('.', '\\.')}\\s*\\}\\}`, 'g'), value)
