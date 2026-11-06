@@ -3,6 +3,7 @@ import { Callout, Mermaid, Tabs } from 'nextra/components'
 import { evaluate } from 'nextra/evaluate'
 import { useMDXComponents as getMDXComponents } from '../../../../mdx-components'
 import { convertHtmlScriptsToJsxComments } from '@/lib/transformMdx'
+import { escapeStrayBraces } from '@/lib/escapeStrayBraces'
 import { sanitizeHtmlForMdx, removeCommentPatterns } from '@/lib/sanitizeHtml'
 import { rewriteRelativeImagePaths } from '@/lib/rewriteImagePaths'
 import { rewriteRelativeDocLinks } from '@/lib/rewriteDocLinks'
@@ -347,7 +348,7 @@ export default async function DocPage({ params }: Props) {
   let evaluated: ReturnType<typeof evaluate> | null = null
   let compilationFailed = false
   try {
-    const compiled = await compileMdx(content, {
+    const compiled = await compileMdx(escapeStrayBraces(content), {
       mdxOptions: {
         // Content is synced from other repositories; never let it ship
         // JavaScript (ESM, {expressions}, JSX attribute expressions) into

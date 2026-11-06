@@ -45,8 +45,8 @@ describe("DocPage — template variable replacement", () => {
     await DocPage({ params: Promise.resolve({ slug: ["hive", "governor"] }) });
 
     const source = String((compileMdx.mock.calls[0] as unknown[])[0]);
-    expect(source).toContain("{{file}}");
-    expect(source).toContain("--format '{{.Mountpoint}}'");
+    expect(source).toContain("\\{\\{file\\}\\}");
+    expect(source).toContain("--format '\\{\\{.Mountpoint\\}\\}'");
     expect(source).toContain("https://docs.hivecommons.dev/hive");
     expect(source).not.toContain("config.docs_url");
   });

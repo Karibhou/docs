@@ -1,0 +1,1 @@
+- Render stray `{`/`}` in prose (e.g. a Go-template `{{.Mountpoint}}`) literally instead of failing MDX compilation and dropping the whole page to the raw-text fallback.
