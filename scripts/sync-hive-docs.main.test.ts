@@ -354,6 +354,28 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     return path.join(caseDir, "scripts", "sync-hive-docs.files.json");
   }
 
+  function pageMapPath(): string {
+    return path.join(caseDir, "src", "app", "docs", "page-map.ts");
+  }
+
+  // Minimal page-map.ts with the two markers addToHiveNav edits between.
+  const pageMapFixture = [
+    "const NAV_STRUCTURE_HIVE = [",
+    "  {",
+    "    title: 'Reference',",
+    "    items: [",
+    "      { 'Environment variable reference': 'env-vars.md' },",
+    "    ]",
+    "  }",
+    "]",
+    "",
+    "const NAV_STRUCTURE_HOTSHOT = [",
+    "  { title: 'Other', items: [",
+    "    ] }",
+    "]",
+    "",
+  ].join("\n");
+
   it("reports unlisted siblings and linked pages without failing (report-only)", async () => {
     const summary = path.join(caseDir, "summary.md");
     fs.writeFileSync(summary, "existing\n");
@@ -498,6 +520,42 @@ describe("sync-hive-docs main() file-list drift (#612)", () => {
     expect(out).toContain(
       "- `new-root.md` — linked from integrations/drift-sibling-b.md"
     );
+    // Without a page map in the checkout there is nothing to add the nav to.
+    expect(fs.existsSync(pageMapPath())).toBe(false);
+  });
+
+  it("heal mode adds each healed page to NAV_STRUCTURE_HIVE, titled by its heading or filename", async () => {
+    process.env.SYNC_HIVE_DOCS_HEAL = "1";
+    fs.mkdirSync(path.dirname(pageMapPath()), { recursive: true });
+    fs.writeFileSync(pageMapPath(), pageMapFixture);
+    // sibling-b has a `# ` heading; sibling-a has none and falls back to
+    // its basename.
+    stubUpstream({
+      "integrations/drift-sibling-a.md": "Intro paragraph, no heading.\n",
+      "integrations/drift-sibling-b.md":
+        "# Forges\nSee [new](../new-root.md).\n",
+    });
+
+    const { err } = await runSync();
+
+    expect(err).toBe("");
+    expect(exitSpy).not.toHaveBeenCalled();
+    const pageMap = fs.readFileSync(pageMapPath(), "utf8");
+    expect(pageMap).toContain(
+      "      { 'Environment variable reference': 'env-vars.md' },\n" +
+        "      { 'drift-sibling-a': 'integrations/drift-sibling-a.md' },\n" +
+        "      { 'Forges': 'integrations/drift-sibling-b.md' },\n    ]\n  }\n]"
+    );
+    // The hotshot nav is left byte-for-byte alone.
+    expect(pageMap.split("NAV_STRUCTURE_HOTSHOT")[1]).toBe(
+      pageMapFixture.split("NAV_STRUCTURE_HOTSHOT")[1]
+    );
+    // The files list gained the same two pages, in the same order.
+    const list = JSON.parse(fs.readFileSync(filesListPath(), "utf8"));
+    expect(list.slice(-2)).toEqual([
+      { source: "integrations/drift-sibling-a.md" },
+      { source: "integrations/drift-sibling-b.md" },
+    ]);
   });
 
   it("heal mode (--heal) fails when the upstream listing is truncated", async () => {
