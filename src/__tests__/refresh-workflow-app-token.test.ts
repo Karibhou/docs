@@ -81,7 +81,9 @@ describe.each(REFRESH_WORKFLOWS)("%s opens its PR as the hive App", refresh => {
   });
 
   it("reads the App id and private key from the repo's vars and secrets", () => {
-    expect(yaml).toMatch(/^\s+app-id:\s*\$\{\{\s*vars\.HIVE_APP_ID\s*\}\}\s*$/m);
+    expect(yaml).toMatch(
+      /^\s+app-id:\s*\$\{\{\s*vars\.HIVE_APP_ID\s*\}\}\s*$/m
+    );
     expect(yaml).toMatch(
       /^\s+private-key:\s*\$\{\{\s*secrets\.HIVE_APP_PRIVATE_KEY\s*\}\}\s*$/m
     );
