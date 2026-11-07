@@ -18,17 +18,11 @@ permissions:
 
 env:
   REFRESH_BRANCH: bot/hive-docs-refresh
-  # Workflows whose jobs are the required status checks on main. Each must
-  # declare `on: workflow_dispatch` so this run can trigger them on the PR
-  # branch (see "Trigger required checks" below).
-  REQUIRED_CHECK_WORKFLOWS: build.yml typecheck.yml vitest.yml npm-audit.yml check-internal-links.yml markdownlint-cli2.yml
 
 jobs:
   refresh:
     permissions:
-      actions: write # dispatch the CI workflows on the PR branch
-      contents: write
-      pull-requests: write
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -54,14 +48,21 @@ jobs:
           SYNC_HIVE_DOCS_HEAL: "1"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npm run sync-sibling-docs
+      - name: Mint hive App token
+        id: app-token
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+        with:
+          app-id: ${{ vars.HIVE_APP_ID }}
+          private-key: ${{ secrets.HIVE_APP_PRIVATE_KEY }}
       - name: Open PR with resynced mirror
         id: pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          # Pushes and PRs made with GITHUB_TOKEN never create pull_request
-          # runs; the step below dispatches the CI workflows on the PR branch
-          # instead (same approach as meeting-recordings-refresh.yml).
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Open the PR as the hive App, not GITHUB_TOKEN: GITHUB_TOKEN-opened
+          # same-repo PRs get their pull_request runs held for maintainer
+          # approval (the fork-PR policy applies to them), which blocks the
+          # hive sweep from merging. App-opened PRs run CI normally.
+          token: ${{ steps.app-token.outputs.token }}
           signoff: true
           branch: ${{ env.REFRESH_BRANCH }}
           delete-branch: true
@@ -78,26 +79,8 @@ jobs:
             Automated daily resync of the committed mirrors under `docs/content/`
             via `npm run sync-hive-docs` and `npm run sync-sibling-docs`.
 
-            This PR was opened with `GITHUB_TOKEN`, so GitHub does not start
-            `pull_request` workflows for it. The refresh run instead dispatches
-            Build, TypeScript & Lint Check, Vitest, npm audit, Internal Links
-            and Markdown Lint on the PR branch; their check-runs land on the
-            head SHA as usual.
-
             Refresh run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             Refs #496
 
             The hive sweep merges this PR once CI is green.
-      - name: Trigger required checks on the PR branch
-        if: steps.pr.outputs.pull-request-operation == 'created' || steps.pr.outputs.pull-request-operation == 'updated'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_SHA: ${{ steps.pr.outputs.pull-request-head-sha }}
-        run: |
-          set -euo pipefail
-          echo "Dispatching required checks on $REFRESH_BRANCH @ $HEAD_SHA"
-          for wf in $REQUIRED_CHECK_WORKFLOWS; do
-            gh workflow run "$wf" --repo "$GITHUB_REPOSITORY" --ref "$REFRESH_BRANCH"
-            echo "  dispatched $wf"
-          done
