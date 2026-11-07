@@ -1,8 +1,17 @@
 {
-  "updatedAt": "2026-11-01T12:24:37.395Z",
+  "updatedAt": "2026-11-07T12:24:17.303Z",
   "source": "https://www.youtube.com/feeds/videos.xml?channel_id=UCIA3fKJFv2nLoG6vKK65xLg",
   "channelId": "UCIA3fKJFv2nLoG6vKK65xLg",
   "recordings": [
+    {
+      "id": "NvVnhfbRQSg",
+      "title": "Hive Commons Community Meeting bi weekly 20261105 100407 Meeting Recording",
+      "publishedAt": "2026-11-06T18:05:11+00:00",
+      "updatedAt": "2026-11-06T20:13:37+00:00",
+      "url": "https://www.youtube.com/watch?v=NvVnhfbRQSg",
+      "thumbnail": "https://i3.ytimg.com/vi/NvVnhfbRQSg/hqdefault.jpg",
+      "description": ""
+    },
     {
       "id": "T9ShTNpdf3o",
       "title": "Hive Commons Community Meeting bi weekly 20261022 100443 Meeting Recording",
