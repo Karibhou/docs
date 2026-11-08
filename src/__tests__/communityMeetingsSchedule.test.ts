@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getTimeZoneParts,
   getUpcomingMeetings,
   isoWeekInfo,
   type MeetingScheduleConfig,
@@ -99,5 +100,65 @@ describe("community meeting 14-day recurrence", () => {
     );
     expect(summer.date.toISOString()).toBe("2026-09-10T14:00:00.000Z");
     expect(winter.date.toISOString()).toBe("2027-01-14T15:00:00.000Z");
+  });
+
+  it("counts a Sunday as ISO weekday 7 in the week that started on Monday", () => {
+    // 2027-01-03 is a Sunday. ISO weeks start on Monday, so it closes the
+    // week that began on Monday 2026-12-28 and belongs to ISO year 2026,
+    // week 53 — not to 2027-W01. Date#getUTCDay() returns 0 for Sunday;
+    // without the `|| 7` fallback the Thursday-shift would land in the next
+    // week and misplace every Sunday at a year boundary.
+    expect(isoWeekInfo("2027-01-03")).toEqual({
+      isoYear: 2026,
+      week: 53,
+      isoWeekday: 7,
+    });
+    expect(isoWeekInfo("2027-01-04")).toEqual({
+      isoYear: 2027,
+      week: 1,
+      isoWeekday: 1,
+    });
+  });
+});
+
+describe("getTimeZoneParts", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("normalises the hour12:false midnight hour of 24 to 0", () => {
+    // Some ICU builds format midnight as "24" under `hour12: false` (the h24
+    // cycle); current Node returns "00". Stub formatToParts to replay the h24
+    // shape so the normalisation stays pinned on either runtime.
+    vi.spyOn(Intl.DateTimeFormat.prototype, "formatToParts").mockReturnValue([
+      { type: "month", value: "09" },
+      { type: "literal", value: "/" },
+      { type: "day", value: "10" },
+      { type: "literal", value: "/" },
+      { type: "year", value: "2026" },
+      { type: "literal", value: ", " },
+      { type: "hour", value: "24" },
+      { type: "literal", value: ":" },
+      { type: "minute", value: "00" },
+      { type: "literal", value: ":" },
+      { type: "second", value: "00" },
+    ]);
+
+    expect(
+      getTimeZoneParts(new Date("2026-09-10T04:00:00Z"), "America/New_York")
+    ).toEqual({
+      year: 2026,
+      month: 9,
+      day: 10,
+      hour: 0,
+      minute: 0,
+      second: 0,
+    });
+  });
+
+  it("passes a real midnight through unchanged as hour 0", () => {
+    expect(
+      getTimeZoneParts(new Date("2026-09-10T04:00:00Z"), "America/New_York")
+    ).toMatchObject({ year: 2026, month: 9, day: 10, hour: 0, minute: 0 });
   });
 });
