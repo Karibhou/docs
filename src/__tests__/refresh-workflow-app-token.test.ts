@@ -89,6 +89,15 @@ describe.each(REFRESH_WORKFLOWS)("%s opens its PR as the hive App", refresh => {
     );
   });
 
+  it("scopes the App token to contents and pull-requests write only", () => {
+    expect(yaml).toMatch(/^\s+permission-contents:\s*write\s*$/m);
+    expect(yaml).toMatch(/^\s+permission-pull-requests:\s*write\s*$/m);
+    const granted = [...yaml.matchAll(/^\s+permission-([a-z-]+):/gm)].map(
+      m => m[1]
+    );
+    expect(granted.sort()).toEqual(["contents", "pull-requests"]);
+  });
+
   it("passes the minted token to peter-evans/create-pull-request", () => {
     expect(yaml).toMatch(/uses:\s*peter-evans\/create-pull-request@/);
     expect(yaml).toMatch(

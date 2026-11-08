@@ -37,6 +37,10 @@ jobs:
         with:
           app-id: ${{ vars.HIVE_APP_ID }}
           private-key: ${{ secrets.HIVE_APP_PRIVATE_KEY }}
+          # Least privilege: push the refresh branch and open/update the PR.
+          # Without these the token inherits every installation permission.
+          permission-contents: write
+          permission-pull-requests: write
       - name: Open PR with recording feed snapshot
         id: pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
