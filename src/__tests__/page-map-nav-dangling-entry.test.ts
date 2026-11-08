@@ -22,6 +22,9 @@ const PROJECTS: Array<[ProjectId, string]> = [
   ["dibs", "NAV_STRUCTURE_DIBS"],
   ["crux", "NAV_STRUCTURE_CRUX"],
   ["spektacular", "NAV_STRUCTURE_SPEKTACULAR"],
+  // Shared Community section appended to every project's nav; its files are
+  // merged into filePaths for any project, so one project id covers it.
+  ["hive", "NAV_STRUCTURE_GENERAL"],
 ];
 
 const source = fs.readFileSync(
@@ -33,13 +36,17 @@ const source = fs.readFileSync(
 function navPaths(constName: string): string[] {
   const start = source.indexOf(`const ${constName}`);
   expect(start, `${constName} is declared in page-map.ts`).toBeGreaterThan(-1);
-  const end = source.indexOf("\nconst ", start + 1);
-  const block = source.slice(start, end === -1 ? undefined : end);
+  // Stop at the next top-level declaration of any kind so a trailing
+  // constant (NAV_STRUCTURE_GENERAL) is not attributed everything to EOF.
+  const rest = source.slice(start + 1);
+  const next = rest.search(/\n(?:export |const |function |let |var )/);
+  const block =
+    next === -1 ? source.slice(start) : source.slice(start, start + 1 + next);
   return [...block.matchAll(/:\s*'([^']+\.mdx?)'/g)].map(m => m[1]);
 }
 
 describe("every nav entry resolves to a file buildPageMap can serve", () => {
-  it.each(PROJECTS)("%s", (projectId, constName) => {
+  it.each(PROJECTS)("%s %s", (projectId, constName) => {
     const paths = navPaths(constName);
     expect(paths.length).toBeGreaterThan(0);
     const { filePaths } = buildPageMap(projectId);
