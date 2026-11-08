@@ -32,3 +32,5 @@ Hive Commons thanks Akamai (Linode), Oracle Cloud (OKE), Cloudflare, GitHub Copi
 - [Discord](https://hivecommons.dev/discord): community chat
 - [Twitch](https://www.twitch.tv/hivecommons): live stream of the hosted hive's Activity Monitor
 - [Meeting recordings](https://hivecommons.dev/tv): past community meetings on YouTube
+- [How Hive works](https://www.youtube.com/watch?v=uo1KGTyJJyU): video introduction to Hive on the Hive Commons YouTube channel
+- [Who runs Hive (ADOPTERS.md)](https://github.com/hivecommons/hive/blob/v5/ADOPTERS.md): organizations using Hive, each marked Production, Pre-production or Evaluation
