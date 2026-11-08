@@ -202,6 +202,8 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
         { '0026 Sandbox runtime selection': 'adr/0026-sandbox-runtime-selection.md' },
       ] },
       { 'Environment variable reference': 'env-vars.md' },
+      { 'How Hive injects knowledge and memory into agents': 'agent-knowledge-and-memory.md' },
+      { 'Crux work services: S1 pinned checkout (hivecommons/crux#114)': 'design/crux-work-services.md' },
     ]
   }
 ]

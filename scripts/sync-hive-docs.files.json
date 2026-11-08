@@ -215,5 +215,11 @@
   },
   {
     "source": "integrations/forges.md"
+  },
+  {
+    "source": "agent-knowledge-and-memory.md"
+  },
+  {
+    "source": "design/crux-work-services.md"
   }
 ]

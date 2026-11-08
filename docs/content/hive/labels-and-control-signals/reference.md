@@ -274,6 +274,20 @@ With the gate on (default off), a human-filed, unclaimed issue whose clarity sco
 
 **Configuration and implementation.** `runs.triage.clarity_gate` (`src/pkg/scheduler/clarity_gate.go`, `src/pkg/classify/clarity.go`, `src/pkg/github/clarity_gate_resume.go`)
 
+#### `<!-- spek:publish … -->` body marker (Spek publish hand-off)
+
+**Applies to:** Issues (GitHub, Jira, Linear bodies). **Kind:** Routing signal; never a hold.
+
+Spek writes `<!-- spek:publish name=<name> artifact_id=<id> target=<t> [task=<id>] [rfc=<url>] -->` into every RFC and child issue it publishes ([spektacular#114](https://github.com/hivecommons/spektacular/issues/114)). A marker **with** `task=` is a child: `runs.triage` keeps it on the direct-fix path (never a new `spec` run; `run/spec` still overrides), the clarity gate does not score it, and its kick line carries `specified by Spek: RFC <url> (spek <name>, artifact <id>, task <id>)` plus the `Fixes #<n>` instruction. A marker **without** `task=` is the RFC itself: treated like `epic` for `governor.claims.never_claim_labels` — every automated claim producer refuses it with `never-claim label: spek:publish`, a stray claim is never staged 020/030 and `IsTrackerIssue` flags it — even when the repo has no `epic` label. A malformed marker is no marker; `rfc=` is dropped unless it is an http(s) URL.
+
+**Who applies it:** Spek (`spektacular publish`).
+
+**Checked by:** `pkg/spekmarker`; scheduler triage / clarity gate / kick assembly; the claim gate and stage derivation. **When:** Before kicks are built and on every claim.
+
+**Release or override.** Remove the marker from the body; `run/spec` sends a child into a spec run regardless.
+
+**Configuration and implementation.** None (`src/pkg/spekmarker/marker.go`, `src/pkg/classify/triage.go`, `src/pkg/scheduler/clarity_gate.go`, `src/pkg/scheduler/kickmessage.go`, `src/pkg/claims/neverclaim.go`, `src/pkg/github/issue_claim_gate.go`)
+
 #### `stage/017-possible-existing` from the prior-art gate
 
 **Applies to:** Issues. **Kind:** Hard suppress.
@@ -730,7 +744,7 @@ Same exempt behavior as `do-not-merge`; wins over required-label admission. Defa
 
 **Applies to:** PRs (issues when a step on one is blocked). **Kind:** Human-gated hold.
 
-The hive's GitHub App was refused (`403 Resource not accessible by integration`) on an API call the lane needs to advance, so only a person can take the next step. First wired call site: approving held `action_required` workflow runs for a registry-trusted author needs `actions: write`, which an operator may decline to grant ([#14589](https://github.com/hivecommons/hive/issues/14589)). The lane reports `unauthorized:<step>` (`unauthorized:approve-workflow-runs`), the stage engine parks the PR at 085, one `<!-- hive:unauthorized head=<sha> step=<step> -->` comment names the missing permission, the exact human step (**Approve and run** on the checks banner or Actions tab, with the run ids) and the alternative of granting the permission, and the hive logs `lane unauthorized` once per head at INFO instead of a WARN per tick.
+The hive's GitHub App was refused (`403 Resource not accessible by integration`) on an API call the lane needs to advance, so only a person can take the next step. First wired call site: approving held `action_required` workflow runs for a registry-trusted author needs `actions: write`, which an operator may decline to grant ([#14589](https://github.com/hivecommons/hive/issues/14589)). The lane reports `unauthorized:<step>` (`unauthorized:approve-workflow-runs`), the stage engine parks the PR at 085, one `<!-- hive:unauthorized step=<step> -->` comment per PR and step names the missing permission, the exact human step (**Approve and run** on the checks banner or Actions tab, with the run ids) and the alternative of granting the permission — a further head hitting the same block edits that comment with an attempt count and the heads it covers instead of posting again ([#17066](https://github.com/hivecommons/hive/issues/17066)) — and the hive logs `lane unauthorized` once per head at INFO instead of a WARN per tick.
 
 The activity monitor draws a muted `unauthorized` pill (counted under Needs attention) whose tooltip repeats the permission and the step, and the 085 cell reads **Awaiting human: approve workflow runs**.
 
