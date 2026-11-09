@@ -20,12 +20,13 @@ afterEach(() => {
 });
 
 // jsdom reorders the `animation` shorthand on serialization (jsdom 31 puts
-// the name last), so compare the set of tokens rather than the exact string.
+// the name last) and may fold a separately-set `animation-delay` back into
+// it, so assert that every expected token is present rather than comparing
+// the exact string.
 function expectAnimation(el: Element, expected: string) {
-  const tokens = (s: string) => s.trim().split(/\s+/).sort();
-  expect(tokens((el as HTMLElement | SVGElement).style.animation)).toEqual(
-    tokens(expected)
-  );
+  const tokens = (s: string) => s.trim().split(/\s+/);
+  const actual = tokens((el as HTMLElement | SVGElement).style.animation);
+  expect(actual).toEqual(expect.arrayContaining(tokens(expected)));
 }
 
 describe("GridLines", () => {
