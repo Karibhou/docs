@@ -59,6 +59,13 @@ import { DocsSidebar } from "../components/docs/DocsSidebar";
 
 type MenuItem = React.ComponentProps<typeof DocsSidebar>["pageMap"][number];
 
+// jsdom serializes `calc(100vh - X)` as `calc(-X + 100vh)` from jsdom 31 on;
+// accept either ordering so the assertion survives the dependency bump.
+function calcViewportMinus(offset: string): RegExp {
+  const escaped = offset.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`^calc\\((100vh - ${escaped}|-${escaped} \\+ 100vh)\\)$`);
+}
+
 function renderSidebar(pageMap: MenuItem[], projectId = "hive") {
   return render(
     <DocsProvider>
@@ -439,7 +446,7 @@ describe("DocsSidebar layout and chrome", () => {
       frames[0](0);
     });
     expect(aside.style.top).toBe("96px");
-    expect(aside.style.height).toBe("calc(100vh - 96px)");
+    expect(aside.style.height).toMatch(calcViewportMinus("96px"));
 
     fireEvent.scroll(window);
     expect(frames).toHaveLength(2);
@@ -456,7 +463,7 @@ describe("DocsSidebar layout and chrome", () => {
         vi.advanceTimersByTime(400);
       });
       expect(aside.style.top).toBe("4rem");
-      expect(aside.style.height).toBe("calc(100vh - 4rem)");
+      expect(aside.style.height).toMatch(calcViewportMinus("4rem"));
     } finally {
       vi.useRealTimers();
     }

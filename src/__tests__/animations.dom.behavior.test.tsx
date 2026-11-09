@@ -19,6 +19,15 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// jsdom reorders the `animation` shorthand on serialization (jsdom 31 puts
+// the name last), so compare the set of tokens rather than the exact string.
+function expectAnimation(el: Element, expected: string) {
+  const tokens = (s: string) => s.trim().split(/\s+/).sort();
+  expect(tokens((el as HTMLElement | SVGElement).style.animation)).toEqual(
+    tokens(expected)
+  );
+}
+
 describe("GridLines", () => {
   it("renders one svg with horizontal + vertical lines and default stroke props", () => {
     const { container } = render(<GridLines />);
@@ -46,7 +55,7 @@ describe("GridLines", () => {
       expect(l.getAttribute("stroke-width")).toBe("0.5");
       expect(l.getAttribute("stroke-opacity")).toBe("0.2");
     }
-    expect(svgs[0].style.animation).toBe("move-diagonal 5s linear infinite");
+    expectAnimation(svgs[0], "move-diagonal 5s linear infinite");
   });
 
   it("applies custom stroke, speed, opacity and className props", () => {
@@ -67,7 +76,7 @@ describe("GridLines", () => {
     expect(root.style.opacity).toBe("0.5");
 
     const svg = container.querySelector("svg")!;
-    expect(svg.style.animation).toBe("move-diagonal 12s linear infinite");
+    expectAnimation(svg, "move-diagonal 12s linear infinite");
     const lines = svg.querySelectorAll("line");
     expect(lines).toHaveLength(5);
     expect(lines[0].getAttribute("stroke")).toBe("#ff0000");
@@ -75,7 +84,7 @@ describe("GridLines", () => {
     expect(lines[0].getAttribute("stroke-opacity")).toBe("0.9");
     // Pulse animation staggers by 0.2s per line within each orientation.
     expect(lines[1].style.animationDelay).toBe("0.2s");
-    expect(lines[1].style.animation).toContain("gridPulse 4s");
+    expectAnimation(lines[1], "gridPulse 4s infinite alternate ease-in-out");
   });
 
   it("renders an empty svg when both line counts are 0", () => {
