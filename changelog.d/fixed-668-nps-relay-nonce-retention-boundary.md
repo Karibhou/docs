@@ -1,0 +1,1 @@
+- nps-relay: keep seen nonces for the full inclusive skew window so a replay at the exact retention boundary is rejected (#668).

@@ -153,7 +153,8 @@ export const SIGNATURE_MAX_SKEW_MS = 5 * 60 * 1000;
 /**
  * Seen nonces are kept this long. A request is only accepted within
  * SIGNATURE_MAX_SKEW_MS of its timestamp, so a nonce older than twice that can
- * no longer be replayed.
+ * no longer be replayed. The retention check is inclusive so a nonce outlives
+ * every timestamp it could have been accepted with.
  */
 export const NONCE_RETENTION_MS = 2 * SIGNATURE_MAX_SKEW_MS;
 /** Most live nonces kept per install; more signed requests in the window get 429. */
@@ -860,7 +861,7 @@ function consumeNonce(
         s &&
         typeof s.n === "string" &&
         typeof s.t === "number" &&
-        now - s.t < NONCE_RETENTION_MS
+        now - s.t <= NONCE_RETENTION_MS
     );
     if (live.some(s => s.n === nonce))
       return { reject: json(401, { error: "replayed request" }) };

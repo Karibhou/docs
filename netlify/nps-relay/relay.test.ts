@@ -32,6 +32,7 @@ import {
   MAX_REGISTRATIONS_PER_IP_PER_WINDOW,
   MAX_SUBMIT_BODY_BYTES,
   NONCE_PREFIX,
+  NONCE_RETENTION_MS,
   PENDING_PATH,
   PURPOSE_REGISTER,
   PURPOSE_SUBMIT,
@@ -629,6 +630,26 @@ describe("POST /api/nps (submit)", () => {
     expect(store.data.has(`${NONCE_PREFIX}${hive.installId}`)).toBe(true);
   });
 
+  it("rejects a replayed nonce at the exact retention boundary", async () => {
+    now = T0;
+    const nonce = "b".repeat(32);
+    const timestampMs = T0 + SIGNATURE_MAX_SKEW_MS;
+    expect(
+      (await handleRelayRequest(submit(GOOD, { nonce, timestampMs }), deps()))
+        .status
+    ).toBe(201);
+    // At exactly T0 + NONCE_RETENTION_MS, the nonce should still be live.
+    now = T0 + NONCE_RETENTION_MS;
+    const replay = await handleRelayRequest(
+      submit(GOOD, { nonce, timestampMs }),
+      deps({ clientIp: "198.51.100.9" })
+    );
+    expect(replay.status).toBe(401);
+    const responseBody = await replay.json();
+    expect(responseBody.error).toBe("replayed request");
+    expect(store.entries()).toHaveLength(1);
+  });
+
   it("bounds the live nonces kept per install", async () => {
     const seen = Array.from({ length: MAX_NONCES_PER_INSTALL }, (_, i) => ({
       n: String(i).padStart(32, "0"),
@@ -637,7 +658,7 @@ describe("POST /api/nps (submit)", () => {
     store.data.set(`${NONCE_PREFIX}${hive.installId}`, { seen });
     expect((await handleRelayRequest(submit(GOOD), deps())).status).toBe(429);
     // Once they age out, the install can submit again.
-    now = T0 + 2 * SIGNATURE_MAX_SKEW_MS;
+    now = T0 + NONCE_RETENTION_MS + 1;
     expect((await handleRelayRequest(submit(GOOD), deps())).status).toBe(201);
   });
 
