@@ -221,5 +221,59 @@
   },
   {
     "source": "design/crux-work-services.md"
+  },
+  {
+    "source": "crux-integration-guide.md"
+  },
+  {
+    "source": "design/achievements-2.md"
+  },
+  {
+    "source": "design/agent-host-confinement.md"
+  },
+  {
+    "source": "design/agent-state-inventory.md"
+  },
+  {
+    "source": "design/agent-turn-handoff.md"
+  },
+  {
+    "source": "design/agent-turn-model.md"
+  },
+  {
+    "source": "design/capability-aware-assignment-boundary.md"
+  },
+  {
+    "source": "design/cli-memory-drain.md"
+  },
+  {
+    "source": "design/copilot-cost-capture.md"
+  },
+  {
+    "source": "design/crux-tool-policy.md"
+  },
+  {
+    "source": "design/headroom-library.md"
+  },
+  {
+    "source": "design/master-delivery-wrapped.md"
+  },
+  {
+    "source": "design/master-key-rotation.md"
+  },
+  {
+    "source": "design/mobile-checkpoint.md"
+  },
+  {
+    "source": "design/nous-spek-source.md"
+  },
+  {
+    "source": "design/pr-reach-telemetry.md"
+  },
+  {
+    "source": "design/reentrant-turn-model.md"
+  },
+  {
+    "source": "design/tool-approval-desk.md"
   }
 ]
