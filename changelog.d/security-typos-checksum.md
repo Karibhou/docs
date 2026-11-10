@@ -1,0 +1,1 @@
+- Verify the SHA-256 of the `typos` release tarball in `typecheck.yml` before extracting it, so a replaced release asset can no longer run in CI.
