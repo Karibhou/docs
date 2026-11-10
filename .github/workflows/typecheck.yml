@@ -42,6 +42,25 @@ jobs:
       - name: Prettier
         run: npm run format:check
 
+      # Pre-install typos with retries: the action's entrypoint does a single
+      # unretried wget and skips it when $RUNNER_TEMP/typos is executable (#686);
+      # the pinned action.yml sets INSTALL_DIR to runner.temp, not $HOME/bin.
+      # The version in the key and URL must match the crate-ci/typos pin below.
+      - name: Cache typos binary
+        id: typos-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/typos
+          key: typos-v1.52.0-${{ runner.os }}-x86_64
+
+      - name: Install typos
+        if: steps.typos-cache.outputs.cache-hit != 'true'
+        run: |
+          curl --fail --location --retry 8 --retry-all-errors --retry-delay 5 \
+            https://github.com/crate-ci/typos/releases/download/v1.52.0/typos-v1.52.0-x86_64-unknown-linux-musl.tar.gz \
+            | tar -xz -C "$RUNNER_TEMP" ./typos
+          chmod +x "$RUNNER_TEMP/typos"
+
       # Spell check; config and allow-list in _typos.toml (#455).
       - name: Typos
         uses: crate-ci/typos@4c8b7f51ca60df14e3c5ca82770dfbbe6c3dae85 # v1.52.0
