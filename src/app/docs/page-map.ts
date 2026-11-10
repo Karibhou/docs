@@ -222,6 +222,8 @@ const NAV_STRUCTURE_HIVE: Array<{ title: string; items: NavItem[] }> = [
       { 'PR reach telemetry (#3973)': 'design/pr-reach-telemetry.md' },
       { 'RFC: Re-entrant Conversation-as-State Agent Turn Model (#4002)': 'design/reentrant-turn-model.md' },
       { 'The Tool-Approval Desk': 'design/tool-approval-desk.md' },
+      { 'Fork PR stalled on Prow presubmits — recovery runbook': 'fork-pr-presubmit-stall-runbook.md' },
+      { 'Red-team agent': 'redteam.md' },
     ]
   }
 ]

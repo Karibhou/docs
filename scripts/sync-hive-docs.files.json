@@ -275,5 +275,11 @@
   },
   {
     "source": "design/tool-approval-desk.md"
+  },
+  {
+    "source": "fork-pr-presubmit-stall-runbook.md"
+  },
+  {
+    "source": "redteam.md"
   }
 ]
