@@ -1,0 +1,1 @@
+- Relative images in general-section pages (`community/`, `contributing/`, `news/`) now load at project alias routes such as `/docs/hive/community/...` (hivecommons/docs#694).

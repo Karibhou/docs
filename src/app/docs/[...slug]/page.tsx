@@ -225,6 +225,13 @@ async function getPageContent(slug: string[], projectId?: ProjectId): Promise<Pa
 // serves files from docs/content/.  We compute the directory of the source file
 // relative to docs/content/ and use it as the base for the rewritten URL.
 function sourceBaseDir(filePath: string, projectId: ProjectId | undefined): string {
+  // General-section files are always read from the shared docs/content/ root,
+  // even when served at a project-prefixed route (/docs/<project>/community/...).
+  if (isGeneralSectionFile(filePath)) {
+    const dir = path.posix.dirname(filePath)
+    return dir === '.' ? '' : dir
+  }
+
   // The content root for this project (e.g. docs/content/console for projectId='console').
   const contentRoot = projectId ? getContentPath(projectId) : docsContentPath
 
