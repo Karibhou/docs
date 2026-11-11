@@ -12,6 +12,9 @@ contact_links:
   - name: Join our Discord
     url: https://hivecommons.dev/discord
     about: Ask questions and talk with the Hive Commons community.
+  - name: Join the community meeting
+    url: https://docs.hivecommons.dev/docs/community/meetings
+    about: Public Hive Commons meeting every other Thursday — schedule, join link, agenda and calendar.
   - name: Watch the hive live on Twitch
     url: https://www.twitch.tv/hivecommons
     about: Live stream of the hosted hive's Activity Monitor — see issues and PRs move through the pipeline in real time.

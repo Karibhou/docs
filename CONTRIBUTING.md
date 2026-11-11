@@ -11,6 +11,12 @@ Thank you for helping improve the Hive Commons documentation site
 - Operating the deployed site (for example rolling back a bad deploy): see [`runbooks/`](runbooks/README.md).
 - Open an issue at https://github.com/hivecommons/docs/issues for anything unclear.
 
+## Finding something to work on
+
+- Issues labelled [`good first issue`](https://github.com/hivecommons/docs/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are scoped for a first PR; [`help wanted`](https://github.com/hivecommons/docs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues are open to anyone.
+- Spotted a problem on the site? File a [documentation issue](https://github.com/hivecommons/docs/issues/new?template=doc_issue.yaml); ideas for the site go in a [feature request](https://github.com/hivecommons/docs/issues/new?template=feature_request.yaml).
+- Not sure where to start, or want to check an approach before writing code? Ask in the [Hive Commons Discord](https://hivecommons.dev/discord) or bring it to the biweekly [Hive Commons community meeting](https://docs.hivecommons.dev/docs/community/meetings).
+
 ## Before you open a PR
 
 From a fresh checkout, install the exact dependency set and run the local
