@@ -30,6 +30,18 @@ function stripUntilStableSR(text: string, pattern: RegExp): string {
   return text;
 }
 
+// The sync scripts (scripts/sync-hive-docs.ts, scripts/sync-sibling-docs.ts)
+// prepend a provenance banner that the docs page reads as metadata. It is not
+// page text, so keep it out of snippets and content matches. Matches only that
+// banner (plus its contiguous "Also published at" quote lines and trailing
+// blank lines); other leading callouts stay searchable.
+const SYNCED_BANNER_RE =
+  /^> \*\*Synced from [^*\n]+\*\* This page is pulled from [^\n]*(?:\n>[^\n]*)*(?:\n[ \t]*)*/m;
+
+function stripSyncedBanner(content: string): string {
+  return content.replace(SYNCED_BANNER_RE, "");
+}
+
 function toPlainText(content: string): string {
   let text = content;
 
@@ -136,7 +148,9 @@ function buildSearchIndex(): IndexedDoc[] {
       if (seenFiles.has(filePath)) continue;
       seenFiles.add(filePath);
 
-      const text = toPlainText(convertHtmlScriptsToJsxComments(raw));
+      const text = toPlainText(
+        convertHtmlScriptsToJsxComments(stripSyncedBanner(raw))
+      );
 
       const fallbackTitle =
         routeKey
