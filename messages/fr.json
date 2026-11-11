@@ -6,20 +6,6 @@
     "subtitle": "Découvrez l'avenir de l'orchestration cloud-native. Hive Commons révolutionne la gestion multi-cluster avec l'automatisation alimentée par l'IA et l'intelligence en temps réel.",
     "terminalTitle": "hivecommons-control-center",
     "terminalStatus": "PRÊT",
-    "terminalCommandL1": "bash <(curl -s \\",
-    "terminalCommandL2": "  https://raw.githubusercontent.com/hivecommons/hivecommons/ \\",
-    "terminalCommandL3": "  refs/tags/v0.27.2/scripts/ \\",
-    "terminalCommandL4": "  create-hivecommons-demo-env.sh) --platform kind",
-    "terminalOutputInfo": "INFO",
-    "terminalOutputInfoText": "Installation de l'environnement de démonstration Hive Commons...",
-    "terminalOutputSetup": "CONFIG",
-    "terminalOutputSetupText": "Création des clusters kind : kubeflex, cluster1, cluster2",
-    "terminalOutputInstall": "INSTALL",
-    "terminalOutputInstallText": "Déploiement des composants du plan de contrôle KubeFlex",
-    "terminalOutputConfig": "CONFIG",
-    "terminalOutputConfigText": "Configuration d'Open Cluster Management",
-    "terminalOutputSuccess": "SUCCÈS",
-    "terminalOutputSuccessText": "Environnement de démonstration Hive Commons prêt ! Configuration terminée",
     "buttonInstall": "Essayer la console",
     "buttonDocs": "Explorer la documentation de la console"
   },
@@ -575,31 +561,6 @@
           "Rejoindre le Slack de la communauté Hive Commons",
           "Lire et comprendre le Code de Conduite",
           "Faire votre première contribution (documentation, code, ou tests)"
-        ]
-      },
-      "unpaidIntern": {
-        "title": "Stagiaire Non Rémunéré",
-        "nextLevel": "Stagiaire Rémunéré",
-        "description": "Parcours de 12 semaines pour démontrer l'engagement et les compétences",
-        "timeframe": "12 semaines",
-        "requirements": [
-          "Compléter au moins 3 PRs fusionnés",
-          "Assister à 6 réunions communautaires",
-          "Contribuer à la documentation ou aux tests",
-          "Démontrer une compréhension des meilleures pratiques Hive Commons",
-          "Recevoir l'approbation d'un mainteneur existant"
-        ]
-      },
-      "paidIntern": {
-        "title": "Stagiaire Rémunéré",
-        "nextLevel": "Mentor",
-        "description": "Contributeur reconnu avec compensation et responsabilité",
-        "requirements": [
-          "Compléter avec succès le stage non rémunéré",
-          "Démontrer des contributions techniques consistantes",
-          "Prendre la responsabilité d'un composant ou domaine spécifique",
-          "Mentorer de nouveaux contributeurs",
-          "Participer activement aux discussions de la communauté"
         ]
       },
       "mentor": {

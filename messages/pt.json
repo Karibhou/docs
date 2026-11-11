@@ -6,20 +6,6 @@
     "subtitle": "Experimente o futuro da orquestração nativa da nuvem. O Hive Commons revoluciona o gerenciamento multi-cluster com automação baseada em IA e inteligência em tempo real.",
     "terminalTitle": "hivecommons-control-center",
     "terminalStatus": "PRONTO",
-    "terminalCommandL1": "bash <(curl -s \\",
-    "terminalCommandL2": "  https://raw.githubusercontent.com/hivecommons/hivecommons/ \\",
-    "terminalCommandL3": "  refs/tags/v0.27.2/scripts/ \\",
-    "terminalCommandL4": "  create-hivecommons-demo-env.sh) --platform kind",
-    "terminalOutputInfo": "INFO",
-    "terminalOutputInfoText": "Instalando ambiente de demonstração do Hive Commons...",
-    "terminalOutputSetup": "CONFIGURAÇÃO",
-    "terminalOutputSetupText": "Criando clusters kind: kubeflex, cluster1, cluster2",
-    "terminalOutputInstall": "INSTALAR",
-    "terminalOutputInstallText": "Implantando componentes do plano de controle KubeFlex",
-    "terminalOutputConfig": "CONFIG",
-    "terminalOutputConfigText": "Configurando Open Cluster Management",
-    "terminalOutputSuccess": "SUCESSO",
-    "terminalOutputSuccessText": "Ambiente de demonstração Hive Commons pronto! Configuração completa",
     "buttonInstall": "Experimentar console",
     "buttonDocs": "Explorar documentação da console"
   },
@@ -628,31 +614,6 @@
           "Demonstre entusiasmo e interesse em participação a longo prazo",
           "Seja ativo no GitHub e Slack",
           "Aplicação informal ou nomeação para se juntar ao programa de estágio"
-        ]
-      },
-      "unpaidIntern": {
-        "title": "Estagiário Não Remunerado",
-        "nextLevel": "Estagiário Remunerado",
-        "description": "Jornada de 12 semanas para demonstrar comprometimento e habilidade",
-        "timeframe": "12 semanas",
-        "requirements": [
-          "Abrir pelo menos 6 issues 'help wanted'",
-          "Fazer merge de pelo menos 20 PRs (8 nas primeiras 6 semanas)",
-          "Participar de reuniões semanais da equipe ou submeter resumos",
-          "Trabalhar colaborativamente com mentores",
-          "Receber recomendação do mentor"
-        ]
-      },
-      "paidIntern": {
-        "title": "Estagiário Remunerado",
-        "nextLevel": "Mentor",
-        "description": "Contribuidor reconhecido com compensação e responsabilidade",
-        "requirements": [
-          "Completar com sucesso pelo menos um ciclo de estágio remunerado de 12 semanas",
-          "Ajudar a integrar e apoiar pelo menos um novo estagiário ou contribuidor",
-          "Submeter ≥3 revisões de PR",
-          "Submeter ≥5 comentários úteis em PRs ou issues",
-          "Apresentar ou co-apresentar em uma chamada da comunidade"
         ]
       },
       "mentor": {

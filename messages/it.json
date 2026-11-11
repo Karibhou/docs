@@ -6,28 +6,9 @@
     "subtitle": "Scopri il futuro dell'orchestrazione cloud-native. Hive Commons rivoluziona la gestione multi‑cluster con automazione intelligente e visibilità in tempo reale.",
     "terminalTitle": "hivecommons-control-center",
     "terminalStatus": "PRONTO",
-    "terminalCommandL1": "bash <(curl -s \\",
-    "terminalCommandL2": "  https://raw.githubusercontent.com/hivecommons/hivecommons/ \\",
-    "terminalCommandL3": "  refs/tags/v0.27.2/scripts/ \\",
-    "terminalCommandL4": "  create-hivecommons-demo-env.sh) --platform kind",
-    "terminalOutputInfo": "INFO",
-    "terminalOutputInfoText": "Installazione dell'ambiente demo Hive Commons...",
-    "terminalOutputSetup": "SETUP",
-    "terminalOutputSetupText": "Creazione dei cluster kind: kubeflex, cluster1, cluster2",
-    "terminalOutputInstall": "INSTALL",
-    "terminalOutputInstallText": "Distribuzione dei componenti del control plane KubeFlex",
-    "terminalOutputConfig": "CONFIG",
-    "terminalOutputConfigText": "Configurazione di Open Cluster Management",
-    "terminalOutputSuccess": "SUCCESSO",
-    "terminalOutputSuccessText": "Ambiente demo Hive Commons pronto! Configurazione completata",
     "buttonInstall": "Prova la console",
     "buttonDocs": "Esplora la documentazione della console",
-    "getStartedWith": "Inizia con",
-    "chooseEnvironment": "Scegli il tuo ambiente di deployment",
-    "localDevelopment": "Sviluppo locale",
-    "localDevelopmentTime": "Docker + Kind • 15 min",
-    "awsEksProduction": "AWS EKS Produzione",
-    "awsEksProductionTime": "Enterprise Ready • 30 min"
+    "getStartedWith": "Inizia con"
   },
   "footer": {
     "description": "Piattaforma di orchestrazione Kubernetes multi‑cluster che semplifica la gestione dei workload distribuiti su infrastrutture eterogenee.",
@@ -804,8 +785,6 @@
       "stats": {
         "pluginsAvailable": "Plugin disponibili",
         "freePlugins": "Plugin gratuiti",
-        "enterpriseReady": "Pronti per l'enterprise",
-        "activeInstalls": "Installazioni attive",
         "totalDownloads": "Download totali"
       }
     },

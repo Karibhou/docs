@@ -6,20 +6,6 @@
     "subtitle": "क्लाउड-नेटिव ऑर्केस्ट्रेशन का भविष्य अनुभव करें। Hive Commons एआई-सक्षम ऑटोमेशन और रीयल-टाइम इंटेलिजेंस के साथ मल्टी-क्लस्टर प्रबंधन को क्रांतिकारी बनाता है।",
     "terminalTitle": "hivecommons-control-center",
     "terminalStatus": "READY",
-    "terminalCommandL1": "bash <(curl -s \\",
-    "terminalCommandL2": "  https://raw.githubusercontent.com/hivecommons/hivecommons/ \\",
-    "terminalCommandL3": "  refs/tags/v0.27.2/scripts/ \\",
-    "terminalCommandL4": "  create-hivecommons-demo-env.sh) --platform kind",
-    "terminalOutputInfo": "INFO",
-    "terminalOutputInfoText": "Hive Commons डेमो वातावरण इंस्टॉल किया जा रहा है…",
-    "terminalOutputSetup": "SETUP",
-    "terminalOutputSetupText": "kind क्लस्टर बना रहा है: kubeflex, cluster1, cluster2",
-    "terminalOutputInstall": "INSTALL",
-    "terminalOutputInstallText": "KubeFlex कंट्रोल प्लेन घटक डिप्लॉय कर रहा है",
-    "terminalOutputConfig": "CONFIG",
-    "terminalOutputConfigText": "ओपन क्लस्टर मैनेजमेंट को कॉन्फ़िगर कर रहा है",
-    "terminalOutputSuccess": "SUCCESS",
-    "terminalOutputSuccessText": "Hive Commons डेमो वातावरण तैयार! सेटअप पूरा",
     "buttonInstall": "कंसोल आजमाएं",
     "buttonDocs": "कंसोल दस्तावेज़ देखें"
   },
@@ -625,31 +611,6 @@
           "लंबी अवधि की भागीदारी में रुचि और उत्साह दिखाएँ",
           "GitHub और Slack पर सक्रिय रहें",
           "अनौपचारिक आवेदन या नामांकन इंटर्न प्रोग्राम में"
-        ]
-      },
-      "unpaidIntern": {
-        "title": "बिना वेतन इंटर्न",
-        "nextLevel": "वेतनप्राप्त इंटर्न",
-        "description": "12-सप्ताह की यात्रा कौशल और प्रतिबद्धता दिखाने की",
-        "timeframe": "12 सप्ताह",
-        "requirements": [
-          "कम-से-कम 6 'help wanted' issues खोलें",
-          "कम-से-कम 20 PRs मर्ज करें (पहले 6 सप्ताह में 8)",
-          "साप्ताहिक टीम मीटिंग्स में भाग लें या सारांश जमा करें",
-          "मेंटर्स के साथ सहयोग करें",
-          "एक मेंटर की सिफारिश प्राप्त करें"
-        ]
-      },
-      "paidIntern": {
-        "title": "वेतनप्राप्त इंटर्न",
-        "nextLevel": "मेंटोर",
-        "description": "पहचाने गए योगदानकर्ता जिन्हें मुआवजा और ज़िम्मेदारी मिलती है",
-        "requirements": [
-          "कम-से-कम एक 12-सप्ताह वेतनप्राप्त इंटर्नशिप सफलतापूर्वक पूरी करें",
-          "कम-से-कम एक नए इंटर्न या योगदानकर्ता को ऑन-बोर्ड और सहायता करें",
-          "कम-से-कम 3 PR समीक्षाएँ जमा करें",
-          "कम-से-कम 5 सहायक टिप्पणी PRs या मुद्दों पर दें",
-          "एक कम्युनिटी कॉल में (या सह-प्रस्तुति) प्रस्तुत करें"
         ]
       },
       "mentor": {
