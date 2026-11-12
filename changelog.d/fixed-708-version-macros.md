@@ -1,0 +1,1 @@
+- Fix documentation version macros to use the main branch and avoid double-prefixed release tags (hivecommons/docs#708).

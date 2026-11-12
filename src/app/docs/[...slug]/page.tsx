@@ -115,15 +115,9 @@ type Props = {
 // Template variables substituted into docs content; also the source of truth
 // for the macro allowlist in the docs-content double-brace test.
 export function templateVariables(): Record<string, string> {
-  // Use CURRENT_VERSION from config to support versioned documentation
-  // When a version branch is created, CURRENT_VERSION is updated to that version
-  const version = CURRENT_VERSION as string
-  const versionBranch = version === '0.29.0' ? 'main' : `release-${version}`
-  const versionTag = version === '0.29.0' ? 'latest' : `v${version}`
-
   return {
-    'config.ks_branch': versionBranch,
-    'config.ks_tag': versionTag,
+    'config.ks_branch': 'main',
+    'config.ks_tag': `v${CURRENT_VERSION.replace(/^v/, '')}`,
     'config.ks_latest_release': CURRENT_VERSION,
     'config.ks_latest_regular_release': CURRENT_VERSION,
     'config.docs_url': 'https://docs.hivecommons.dev',
